@@ -1,6 +1,8 @@
-# Zone 8a Planting Calendar
+# Piedmont Planner - Zone 8a Planting Calendar
 
-A beautiful, interactive planting calendar for Zone 8a gardeners. This website helps you track when to sow, transplant, and harvest vegetables and flowers throughout the year.
+**🌱 [View Live Site](https://jyvisuals.github.io/Piedmont-Planner/)**
+
+A beautiful, interactive planting calendar for Zone 8a gardeners in the Piedmont region. This website helps you track when to sow, transplant, and harvest vegetables and flowers throughout the year.
 
 ## Features
 
@@ -44,38 +46,22 @@ A beautiful, interactive planting calendar for Zone 8a gardeners. This website h
 2. Open `index.html` in a web browser
 3. No build process or server required!
 
-## Deploying to GitHub Pages
+## Deployment
 
-### Option 1: Using GitHub Web Interface
+This site is deployed using GitHub Pages with GitHub Actions. The deployment workflow automatically publishes changes when pushed to the `main` branch.
 
-1. Create a new repository on GitHub
-2. Upload all files (`index.html`, `styles.css`, `script.js`, `data.js`, `README.md`)
-3. Go to repository Settings > Pages
-4. Under "Source", select "main" branch
-5. Click Save
-6. Your site will be published at `https://yourusername.github.io/gardenmap/`
+**Live Site**: [https://jyvisuals.github.io/Piedmont-Planner/](https://jyvisuals.github.io/Piedmont-Planner/)
 
-### Option 2: Using Git Command Line
+### Making Updates
 
+To deploy changes:
 ```bash
-# Initialize git repository
-git init
-
-# Add all files
 git add .
-
-# Commit
-git commit -m "Initial commit: Zone 8a Planting Calendar"
-
-# Add remote (replace with your repository URL)
-git remote add origin https://github.com/yourusername/gardenmap.git
-
-# Push to GitHub
-git branch -M main
-git push -u origin main
+git commit -m "Your commit message"
+git push
 ```
 
-Then enable GitHub Pages in your repository settings as described in Option 1.
+The site will automatically rebuild and deploy within 1-2 minutes.
 
 ## File Structure
 
