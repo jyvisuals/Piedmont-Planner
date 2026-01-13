@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zone 8a Planting Calendar</title>
+    <meta name="description" content="Interactive Zone 8a planting calendar with grid, timeline, and month views for vegetables and flowers.">
+    <meta name="theme-color" content="#000000">
+    <meta property="og:title" content="Zone 8a Planting Calendar">
+    <meta property="og:description" content="Interactive Zone 8a planting calendar with grid, timeline, and month views for vegetables and flowers.">
+    <meta property="og:type" content="website">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>Zone 8a Planting Calendar</h1>
+                    <p class="subtitle">A comprehensive guide to planting vegetables and flowers throughout the year in the NC Piedmont</p>
+                </div>
+                <div class="view-toggle" role="tablist" aria-label="View mode">
+                    <button id="gridViewBtn" class="btn active" type="button" role="tab" aria-selected="true" aria-controls="gridView" tabindex="0">Grid</button>
+                    <button id="monthViewBtn" class="btn" type="button" role="tab" aria-selected="false" aria-controls="monthView" tabindex="-1">Month</button>
+                </div>
+            </div>
+        </header>
+
+        <main id="main" tabindex="-1">
+            <noscript>
+                <div class="no-results">This page needs JavaScript enabled to render the calendar.</div>
+            </noscript>
+
+            <div class="controls" aria-label="Calendar controls">
+                <div class="control-group">
+                    <h3>Filters</h3>
+                    <div class="filter-controls" role="group" aria-label="Filters">
+                        <label class="sr-only" for="searchInput">Search plants</label>
+                        <input type="text" id="searchInput" placeholder="Search plants..." class="search-input" autocomplete="off" spellcheck="false" aria-describedby="resultsSummary">
+
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="showFlowers" checked>
+                            <span>Show Flowers</span>
+                        </label>
+
+                        <button id="resetFilters" class="btn btn-secondary" type="button">Reset Filters</button>
+                    </div>
+                    <div id="resultsSummary" class="results-summary" aria-live="polite"></div>
+                </div>
+
+                <div class="control-group legend-group" aria-label="Activity filter">
+                    <div class="legend-items">
+                        <button class="legend-item active" data-activity="all" type="button">
+                            <span class="legend-badge activity-all">All</span>
+                        </button>
+                        <button class="legend-item" data-activity="si" type="button">
+                            <span class="legend-badge activity-si">si</span>
+                            <span>Sow Indoors</span>
+                        </button>
+                        <button class="legend-item" data-activity="sg" type="button">
+                            <span class="legend-badge activity-sg">sg</span>
+                            <span>Sow Greenhouse</span>
+                        </button>
+                        <button class="legend-item" data-activity="s" type="button">
+                            <span class="legend-badge activity-s">s</span>
+                            <span>Sow Outdoors</span>
+                        </button>
+                        <button class="legend-item" data-activity="t" type="button">
+                            <span class="legend-badge activity-t">t</span>
+                            <span>Transplant</span>
+                        </button>
+                        <button class="legend-item" data-activity="tg" type="button">
+                            <span class="legend-badge activity-tg">tg</span>
+                            <span>Transplant Greenhouse</span>
+                        </button>
+                        <button class="legend-item" data-activity="h" type="button">
+                            <span class="legend-badge activity-h">h</span>
+                            <span>Harvest</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid View -->
+            <div id="gridView" class="view active" role="tabpanel" aria-labelledby="gridViewBtn">
+                <div class="table-container">
+                    <table id="gridTable" class="calendar-table">
+                        <caption class="sr-only">Planting calendar by half-month</caption>
+                        <thead>
+                            <tr>
+                                <th class="sticky-col plant-col" scope="col">Plant</th>
+                                <th colspan="2" scope="colgroup">Jan</th>
+                                <th colspan="2" scope="colgroup">Feb</th>
+                                <th colspan="2" scope="colgroup">Mar</th>
+                                <th colspan="2" scope="colgroup">Apr</th>
+                                <th colspan="2" scope="colgroup">May</th>
+                                <th colspan="2" scope="colgroup">Jun</th>
+                                <th colspan="2" scope="colgroup">Jul</th>
+                                <th colspan="2" scope="colgroup">Aug</th>
+                                <th colspan="2" scope="colgroup">Sep</th>
+                                <th colspan="2" scope="colgroup">Oct</th>
+                                <th colspan="2" scope="colgroup">Nov</th>
+                                <th colspan="2" scope="colgroup">Dec</th>
+                            </tr>
+                            <tr class="half-month-header">
+                                <th class="sticky-col plant-col" aria-hidden="true"></th>
+                                <th scope="col">1-15</th>
+                                <th scope="col">16-31</th>
+                                <th scope="col">1-15</th>
+                                <th scope="col">16-28</th>
+                                <th scope="col">1-15</th>
+                                <th scope="col">16-31</th>
+                                <th scope="col">1-15</th>
+                                <th scope="col">16-30</th>
+                                <th scope="col">1-15</th>
+                                <th scope="col">16-31</th>
+                                <th scope="col">1-15</th>
+                                <th scope="col">16-30</th>
+                                <th scope="col">1-15</th>
+                                <th scope="col">16-31</th>
+                                <th scope="col">1-15</th>
+                                <th scope="col">16-31</th>
+                                <th scope="col">1-15</th>
+                                <th scope="col">16-30</th>
+                                <th scope="col">1-15</th>
+                                <th scope="col">16-31</th>
+                                <th scope="col">1-15</th>
+                                <th scope="col">16-30</th>
+                                <th scope="col">1-15</th>
+                                <th scope="col">16-31</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gridTableBody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Month View -->
+            <div id="monthView" class="view" role="tabpanel" aria-labelledby="monthViewBtn" hidden>
+                <div class="month-selector">
+                    <div class="month-title-with-nav">
+                        <h2 id="currentMonthTitle">January</h2>
+                        <button id="prevMonth" class="btn month-nav-btn" type="button">&larr;</button>
+                        <button id="nextMonth" class="btn month-nav-btn" type="button">&rarr;</button>
+                    </div>
+                </div>
+                <div id="monthContent">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Zone 8a Planting Calendar | <a href="https://github.com" target="_blank" rel="noopener noreferrer">View on GitHub</a></p>
+        </footer>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
