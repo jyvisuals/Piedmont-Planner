@@ -175,6 +175,28 @@ function getActivityColorValue(activity) {
     return colors[activity] || '#c1604a';
 }
 
+function blendColors(activities) {
+    if (activities.length === 0) return '#c1604a';
+    if (activities.length === 1) return getActivityColorValue(activities[0]);
+
+    // Convert hex to RGB and average
+    let r = 0, g = 0, b = 0;
+
+    activities.forEach(activity => {
+        const hex = getActivityColorValue(activity);
+        const rgb = parseInt(hex.slice(1), 16);
+        r += (rgb >> 16) & 255;
+        g += (rgb >> 8) & 255;
+        b += rgb & 255;
+    });
+
+    r = Math.round(r / activities.length);
+    g = Math.round(g / activities.length);
+    b = Math.round(b / activities.length);
+
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
 function createActivityBadge(activity) {
     return `<span class="activity-badge ${getActivityColor(activity)}">${activity}</span>`;
 }
@@ -633,8 +655,7 @@ function renderGridView() {
             if (monthData.half1.length > 0) {
                 const activityDiv = document.createElement('div');
                 activityDiv.className = 'activity-cell has-activity';
-                const primaryActivity = monthData.half1[0];
-                activityDiv.style.backgroundColor = getActivityColorValue(primaryActivity);
+                activityDiv.style.backgroundColor = blendColors(monthData.half1);
                 activityDiv.textContent = monthData.half1.join(', ').toUpperCase();
                 half1Cell.appendChild(activityDiv);
             } else {
@@ -649,8 +670,7 @@ function renderGridView() {
             if (monthData.half2.length > 0) {
                 const activityDiv = document.createElement('div');
                 activityDiv.className = 'activity-cell has-activity';
-                const primaryActivity = monthData.half2[0];
-                activityDiv.style.backgroundColor = getActivityColorValue(primaryActivity);
+                activityDiv.style.backgroundColor = blendColors(monthData.half2);
                 activityDiv.textContent = monthData.half2.join(', ').toUpperCase();
                 half2Cell.appendChild(activityDiv);
             } else {
