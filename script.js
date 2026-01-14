@@ -207,71 +207,92 @@ function createActivityBadge(activity) {
 // Emoji Icon Mapping
 function getPlantIcon(plantName) {
     const iconMap = {
-        'Arugula': '🥬',
+        // Salad Greens
+        'Arugula': '🥗',
         'Lettuce, Head': '🥬',
         'Lettuce, Leaf': '🥬',
-        'Radishes': '🌱',
-        'Onions, green': '🧅',
         'Spinach': '🥬',
-        'Celery': '🥬',
-        'Onions, bulb': '🧅',
-        'Leek': '🧅',
+
+        // Leafy Greens
         'Kale': '🥬',
         'Collards': '🥬',
         'Bok Choy': '🥬',
-        'Chives': '🌿',
-        'Peas, snap (bush)': '🫛',
-        'Peas, vining (pole)': '🫛',
-        'Peas, bush': '🫛',
         'Mustard': '🥬',
-        'Parsley': '🌿',
         'Chard, Swiss': '🥬',
-        'Carrots': '🥕',
-        'Peppers': '🌶️',
-        'Tomatoes': '🍅',
-        'Strawberries': '🍓',
-        'Potatoes, Irish': '🥔',
-        'Eggplant': '🍆',
+        'Celery': '🥬',
+
+        // Brassicas
         'Cabbage': '🥬',
         'Cabbage, Chinese': '🥬',
         'Broccoli': '🥦',
         'Cauliflower': '🥦',
-        'Basil': '🌿',
-        'Kohlrabi': '🥬',
-        'Fennel': '🌿',
-        'Cilantro': '🌿',
-        'Turnips': '🥕',
-        'Sage': '🌿',
-        'Dill': '🌿',
-        'Borage': '🌿',
+        'Brussels': '🌰',
+        'Kohlrabi': '🫚',
+
+        // Root Vegetables
+        'Radishes': '🌱',
+        'Carrots': '🥕',
+        'Turnips': '🫚',
+        'Rutabaga': '🫚',
         'Beets': '🥕',
-        'Ginger': '🫚',
-        'Squash, summer': '🥒',
-        'Squash, winter': '🎃',
-        'Cucumbers': '🥒',
-        'Corn, sweet': '🌽',
-        'Cantaloupe': '🍈',
+
+        // Alliums
+        'Onions, green': '🧅',
+        'Onions, bulb': '🧅',
+        'Leek': '🧅',
+        'Garlic': '🧄',
+        'Chives': '🪴',
+
+        // Herbs
+        'Parsley': '🍃',
+        'Basil': '🌿',
+        'Cilantro': '🍃',
+        'Dill': '🍃',
+        'Sage': '🌿',
+        'Fennel': '🌿',
+        'Borage': '🌿',
+
+        // Legumes
+        'Peas, snap (bush)': '🫛',
+        'Peas, vining (pole)': '🫛',
+        'Peas, bush': '🫛',
         'Field Peas': '🫛',
         'Lima Bean (pole)': '🫘',
         'Lima Bean (bush)': '🫘',
-        'Watermelon': '🍉',
+
+        // Fruiting Vegetables
+        'Peppers': '🫑',
+        'Tomatoes': '🍅',
+        'Eggplant': '🍆',
         'Okra': '🌶️',
+        'Squash, summer': '🥒',
+        'Squash, winter': '🎃',
+        'Cucumbers': '🥒',
         'Pumpkin': '🎃',
-        'Brussels': '🥬',
+
+        // Tubers & Rhizomes
+        'Potatoes, Irish': '🥔',
         'Potatoes, sweet': '🍠',
-        'Rutabaga': '🥕',
-        'Garlic': '🧄'
+        'Ginger': '🫚',
+
+        // Grains & Melons
+        'Corn, sweet': '🌽',
+        'Cantaloupe': '🍈',
+        'Watermelon': '🍉',
+
+        // Berries
+        'Strawberries': '🍓'
     };
 
     const flowerMap = {
         'Yarrow': '🌼',
-        'Marigolds': '🌼',
+        'Marigolds': '🧡',
         'Echinacea': '🌸',
         'Chamomile': '🌼',
         'Moonflower': '🌕',
         'Sunflower': '🌻',
         'Zinnias': '🌺',
-        'Nasturtium': '🌺'
+        'Nasturtium': '🌼'
     };
 
     // Check flower map first
