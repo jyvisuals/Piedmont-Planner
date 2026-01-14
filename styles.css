@@ -25,15 +25,16 @@
     --yellow: #ffc300;
     --green: #2a9d8f;
 
-    /* Activity Colors - Earthy Natural Palette */
-    --color-si: #5b8ec4;
-    --color-t: #c1604a;
-    --color-s: #8b9d77;
-    --color-sg: #4a7c8f;
-    --color-tg: #d97638;
-    --color-h: #daa520;
-    --color-o: #9d84b7;
-    --color-B: #722f37;
+    /* Activity Colors - Harmonious Garden Palette */
+    /* Cool → warm progression designed for blending */
+    --color-si: #6FA8DC;  /* Cornflower blue - indoors, protected */
+    --color-s: #93C47D;   /* Pistachio green - earth, outdoors */
+    --color-sg: #76A5AF;  /* Slate blue - greenhouse glass */
+    --color-t: #B4A7D6;   /* Lavender - transition, moving plants */
+    --color-tg: #C9A4C4;  /* Orchid - greenhouse transition */
+    --color-h: #E6B84D;   /* Warm gold - ripe harvest */
+    --color-B: #9B7EBD;   /* Purple - bulbs */
+    --color-o: #A8B5A8;   /* Neutral sage - other */
 
     /* Null cell alternating shades */
     --empty-cell-odd: #fafafa;
@@ -639,6 +640,10 @@ header h1 {
     text-transform: uppercase;
     letter-spacing: 0.08em;
     padding: 2px 1px;
+}
+
+.activity-cell.greenhouse {
+    border-bottom: 3px solid rgba(0, 0, 0, 0.25);
 }
 
 .activity-badge {

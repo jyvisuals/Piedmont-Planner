@@ -164,19 +164,23 @@ function getActivityColor(activity) {
 }
 
 function getActivityColorValue(activity) {
+    // Harmonious garden-inspired palette designed for blending
+    // Cool → warm progression from seed to harvest
     const colors = {
-        'si': '#5b8ec4',
-        't': '#c1604a',
-        's': '#8b9d77',
-        'sg': '#4a7c8f',
-        'tg': '#d97638',
-        'h': '#daa520'
+        'si': '#6FA8DC',  // Cornflower blue - indoors, protected (cool start)
+        's': '#93C47D',   // Pistachio green - earth, outdoors (natural growth)
+        'sg': '#76A5AF',  // Slate blue - greenhouse glass (controlled)
+        't': '#B4A7D6',   // Lavender - transition, moving plants (mid-tone)
+        'tg': '#C9A4C4',  // Orchid - greenhouse transition (warm mid-tone)
+        'h': '#E6B84D',   // Warm gold - ripe harvest (warm end)
+        'B': '#9B7EBD',   // Purple - bulbs (earthy purple)
+        'o': '#A8B5A8'    // Neutral sage - other activities
     };
-    return colors[activity] || '#c1604a';
+    return colors[activity] || '#B4A7D6';
 }
 
 function blendColors(activities) {
-    if (activities.length === 0) return '#c1604a';
+    if (activities.length === 0) return '#B4A7D6';
     if (activities.length === 1) return getActivityColorValue(activities[0]);
 
     // Convert hex to RGB and average
@@ -654,7 +658,8 @@ function renderGridView() {
             const half1Cell = document.createElement('td');
             if (monthData.half1.length > 0) {
                 const activityDiv = document.createElement('div');
-                activityDiv.className = 'activity-cell has-activity';
+                const isGreenhouse = monthData.half1.some(a => a === 'sg' || a === 'tg');
+                activityDiv.className = isGreenhouse ? 'activity-cell has-activity greenhouse' : 'activity-cell has-activity';
                 activityDiv.style.backgroundColor = blendColors(monthData.half1);
                 activityDiv.textContent = monthData.half1.join(', ').toUpperCase();
                 half1Cell.appendChild(activityDiv);
@@ -669,7 +674,8 @@ function renderGridView() {
             const half2Cell = document.createElement('td');
             if (monthData.half2.length > 0) {
                 const activityDiv = document.createElement('div');
-                activityDiv.className = 'activity-cell has-activity';
+                const isGreenhouse = monthData.half2.some(a => a === 'sg' || a === 'tg');
+                activityDiv.className = isGreenhouse ? 'activity-cell has-activity greenhouse' : 'activity-cell has-activity';
                 activityDiv.style.backgroundColor = blendColors(monthData.half2);
                 activityDiv.textContent = monthData.half2.join(', ').toUpperCase();
                 half2Cell.appendChild(activityDiv);
