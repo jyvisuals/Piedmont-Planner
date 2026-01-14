@@ -25,14 +25,14 @@
     --yellow: #ffc300;
     --green: #2a9d8f;
 
-    /* Activity Colors - Harmonious Garden Palette */
-    /* Cool → warm progression designed for blending */
-    --color-si: #6FA8DC;  /* Cornflower blue - indoors, protected */
-    --color-s: #93C47D;   /* Pistachio green - earth, outdoors */
-    --color-sg: #76A5AF;  /* Slate blue - greenhouse glass */
-    --color-t: #B4A7D6;   /* Lavender - transition, moving plants */
-    --color-tg: #C9A4C4;  /* Orchid - greenhouse transition */
-    --color-h: #E6B84D;   /* Warm gold - ripe harvest */
+    /* Activity Colors - Simplified Palette */
+    /* Greenhouse indicated by border, not color */
+    --color-si: #6FA8DC;  /* Cornflower blue - sow indoors */
+    --color-s: #93C47D;   /* Pistachio green - sow outdoors */
+    --color-sg: #93C47D;  /* Same green (greenhouse = border) */
+    --color-t: #B4A7D6;   /* Lavender - transplant */
+    --color-tg: #B4A7D6;  /* Same lavender (greenhouse = border) */
+    --color-h: #E6B84D;   /* Warm gold - harvest */
     --color-B: #9B7EBD;   /* Purple - bulbs */
     --color-o: #A8B5A8;   /* Neutral sage - other */
 

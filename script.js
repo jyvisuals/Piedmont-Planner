@@ -164,17 +164,16 @@ function getActivityColor(activity) {
 }
 
 function getActivityColorValue(activity) {
-    // Harmonious garden-inspired palette designed for blending
-    // Cool → warm progression from seed to harvest
+    // Simplified palette - greenhouse distinction via border, not color
     const colors = {
-        'si': '#6FA8DC',  // Cornflower blue - indoors, protected (cool start)
-        's': '#93C47D',   // Pistachio green - earth, outdoors (natural growth)
-        'sg': '#76A5AF',  // Slate blue - greenhouse glass (controlled)
-        't': '#B4A7D6',   // Lavender - transition, moving plants (mid-tone)
-        'tg': '#C9A4C4',  // Orchid - greenhouse transition (warm mid-tone)
-        'h': '#E6B84D',   // Warm gold - ripe harvest (warm end)
-        'B': '#9B7EBD',   // Purple - bulbs (earthy purple)
-        'o': '#A8B5A8'    // Neutral sage - other activities
+        'si': '#6FA8DC',  // Cornflower blue - sow indoors
+        's': '#93C47D',   // Pistachio green - sow outdoors
+        'sg': '#93C47D',  // Same green - greenhouse indicated by border
+        't': '#B4A7D6',   // Lavender - transplant
+        'tg': '#B4A7D6',  // Same lavender - greenhouse indicated by border
+        'h': '#E6B84D',   // Warm gold - harvest (rarely used)
+        'B': '#9B7EBD',   // Purple - bulbs
+        'o': '#A8B5A8'    // Neutral sage - other
     };
     return colors[activity] || '#B4A7D6';
 }
