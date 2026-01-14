@@ -590,16 +590,8 @@ function filterPlants() {
         );
     }
 
-    // Filter by activity
-    if (state.filters.activity !== 'all') {
-        filtered = filtered.filter(plant => {
-            return MONTHS.some(month => {
-                const monthData = plant.months[month.id];
-                return monthData.half1.includes(state.filters.activity) ||
-                       monthData.half2.includes(state.filters.activity);
-            });
-        });
-    }
+    // Note: Activity filtering is now handled at cell level during rendering
+    // We don't filter out entire plants anymore
 
     state.filteredPlants = filtered;
     updateResultsSummary();
@@ -655,12 +647,23 @@ function renderGridView() {
 
             // Half 1
             const half1Cell = document.createElement('td');
-            if (monthData.half1.length > 0) {
+            const hasHalf1Activity = monthData.half1.length > 0;
+            const matchesFilter = state.filters.activity === 'all' || monthData.half1.includes(state.filters.activity);
+
+            if (hasHalf1Activity) {
                 const activityDiv = document.createElement('div');
                 const isGreenhouse = monthData.half1.some(a => a === 'sg' || a === 'tg');
-                activityDiv.className = isGreenhouse ? 'activity-cell has-activity greenhouse' : 'activity-cell has-activity';
-                activityDiv.style.backgroundColor = blendColors(monthData.half1);
-                activityDiv.textContent = monthData.half1.join(', ').toUpperCase();
+
+                // Only show color if cell matches activity filter
+                if (matchesFilter) {
+                    activityDiv.className = isGreenhouse ? 'activity-cell has-activity greenhouse' : 'activity-cell has-activity';
+                    activityDiv.style.backgroundColor = blendColors(monthData.half1);
+                    activityDiv.textContent = monthData.half1.join(', ').toUpperCase();
+                } else {
+                    // Faded out when not matching filter
+                    activityDiv.className = 'activity-cell has-activity filtered-out';
+                    activityDiv.textContent = monthData.half1.join(', ').toUpperCase();
+                }
                 half1Cell.appendChild(activityDiv);
             } else {
                 const activityDiv = document.createElement('div');
@@ -671,12 +674,23 @@ function renderGridView() {
 
             // Half 2
             const half2Cell = document.createElement('td');
-            if (monthData.half2.length > 0) {
+            const hasHalf2Activity = monthData.half2.length > 0;
+            const matchesFilter2 = state.filters.activity === 'all' || monthData.half2.includes(state.filters.activity);
+
+            if (hasHalf2Activity) {
                 const activityDiv = document.createElement('div');
                 const isGreenhouse = monthData.half2.some(a => a === 'sg' || a === 'tg');
-                activityDiv.className = isGreenhouse ? 'activity-cell has-activity greenhouse' : 'activity-cell has-activity';
-                activityDiv.style.backgroundColor = blendColors(monthData.half2);
-                activityDiv.textContent = monthData.half2.join(', ').toUpperCase();
+
+                // Only show color if cell matches activity filter
+                if (matchesFilter2) {
+                    activityDiv.className = isGreenhouse ? 'activity-cell has-activity greenhouse' : 'activity-cell has-activity';
+                    activityDiv.style.backgroundColor = blendColors(monthData.half2);
+                    activityDiv.textContent = monthData.half2.join(', ').toUpperCase();
+                } else {
+                    // Faded out when not matching filter
+                    activityDiv.className = 'activity-cell has-activity filtered-out';
+                    activityDiv.textContent = monthData.half2.join(', ').toUpperCase();
+                }
                 half2Cell.appendChild(activityDiv);
             } else {
                 const activityDiv = document.createElement('div');

@@ -646,6 +646,12 @@ header h1 {
     border-bottom: 3px solid rgba(0, 0, 0, 0.25);
 }
 
+.activity-cell.filtered-out {
+    background-color: var(--gray-90) !important;
+    color: rgba(0, 0, 0, 0.15);
+    opacity: 0.4;
+}
+
 .activity-badge {
     display: none;
 }
