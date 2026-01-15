@@ -5,6 +5,7 @@ let state = {
     filters: {
         search: '',
         showFlowers: true,
+        showGreenhouse: true,
         activity: 'all',
         month: 'all'
     },
@@ -26,6 +27,7 @@ const elements = {
     // Filter controls
     searchInput: document.getElementById('searchInput'),
     showFlowersCheckbox: document.getElementById('showFlowers'),
+    showGreenhouseCheckbox: document.getElementById('showGreenhouse'),
     activityFilter: document.getElementById('activityFilter'),
     monthFilter: document.getElementById('monthFilter'),
     resetFilters: document.getElementById('resetFilters'),
@@ -67,11 +69,19 @@ function updateResultsSummary() {
     const filters = [];
     if (state.filters.search) filters.push(`search: "${state.filters.search}"`);
     if (!state.filters.showFlowers) filters.push('flowers hidden');
+    if (!state.filters.showGreenhouse) filters.push('greenhouse hidden');
     if (state.filters.activity !== 'all') filters.push(`activity: ${state.filters.activity.toUpperCase()}`);
 
     elements.resultsSummary.textContent = filters.length
         ? `Showing ${shown} of ${total} plants. Filters: ${filters.join(', ')}.`
         : `Showing ${shown} of ${total} plants.`;
+}
+
+function updateGreenhouseFilterVisibility() {
+    const greenhouseButtons = document.querySelectorAll('[data-activity="sg"], [data-activity="tg"]');
+    greenhouseButtons.forEach(btn => {
+        btn.style.display = state.filters.showGreenhouse ? '' : 'none';
+    });
 }
 
 
@@ -151,6 +161,14 @@ function handleTabKeydown(e) {
 }
 
 // Helper Functions
+function filterGreenhouseActivities(activities) {
+    // Remove greenhouse activities when greenhouse filter is off
+    if (!state.filters.showGreenhouse) {
+        return activities.filter(a => a !== 'sg' && a !== 'tg');
+    }
+    return activities;
+}
+
 function getActivityColor(activity) {
     const colors = {
         'si': 'activity-si',
@@ -204,122 +222,104 @@ function createActivityBadge(activity) {
     return `<span class="activity-badge ${getActivityColor(activity)}">${activity}</span>`;
 }
 
-// Emoji Icon Mapping
+// SVG Icon Mapping with Emoji Fallbacks
 function getPlantIcon(plantName) {
-    const iconMap = {
-        // Salad Greens
-        'Arugula': '🥗',
-        'Lettuce, Head': '🥬',
-        'Lettuce, Leaf': '🥬',
-        'Spinach': '🥬',
+    // Map plant names to SVG icon filenames
+    const svgIconMap = {
+        // Vegetables
+        'Arugula': 'arugula',
+        'Basil': 'basil',
+        'Beets': 'beet',
+        'Bok Choy': 'bok-choy',
+        'Borage': 'borage',
+        'Broccoli': 'broccoli',
+        'Brussels': 'brussels',
+        'Cabbage': 'cabbage',
+        'Cabbage (Chinese)': 'cabbage-chinese',
+        'Cantaloupe': 'cantaloupe',
+        'Carrots': 'carrot',
+        'Cauliflower': 'cauliflower',
+        'Celery': 'celery',
+        'Chamomile': 'chamomile',
+        'Chard, Swiss': 'chard',
+        'Chives': 'chive',
+        'Cilantro': 'cilantro',
+        'Collard Greens': 'collard',
+        'Corn (Sweet)': 'corn',
+        'Cucumbers': 'cucumber',
+        'Dill': 'dill',
+        'Echinacea': 'echinacea',
+        'Eggplant': 'eggplant',
+        'Fennel': 'fennel',
+        'Garlic': 'garlic',
+        'Ginger': 'ginger',
+        'Kale': 'kale',
+        'Kohlrabi': 'kohlrabi',
+        'Leek': 'leek',
+        'Lettuce, Head': 'lettuce-head',
+        'Lettuce, Leaf': 'lettuce-leaf',
+        'Lima Bean (Bush)': 'lima-bean',
+        'Lima Bean (Pole)': 'lima-bean',
+        'Mustard': 'mustard',
+        'Okra': 'okra',
+        'Onions, Bulb': 'onion',
+        'Onions, Green': 'green-onion',
+        'Parsley': 'parsley',
+        'Parsnips': 'parsnip',
+        'Peas (Field)': 'pea',
+        'Peas, Bush': 'pea',
+        'Peas, Vining': 'pea',
+        'Snap Pea (Bush)': 'pea',
+        'Snap Pea (Pole)': 'pea',
+        'Peppers': 'pepper',
+        'Potatoes (Irish)': 'potato',
+        'Potatoes (Sweet)': 'sweet-potato',
+        'Pumpkin': 'pumpkin',
+        'Radishes': 'radish',
+        'Rutabaga': 'rutabaga',
+        'Sage': 'sage',
+        'Spinach': 'spinach',
+        'Squash (Summer)': 'summer-squash',
+        'Squash (Winter)': 'winter-squash',
+        'Strawberries (Bare-root)': 'strawberry',
+        'Sunflower': 'sunflower',
+        'Tomatoes': 'tomato',
+        'Turnips': 'turnip',
+        'Watermelon': 'watermelon',
 
-        // Leafy Greens
-        'Kale': '🥬',
-        'Collards': '🥬',
-        'Bok Choy': '🥬',
-        'Mustard': '🥬',
-        'Chard, Swiss': '🥬',
-        'Celery': '🥬',
-
-        // Brassicas
-        'Cabbage': '🥬',
-        'Cabbage, Chinese': '🥬',
-        'Broccoli': '🥦',
-        'Cauliflower': '🥦',
-        'Brussels': '🌰',
-        'Kohlrabi': '🫚',
-
-        // Root Vegetables
-        'Radishes': '🌱',
-        'Carrots': '🥕',
-        'Turnips': '🫚',
-        'Rutabaga': '🫚',
-        'Beets': '🥕',
-
-        // Alliums
-        'Onions, green': '🧅',
-        'Onions, bulb': '🧅',
-        'Leek': '🧅',
-        'Garlic': '🧄',
-        'Chives': '🪴',
-
-        // Herbs
-        'Parsley': '🍃',
-        'Basil': '🌿',
-        'Cilantro': '🍃',
-        'Dill': '🍃',
-        'Sage': '🌿',
-        'Fennel': '🌿',
-        'Borage': '🌿',
-
-        // Legumes
-        'Peas, snap (bush)': '🫛',
-        'Peas, vining (pole)': '🫛',
-        'Peas, bush': '🫛',
-        'Field Peas': '🫛',
-        'Lima Bean (pole)': '🫘',
-        'Lima Bean (bush)': '🫘',
-
-        // Fruiting Vegetables
-        'Peppers': '🫑',
-        'Tomatoes': '🍅',
-        'Eggplant': '🍆',
-        'Okra': '🌶️',
-        'Squash, summer': '🥒',
-        'Squash, winter': '🎃',
-        'Cucumbers': '🥒',
-        'Pumpkin': '🎃',
-
-        // Tubers & Rhizomes
-        'Potatoes, Irish': '🥔',
-        'Potatoes, sweet': '🍠',
-        'Ginger': '🫚',
-
-        // Grains & Melons
-        'Corn, sweet': '🌽',
-        'Cantaloupe': '🍈',
-        'Watermelon': '🍉',
-
-        // Berries
-        'Strawberries': '🍓'
+        // Flowers
+        'Yarrow': 'yarrow',
+        'Marigolds': 'marigold',
+        'Moonflower': 'moonflower',
+        'Sunflower': 'sunflower',
+        'Calendula': 'calendula.png',
+        'Snapdragons': 'snapdragon.png'
     };
 
-    const flowerMap = {
-        'Yarrow': '🌼',
-        'Marigolds': '🧡',
-        'Echinacea': '🌸',
-        'Chamomile': '🌼',
-        'Moonflower': '🌕',
-        'Sunflower': '🌻',
-        'Zinnias': '🌺',
-        'Nasturtium': '🌼'
+    // Emoji icons for flowers without SVG/PNG
+    const emojiFlowers = {
+        'Zinnias': '🌺',          // Bright hibiscus-like flower
+        'Nasturtium': '🌼',       // Yellow/orange daisy
+        'Stock': '🌸',            // Pink blossom for fragrant stock
+        'Echinacea': '🌸',        // Purple coneflower
+        'Chamomile': '🌼'         // Small white daisy
     };
 
-    // Check flower map first
-    if (flowerMap[plantName]) {
-        return flowerMap[plantName];
+    // Check for emoji flower first
+    if (emojiFlowers[plantName]) {
+        return { type: 'emoji', icon: emojiFlowers[plantName] };
     }
 
-    // Check plant map
-    if (iconMap[plantName]) {
-        return iconMap[plantName];
+    // Check for SVG/PNG icon
+    if (svgIconMap[plantName]) {
+        const iconFile = svgIconMap[plantName];
+        // If filename already includes extension, use as-is; otherwise add .svg
+        const path = iconFile.includes('.') ? `icons/${iconFile}` : `icons/${iconFile}.svg`;
+        return { type: 'svg', path: path };
     }
 
-    // Check for partial matches
-    for (const [key, emoji] of Object.entries(iconMap)) {
-        if (plantName.includes(key)) {
-            return emoji;
-        }
-    }
-
-    for (const [key, emoji] of Object.entries(flowerMap)) {
-        if (plantName.includes(key)) {
-            return emoji;
-        }
-    }
-
-    // Default
-    return '🌱';
+    // Default fallback
+    return { type: 'emoji', icon: '🌱' };
 }
 
 function getFlowerIcon(plantName) {
@@ -379,8 +379,17 @@ function renderGridView() {
         const iconContainer = document.createElement('span');
         iconContainer.className = 'plant-icon';
         iconContainer.setAttribute('aria-hidden', 'true');
-        const icon = plant.type === 'flower' ? getFlowerIcon(plant.name) : getPlantIcon(plant.name);
-        iconContainer.textContent = icon;
+        const iconData = plant.type === 'flower' ? getFlowerIcon(plant.name) : getPlantIcon(plant.name);
+
+        if (iconData.type === 'svg') {
+            const img = document.createElement('img');
+            img.src = iconData.path;
+            img.alt = plant.name;
+            img.className = 'plant-icon-svg';
+            iconContainer.appendChild(img);
+        } else {
+            iconContainer.textContent = iconData.icon;
+        }
 
         const plantName = document.createElement('span');
         plantName.className = 'plant-name';
@@ -398,22 +407,23 @@ function renderGridView() {
 
             // Half 1
             const half1Cell = document.createElement('td');
-            const hasHalf1Activity = monthData.half1.length > 0;
+            const filteredHalf1 = filterGreenhouseActivities(monthData.half1);
+            const hasHalf1Activity = filteredHalf1.length > 0;
             const matchesFilter = state.filters.activity === 'all' || monthData.half1.includes(state.filters.activity);
 
             if (hasHalf1Activity) {
                 const activityDiv = document.createElement('div');
-                const isGreenhouse = monthData.half1.some(a => a === 'sg' || a === 'tg');
+                const isGreenhouse = state.filters.showGreenhouse && monthData.half1.some(a => a === 'sg' || a === 'tg');
 
                 // Only show color if cell matches activity filter
                 if (matchesFilter) {
                     activityDiv.className = isGreenhouse ? 'activity-cell has-activity greenhouse' : 'activity-cell has-activity';
-                    activityDiv.style.backgroundColor = blendColors(monthData.half1);
-                    activityDiv.textContent = monthData.half1.join(', ').toUpperCase();
+                    activityDiv.style.backgroundColor = blendColors(filteredHalf1);
+                    activityDiv.textContent = filteredHalf1.join(', ').toUpperCase();
                 } else {
                     // Faded out when not matching filter
                     activityDiv.className = 'activity-cell has-activity filtered-out';
-                    activityDiv.textContent = monthData.half1.join(', ').toUpperCase();
+                    activityDiv.textContent = filteredHalf1.join(', ').toUpperCase();
                 }
                 half1Cell.appendChild(activityDiv);
             } else {
@@ -425,22 +435,23 @@ function renderGridView() {
 
             // Half 2
             const half2Cell = document.createElement('td');
-            const hasHalf2Activity = monthData.half2.length > 0;
+            const filteredHalf2 = filterGreenhouseActivities(monthData.half2);
+            const hasHalf2Activity = filteredHalf2.length > 0;
             const matchesFilter2 = state.filters.activity === 'all' || monthData.half2.includes(state.filters.activity);
 
             if (hasHalf2Activity) {
                 const activityDiv = document.createElement('div');
-                const isGreenhouse = monthData.half2.some(a => a === 'sg' || a === 'tg');
+                const isGreenhouse = state.filters.showGreenhouse && monthData.half2.some(a => a === 'sg' || a === 'tg');
 
                 // Only show color if cell matches activity filter
                 if (matchesFilter2) {
                     activityDiv.className = isGreenhouse ? 'activity-cell has-activity greenhouse' : 'activity-cell has-activity';
-                    activityDiv.style.backgroundColor = blendColors(monthData.half2);
-                    activityDiv.textContent = monthData.half2.join(', ').toUpperCase();
+                    activityDiv.style.backgroundColor = blendColors(filteredHalf2);
+                    activityDiv.textContent = filteredHalf2.join(', ').toUpperCase();
                 } else {
                     // Faded out when not matching filter
                     activityDiv.className = 'activity-cell has-activity filtered-out';
-                    activityDiv.textContent = monthData.half2.join(', ').toUpperCase();
+                    activityDiv.textContent = filteredHalf2.join(', ').toUpperCase();
                 }
                 half2Cell.appendChild(activityDiv);
             } else {
@@ -604,15 +615,26 @@ function renderMonthView() {
 
         group.plants.forEach(plant => {
             const card = document.createElement('div');
-            card.className = 'month-plant-card';
-            if (plant.type === 'flower') {
-                card.style.backgroundColor = '#fef5e7';
-            }
+            card.className = plant.type === 'flower' ? 'month-plant-card flower-card' : 'month-plant-card';
 
-            const icon = plant.type === 'flower' ? getFlowerIcon(plant.name) : getPlantIcon(plant.name);
+            const iconData = plant.type === 'flower' ? getFlowerIcon(plant.name) : getPlantIcon(plant.name);
 
             const header = document.createElement('h4');
-            header.textContent = icon + ' ' + plant.name;
+
+            if (iconData.type === 'svg') {
+                const img = document.createElement('img');
+                img.src = iconData.path;
+                img.alt = plant.name;
+                img.className = 'month-plant-icon-svg';
+                img.style.width = '20px';
+                img.style.height = '20px';
+                img.style.marginRight = '6px';
+                img.style.verticalAlign = 'middle';
+                header.appendChild(img);
+                header.appendChild(document.createTextNode(plant.name));
+            } else {
+                header.textContent = iconData.icon + ' ' + plant.name;
+            }
 
             const info = document.createElement('div');
             info.className = 'month-plant-info';
@@ -716,16 +738,19 @@ function resetFilters() {
     state.filters = {
         search: '',
         showFlowers: true,
+        showGreenhouse: true,
         activity: 'all'
     };
 
     elements.searchInput.value = '';
     elements.showFlowersCheckbox.checked = true;
+    elements.showGreenhouseCheckbox.checked = true;
 
     // Reset legend active state
     document.querySelectorAll('.legend-item').forEach(btn => btn.classList.remove('active'));
     document.querySelector('.legend-item[data-activity="all"]').classList.add('active');
 
+    updateGreenhouseFilterVisibility();
     filterPlants();
 }
 
@@ -756,6 +781,22 @@ if (elements.searchInput) {
 if (elements.showFlowersCheckbox) {
     elements.showFlowersCheckbox.addEventListener('change', (e) => {
         state.filters.showFlowers = e.target.checked;
+        filterPlants();
+    });
+}
+
+if (elements.showGreenhouseCheckbox) {
+    elements.showGreenhouseCheckbox.addEventListener('change', (e) => {
+        state.filters.showGreenhouse = e.target.checked;
+
+        // If greenhouse is turned off and a greenhouse activity is selected, reset to 'all'
+        if (!e.target.checked && (state.filters.activity === 'sg' || state.filters.activity === 'tg')) {
+            state.filters.activity = 'all';
+            document.querySelectorAll('.legend-item').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.legend-item[data-activity="all"]').classList.add('active');
+        }
+
+        updateGreenhouseFilterVisibility();
         filterPlants();
     });
 }
@@ -803,6 +844,7 @@ document.addEventListener('DOMContentLoaded', () => {
     syncViewUI(state.currentView);
 
     // Initial render
+    updateGreenhouseFilterVisibility();
     filterPlants();
     applyNowEmphasisToGrid();
 });

@@ -39,6 +39,9 @@
     /* Null cell alternating shades */
     --empty-cell-odd: #fafafa;
     --empty-cell-even: #f0f0f0;
+
+    /* Flower highlight color */
+    --flower-bg: #fffaed;
 }
 
 body {
@@ -331,6 +334,16 @@ header h1 {
     background-color: var(--gray-95);
 }
 
+.checkbox-label.flowers-label {
+    background-color: var(--flower-bg);
+    border-color: var(--gray-80);
+}
+
+.checkbox-label.flowers-label:hover {
+    background-color: var(--flower-bg);
+    border-color: var(--black);
+}
+
 .checkbox-label input[type="checkbox"] {
     width: 16px;
     height: 16px;
@@ -402,14 +415,14 @@ header h1 {
 
 /* Activity Badge Colors */
 .activity-all { background-color: var(--black); color: var(--white); }
-.activity-si { background-color: var(--color-si); }
-.activity-t { background-color: var(--color-t); }
-.activity-s { background-color: var(--color-s); }
-.activity-sg { background-color: var(--color-sg); }
-.activity-tg { background-color: var(--color-tg); color: var(--black); }
-.activity-h { background-color: var(--color-h); color: var(--black); }
-.activity-o { background-color: var(--color-o); }
-.activity-B { background-color: var(--color-B); }
+.activity-si { background-color: var(--color-si); color: rgba(0, 0, 0, 0.3); }
+.activity-t { background-color: var(--color-t); color: rgba(0, 0, 0, 0.3); }
+.activity-s { background-color: var(--color-s); color: rgba(0, 0, 0, 0.3); }
+.activity-sg { background-color: var(--color-sg); color: rgba(0, 0, 0, 0.3); border-bottom: 3px solid rgba(0, 0, 0, 0.25); }
+.activity-tg { background-color: var(--color-tg); color: rgba(0, 0, 0, 0.3); border-bottom: 3px solid rgba(0, 0, 0, 0.25); }
+.activity-h { background-color: var(--color-h); color: rgba(0, 0, 0, 0.3); }
+.activity-o { background-color: var(--color-o); color: rgba(0, 0, 0, 0.3); }
+.activity-B { background-color: var(--color-B); color: rgba(0, 0, 0, 0.3); }
 
 /* Views */
 .view {
@@ -430,6 +443,7 @@ header h1 {
     padding: 0;
     max-height: calc(100vh - 300px);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling on iOS */
 }
 
 .calendar-table {
@@ -526,10 +540,33 @@ header h1 {
     gap: 6px;
 }
 
+/* Flower row highlighting */
+.calendar-table .flower-row .sticky-col {
+    background-color: var(--flower-bg);
+}
+
+.calendar-table .flower-row td {
+    background-color: var(--flower-bg);
+}
+
 .plant-icon {
     font-size: 1rem;
     line-height: 1;
     flex-shrink: 0;
+}
+
+.plant-icon-svg {
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.month-plant-icon-svg {
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .plant-name {
@@ -739,6 +776,10 @@ header h1 {
     border-color: var(--gray-30);
 }
 
+.month-plant-card.flower-card {
+    background-color: var(--flower-bg);
+}
+
 .month-plant-card h4 {
     color: var(--black);
     margin-bottom: 2px;
@@ -835,7 +876,7 @@ footer a:hover {
 
 @media (max-width: 768px) {
     header {
-        padding: 16px 24px;
+        padding: 16px 20px;
     }
 
     header h1 {
@@ -843,12 +884,13 @@ footer a:hover {
     }
 
     .subtitle {
-        font-size: 0.7rem;
+        font-size: 0.75rem;
+        line-height: 1.5;
     }
 
     .controls,
     .legend {
-        padding: 16px 24px;
+        padding: 16px 20px;
     }
 
     .button-group {
@@ -858,28 +900,98 @@ footer a:hover {
     .filter-controls {
         flex-direction: column;
         align-items: stretch;
+        gap: 12px;
     }
 
     .search-input {
         min-width: 100%;
+        font-size: 16px; /* Prevents iOS zoom on focus */
+        padding: 10px 12px;
     }
 
+    /* Bigger touch targets for legend items */
     .legend-items {
         grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 10px;
     }
 
+    .legend-item {
+        padding: 10px 12px;
+        font-size: 0.7rem;
+        min-height: 44px; /* iOS recommended touch target */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Better button touch targets */
+    .btn {
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 0.85rem;
+    }
+
+    /* Table adjustments */
     .calendar-table {
-        font-size: 0.55rem;
+        font-size: 0.6rem;
     }
 
     .calendar-table th,
     .calendar-table td {
-        padding: 2px;
+        padding: 4px 2px;
     }
 
+    /* Bigger plant icons on mobile */
+    .plant-icon-svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .plant-name {
+        font-size: 0.75rem;
+    }
+
+    /* Month view improvements */
     #monthContent {
         grid-template-columns: 1fr;
         padding: 16px;
+    }
+
+    .month-plant-card {
+        padding: 12px;
+    }
+
+    .month-plant-icon-svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    /* Add scroll hint for table */
+    .table-container::after {
+        content: '← Scroll horizontally →';
+        position: sticky;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
+        padding: 8px;
+        text-align: center;
+        font-size: 0.7rem;
+        color: var(--gray-30);
+        pointer-events: none;
+        display: block;
+    }
+
+    /* Better sticky column shadow on mobile */
+    .calendar-table tbody .sticky-col {
+        box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+    }
+
+    /* Better focus visibility on mobile */
+    button:focus-visible,
+    .legend-item:focus-visible {
+        outline: 3px solid var(--blue);
+        outline-offset: 2px;
     }
 }
 
@@ -889,7 +1001,12 @@ footer a:hover {
     }
 
     header h1 {
-        font-size: 1.2rem;
+        font-size: 1.25rem;
+        line-height: 1.3;
+    }
+
+    .subtitle {
+        font-size: 0.7rem;
     }
 
     .controls,
@@ -897,8 +1014,46 @@ footer a:hover {
         padding: 12px 16px;
     }
 
+    /* Full width buttons */
     .btn {
         width: 100%;
+        min-height: 48px;
+        font-size: 0.9rem;
+    }
+
+    .view-toggle .btn {
+        min-height: 44px;
+    }
+
+    /* Even bigger touch targets */
+    .legend-item {
+        min-height: 48px;
+        font-size: 0.75rem;
+    }
+
+    /* Better table readability */
+    .calendar-table {
+        font-size: 0.55rem;
+    }
+
+    .sticky-col {
+        min-width: 100px; /* Ensure plant names are readable */
+    }
+
+    /* Month navigation buttons */
+    .month-nav button {
+        min-height: 48px;
+        min-width: 48px;
+    }
+
+    /* Checkbox and filter controls */
+    input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+    }
+
+    label {
+        font-size: 0.85rem;
     }
 }
 
