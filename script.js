@@ -620,39 +620,45 @@ function renderMonthView() {
 
             const iconData = plant.type === 'flower' ? getFlowerIcon(plant.name) : getPlantIcon(plant.name);
 
-            const header = document.createElement('h4');
+            // Icon container (left side)
+            const iconContainer = document.createElement('div');
+            iconContainer.className = 'month-plant-icon-container';
 
             if (iconData.type === 'svg') {
                 const img = document.createElement('img');
                 img.src = iconData.path;
                 img.alt = plant.name;
                 img.className = 'month-plant-icon-svg';
-                img.style.width = '20px';
-                img.style.height = '20px';
-                img.style.marginRight = '6px';
-                img.style.verticalAlign = 'middle';
-                header.appendChild(img);
-                header.appendChild(document.createTextNode(plant.name));
+                iconContainer.appendChild(img);
             } else {
-                header.textContent = iconData.icon + ' ' + plant.name;
+                iconContainer.textContent = iconData.icon;
             }
 
-            const info = document.createElement('div');
-            info.className = 'month-plant-info';
+            // Info container (right side)
+            const infoContainer = document.createElement('div');
+            infoContainer.className = 'month-plant-info-container';
+
+            const nameEl = document.createElement('div');
+            nameEl.className = 'month-plant-name';
+            nameEl.textContent = plant.name;
+            infoContainer.appendChild(nameEl);
 
             if (plant.spacing) {
-                const spacingSpan = document.createElement('span');
-                spacingSpan.textContent = `📏 ${plant.spacing}" apart`;
-                info.appendChild(spacingSpan);
-            }
-            if (plant.daysToHarvest) {
-                const daysSpan = document.createElement('span');
-                daysSpan.textContent = `⏱️ ${plant.daysToHarvest} days`;
-                info.appendChild(daysSpan);
+                const spacingEl = document.createElement('div');
+                spacingEl.className = 'month-plant-spacing';
+                spacingEl.textContent = `${plant.spacing}" apart`;
+                infoContainer.appendChild(spacingEl);
             }
 
-            card.appendChild(header);
-            card.appendChild(info);
+            if (plant.daysToHarvest) {
+                const daysEl = document.createElement('div');
+                daysEl.className = 'month-plant-days';
+                daysEl.textContent = plant.daysToHarvest;
+                infoContainer.appendChild(daysEl);
+            }
+
+            card.appendChild(iconContainer);
+            card.appendChild(infoContainer);
             plantsGrid.appendChild(card);
         });
 
