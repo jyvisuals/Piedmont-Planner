@@ -42,6 +42,16 @@
 
     /* Flower highlight color */
     --flower-bg: #fffaed;
+    --flower-bg-alt: #f5f0d8;
+
+    /* Grid column sizing */
+    --grid-half-month-width: 28px;
+}
+
+@media (max-width: 768px) {
+    :root {
+        --grid-half-month-width: 20px;
+    }
 }
 
 body {
@@ -53,6 +63,7 @@ body {
     letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
     text-rendering: geometricPrecision;
+    padding-bottom: 30px;
 }
 
 .container {
@@ -114,6 +125,7 @@ body {
     margin: 0;
     font-size: 0.65rem;
     color: var(--gray-30);
+    display: none;
 }
 
 .btn:focus-visible,
@@ -374,6 +386,7 @@ header h1 {
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    position: relative;
 }
 
 .checkbox-label:hover {
@@ -394,6 +407,47 @@ header h1 {
     width: 16px;
     height: 16px;
     cursor: pointer;
+}
+
+/* Shared tooltip styles */
+.checkbox-label[data-tooltip]::after,
+.legend-item::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    width: max-content;
+    max-width: 200px;
+    padding: 6px 10px;
+    background-color: var(--black);
+    color: var(--white);
+    border: 1px solid var(--black);
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 400;
+    font-style: normal;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    line-height: 1.4;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 9999;
+    white-space: normal;
+    text-align: center;
+}
+
+.checkbox-label[data-tooltip]:hover::after,
+.legend-item:hover::after {
+    opacity: 1;
+}
+
+.checkbox-with-tooltip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
 }
 
 @media (max-width: 768px) {
@@ -429,6 +483,7 @@ header h1 {
     padding: 6px 10px;
     cursor: pointer;
     transition: all 0.15s ease;
+    position: relative;
 }
 
 .legend-item:hover {
@@ -483,19 +538,64 @@ header h1 {
 /* Grid View */
 .table-container {
     overflow-x: auto;
+    overflow-y: visible;
     position: relative;
     margin: 0;
     padding: 0;
-    max-height: calc(100vh - 300px);
-    overflow-y: auto;
     -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling on iOS */
+}
+
+/* Sticky header outside the horizontal scroll container (keeps header sticky on page scroll) */
+.grid-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--gray-95);
+    border-bottom: 1px solid var(--gray-80);
+}
+
+.grid-sticky-header .icon-col {
+    position: sticky;
+    left: 0;
+    z-index: 51;
+    background: var(--gray-95);
+}
+
+.grid-sticky-header-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    position: relative;
+    scrollbar-width: none; /* Firefox */
+}
+
+.grid-sticky-header-scroll::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+body.has-grid-sticky-header #gridTable thead {
+    display: none;
 }
 
 .calendar-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
     font-size: 0.65rem;
     font-weight: 400;
+}
+
+.calendar-table col.col-icon {
+    width: 48px;
+}
+
+.calendar-table col.col-plant {
+    width: 180px;
+}
+
+/* Half-month columns auto-fill remaining space equally */
+.calendar-table col.col-half-month {
+    width: auto;
 }
 
 .calendar-table thead tr:first-child th {
@@ -535,7 +635,7 @@ header h1 {
 }
 
 .calendar-table thead tr.half-month-header th {
-    top: 20px; /* Height of first header row */
+    top: 33px; /* Height of first header row */
 }
 
 .calendar-table thead tr.half-month-header th:not(.sticky-col):hover {
@@ -555,10 +655,6 @@ header h1 {
     font-size: 0.95rem;
     font-weight: 800;
     letter-spacing: 0.12em;
-    position: -webkit-sticky;
-    position: sticky;
-    top: 0;
-    z-index: 11;
 }
 
 .calendar-table thead .sticky-col {
@@ -573,10 +669,19 @@ header h1 {
 
 /* Icon column (sticky) */
 .icon-col {
-    width: 48px;
-    min-width: 48px;
-    max-width: 48px;
     text-align: center;
+}
+
+.calendar-table thead th.icon-col,
+.calendar-table thead th.col-icon {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0;
+    z-index: 25;
+}
+
+.calendar-table thead tr:first-child th.sticky-col {
+    z-index: 30;
 }
 
 .calendar-table tbody .icon-col {
@@ -588,6 +693,17 @@ header h1 {
     position: sticky;
     left: 0;
     z-index: 2;
+}
+
+/* Alternating backgrounds for icon and plant columns */
+.calendar-table tbody tr:nth-child(odd) .icon-col,
+.calendar-table tbody tr:nth-child(odd) .plant-col {
+    background-color: var(--empty-cell-odd);
+}
+
+.calendar-table tbody tr:nth-child(even) .icon-col,
+.calendar-table tbody tr:nth-child(even) .plant-col {
+    background-color: var(--empty-cell-even);
 }
 
 /* Merged plant header */
@@ -613,14 +729,11 @@ header h1 {
 
 /* Second row plant header below first */
 .calendar-table thead tr.half-month-header .plant-header-merged {
-    top: 20px;
+    top: 33px;
 }
 
 /* Plant name column */
 .plant-col {
-    width: 240px;
-    min-width: 240px;
-    max-width: 240px;
     background-color: var(--white);
     color: var(--black);
     font-weight: 800;
@@ -630,16 +743,20 @@ header h1 {
     text-transform: none;
     text-align: left;
     border-right: 2px solid var(--black);
+    white-space: nowrap;
 }
 
-/* Flower row highlighting */
-.calendar-table .flower-row .icon-col,
-.calendar-table .flower-row .plant-col {
+/* Flower row highlighting with alternating backgrounds */
+.calendar-table tbody tr.flower-row:nth-child(odd) .icon-col,
+.calendar-table tbody tr.flower-row:nth-child(odd) .plant-col,
+.calendar-table tbody tr.flower-row:nth-child(odd) td {
     background-color: var(--flower-bg);
 }
 
-.calendar-table .flower-row td {
-    background-color: var(--flower-bg);
+.calendar-table tbody tr.flower-row:nth-child(even) .icon-col,
+.calendar-table tbody tr.flower-row:nth-child(even) .plant-col,
+.calendar-table tbody tr.flower-row:nth-child(even) td {
+    background-color: var(--flower-bg-alt);
 }
 
 .plant-icon {
@@ -665,8 +782,6 @@ header h1 {
 .plant-name {
     display: inline-block;
     white-space: nowrap;
-    position: relative;
-    cursor: help;
     flex: 1;
     min-width: 0;
 }
@@ -688,30 +803,46 @@ header h1 {
     border-radius: 50%;
 }
 
-.plant-name::after {
+/* Plant cell tooltips */
+.icon-col[data-tooltip],
+.plant-col[data-tooltip] {
+    cursor: help;
+}
+
+.plant-col[data-tooltip] {
+    position: relative;
+}
+
+.icon-col[data-tooltip]::after,
+.plant-col[data-tooltip]::after {
     content: attr(data-tooltip);
     position: absolute;
     left: 100%;
     top: 50%;
     transform: translateY(-50%) translateX(8px);
     width: max-content;
-    max-width: 280px;
-    padding: 8px 12px;
+    max-width: 200px;
+    padding: 6px 10px;
     background-color: var(--black);
     color: var(--white);
     border: 1px solid var(--black);
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-    line-height: 1.5;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 400;
+    font-style: normal;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    line-height: 1.4;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.15s ease;
     z-index: 9999;
-    white-space: pre-line;
+    white-space: normal;
+    text-align: left;
 }
 
-.plant-name:hover::after {
+.icon-col[data-tooltip]:hover::after,
+.plant-col[data-tooltip]:hover::after {
     opacity: 1;
 }
 
@@ -724,8 +855,15 @@ header h1 {
     border-bottom: 1px solid var(--gray-80);
     position: -webkit-sticky;
     position: sticky;
-    top: 20px;
+    top: 33px;
     z-index: 9;
+}
+
+.half-month-header th:not(.icon-col):not(.plant-col) {
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: clip;
 }
 
 .calendar-table td {
@@ -734,6 +872,34 @@ header h1 {
     border: none;
     height: 18px;
     position: relative;
+}
+
+/* Month divider borders - add border after every 2nd half-month (end of each month) */
+.calendar-table thead tr.half-month-header th:nth-child(even):not(.icon-col):not(.plant-col),
+.calendar-table tbody td:nth-child(even) {
+    border-right: 1px solid var(--gray-80);
+}
+
+/* Column hover effect */
+.calendar-table thead th.column-hover:not(.icon-col):not(.plant-col) {
+    box-shadow: inset 0 0 0 2px rgba(111, 168, 220, 0.5) !important;
+}
+
+.calendar-table tbody td.column-hover {
+    position: relative;
+}
+
+.calendar-table tbody td.column-hover::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-left: 2px solid rgba(111, 168, 220, 0.4);
+    border-right: 2px solid rgba(111, 168, 220, 0.4);
+    pointer-events: none;
+    z-index: 1;
 }
 
 .calendar-table tbody tr {
@@ -745,12 +911,21 @@ header h1 {
 }
 
 /* Alternating empty cell backgrounds */
-.calendar-table tbody tr:nth-child(odd) td .activity-cell:not(.has-activity) {
+.calendar-table tbody tr:not(.flower-row):nth-child(odd) td .activity-cell:not(.has-activity) {
     background-color: var(--empty-cell-odd);
 }
 
-.calendar-table tbody tr:nth-child(even) td .activity-cell:not(.has-activity) {
+.calendar-table tbody tr:not(.flower-row):nth-child(even) td .activity-cell:not(.has-activity) {
     background-color: var(--empty-cell-even);
+}
+
+/* Flower row empty cell backgrounds */
+.calendar-table tbody tr.flower-row:nth-child(odd) td .activity-cell:not(.has-activity) {
+    background-color: var(--flower-bg);
+}
+
+.calendar-table tbody tr.flower-row:nth-child(even) td .activity-cell:not(.has-activity) {
+    background-color: var(--flower-bg-alt);
 }
 
 .activity-cell {
@@ -761,6 +936,7 @@ header h1 {
     height: 100%;
     min-height: 18px;
     position: relative;
+    overflow: hidden;
 }
 
 .activity-cell.has-activity {
@@ -1183,10 +1359,10 @@ footer a:hover {
     /* Table adjustments */
     .calendar-table {
         font-size: 0.6rem;
+        width: auto;
     }
 
-    .calendar-table th,
-    .calendar-table td {
+    .calendar-table th {
         padding: 2px 2px;
     }
 
@@ -1194,20 +1370,28 @@ footer a:hover {
         padding: 4px 2px;
     }
 
+    .calendar-table td {
+        min-width: 22px;
+    }
+
+    .calendar-table col.col-half-month {
+        width: 22px;
+    }
+
     /* Compact header format on mobile: 1/2 and 2/2 for all months */
-    .calendar-table thead tr.half-month-header th:not(.plant-header-merged) {
+    .calendar-table thead tr.half-month-header th:nth-child(n+3) {
         font-size: 0;
     }
 
-    .calendar-table thead tr.half-month-header th:not(.plant-header-merged)::after {
+    .calendar-table thead tr.half-month-header th:nth-child(n+3)::after {
         font-size: 0.6rem;
     }
 
-    /* First half of each month = 1/2 (even columns starting from 2) */
-    .calendar-table thead tr.half-month-header th:nth-child(even):nth-child(n+2)::after { content: "1/2"; }
+    /* First half of each month = 1/2 (odd columns starting from 3) */
+    .calendar-table thead tr.half-month-header th:nth-child(odd):nth-child(n+3)::after { content: "1/2"; }
 
-    /* Second half of each month = 2/2 (odd columns starting from 3) */
-    .calendar-table thead tr.half-month-header th:nth-child(odd):nth-child(n+3)::after { content: "2/2"; }
+    /* Second half of each month = 2/2 (even columns starting from 4) */
+    .calendar-table thead tr.half-month-header th:nth-child(even):nth-child(n+4)::after { content: "2/2"; }
 
     /* Icon column stays sticky and narrow on mobile */
     .calendar-table .icon-col {
@@ -1215,6 +1399,14 @@ footer a:hover {
         min-width: 32px;
         max-width: 32px;
         padding: 4px;
+    }
+
+    .calendar-table col.col-icon {
+        width: 32px;
+    }
+
+    .calendar-table col.col-plant {
+        width: 120px;
     }
 
     .plant-icon {
@@ -1245,6 +1437,11 @@ footer a:hover {
         background-color: var(--flower-bg);
     }
 
+    /* Activity cells min-width on mobile */
+    .activity-cell {
+        min-width: 19px;
+    }
+
     /* Month view improvements */
     #monthContent {
         grid-template-columns: 1fr;
@@ -1265,22 +1462,6 @@ footer a:hover {
     .month-plant-icon-svg {
         width: 22px;
         height: 22px;
-    }
-
-    /* Add scroll hint for table */
-    .table-container::after {
-        content: '← Scroll horizontally →';
-        position: sticky;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
-        padding: 8px;
-        text-align: center;
-        font-size: 0.7rem;
-        color: var(--gray-30);
-        pointer-events: none;
-        display: block;
     }
 
     /* Better sticky icon column shadow on mobile */
@@ -1355,6 +1536,35 @@ footer a:hover {
     }
 }
 
+/* Mini Footer */
+.mini-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--gray-95);
+    border-top: 1px solid var(--gray-80);
+    padding: 6px 16px;
+    text-align: center;
+    z-index: 50;
+}
+
+.mini-footer p {
+    margin: 0;
+    font-size: 0.65rem;
+    color: var(--gray-30);
+}
+
+.mini-footer a {
+    color: var(--gray-30);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.mini-footer a:hover {
+    color: var(--black);
+}
+
 /* Print Styles */
 @media print {
     body {
@@ -1363,6 +1573,7 @@ footer a:hover {
 
     .controls,
     footer,
+    .mini-footer,
     .btn {
         display: none;
     }

@@ -72,6 +72,14 @@ if (elements.monthView) {
 
 const VIEW_ORDER = PREFERRED_VIEW_ORDER.filter(view => viewUI[view]);
 
+const gridStickyHeader = {
+    tableContainer: null,
+    scrollEl: null,
+    tableEl: null,
+    syncRequested: false,
+    isSyncingScroll: false
+};
+
 function updateResultsSummary() {
     if (!elements.resultsSummary) return;
 
@@ -96,13 +104,84 @@ function updateGreenhouseFilterVisibility() {
     });
 }
 
+function syncGridStickyHeaderLayout() {
+    if (!gridStickyHeader.tableContainer || !gridStickyHeader.scrollEl || !gridStickyHeader.tableEl) return;
+    if (!elements.gridTable) return;
+
+    gridStickyHeader.tableEl.style.width = `${elements.gridTable.scrollWidth}px`;
+    gridStickyHeader.scrollEl.scrollLeft = gridStickyHeader.tableContainer.scrollLeft;
+}
+
+function requestGridStickyHeaderLayoutSync() {
+    if (gridStickyHeader.syncRequested) return;
+    gridStickyHeader.syncRequested = true;
+
+    requestAnimationFrame(() => {
+        gridStickyHeader.syncRequested = false;
+        syncGridStickyHeaderLayout();
+    });
+}
+
+function initGridStickyHeader() {
+    const stickyRoot = document.getElementById('gridStickyHeader');
+    const tableContainer = document.querySelector('#gridView .table-container');
+    const gridTable = elements.gridTable;
+    const gridThead = gridTable ? gridTable.querySelector('thead') : null;
+    const gridColgroup = gridTable ? gridTable.querySelector('colgroup') : null;
+
+    if (!stickyRoot || !tableContainer || !gridTable || !gridThead) return;
+
+    const scrollEl = document.createElement('div');
+    scrollEl.className = 'grid-sticky-header-scroll';
+
+    const headerTable = document.createElement('table');
+    headerTable.id = 'gridStickyHeaderTable';
+    headerTable.className = gridTable.className;
+    if (gridColgroup) headerTable.appendChild(gridColgroup.cloneNode(true));
+    headerTable.appendChild(gridThead.cloneNode(true));
+
+    scrollEl.appendChild(headerTable);
+    stickyRoot.appendChild(scrollEl);
+
+    gridStickyHeader.tableContainer = tableContainer;
+    gridStickyHeader.scrollEl = scrollEl;
+    gridStickyHeader.tableEl = headerTable;
+
+    document.body.classList.add('has-grid-sticky-header');
+
+    const syncScroll = (source, target) => {
+        if (gridStickyHeader.isSyncingScroll) return;
+        gridStickyHeader.isSyncingScroll = true;
+        target.scrollLeft = source.scrollLeft;
+        requestAnimationFrame(() => {
+            gridStickyHeader.isSyncingScroll = false;
+        });
+    };
+
+    tableContainer.addEventListener('scroll', () => {
+        syncScroll(tableContainer, scrollEl);
+    }, { passive: true });
+
+    scrollEl.addEventListener('scroll', () => {
+        syncScroll(scrollEl, tableContainer);
+    }, { passive: true });
+
+    window.addEventListener('resize', requestGridStickyHeaderLayoutSync);
+    requestGridStickyHeaderLayoutSync();
+}
+
 
 function applyNowEmphasisToGrid() {
     const table = elements.gridTable;
     if (!table) return;
 
-    table.querySelectorAll('.is-now, .is-current-month').forEach(el => {
-        el.classList.remove('is-now', 'is-current-month');
+    const stickyHeaderTable = document.getElementById('gridStickyHeaderTable');
+    const headerTables = stickyHeaderTable ? [table, stickyHeaderTable] : [table];
+
+    headerTables.forEach(headerTable => {
+        headerTable.querySelectorAll('.is-now, .is-current-month').forEach(el => {
+            el.classList.remove('is-now', 'is-current-month');
+        });
     });
 
     table.querySelectorAll('td.is-now-col').forEach(td => {
@@ -113,29 +192,51 @@ function applyNowEmphasisToGrid() {
     const monthIndex = today.getMonth();
     const halfIndex = today.getDate() <= 15 ? 0 : 1;
 
-    // Month group header (Jan/Feb/...)
-    const monthHeaderRow = table.querySelector('thead tr:first-child');
-    if (monthHeaderRow) {
-        const monthGroupCell = monthHeaderRow.children[1 + monthIndex];
-        if (monthGroupCell) monthGroupCell.classList.add('is-current-month');
-    }
+    headerTables.forEach(headerTable => {
+        // Month group header (Jan/Feb/...)
+        const monthHeaderRow = headerTable.querySelector('thead tr:first-child');
+        if (monthHeaderRow) {
+            const monthGroupCell = monthHeaderRow.children[2 + monthIndex];
+            if (monthGroupCell) monthGroupCell.classList.add('is-current-month');
+        }
 
-    // Half-month header (1-15 / 16-..)
-    const halfHeaderRow = table.querySelector('thead tr.half-month-header');
-    if (halfHeaderRow) {
-        const halfCellIndex = 1 + (monthIndex * 2) + halfIndex;
-        const halfCell = halfHeaderRow.children[halfCellIndex];
-        if (halfCell) halfCell.classList.add('is-now');
-    }
+        // Half-month header (1-15 / 16-..)
+        const halfHeaderRow = headerTable.querySelector('thead tr.half-month-header');
+        if (halfHeaderRow) {
+            const halfCellIndex = 2 + (monthIndex * 2) + halfIndex;
+            const halfCell = halfHeaderRow.children[halfCellIndex];
+            if (halfCell) halfCell.classList.add('is-now');
+        }
+    });
 
     // Body column
-    const targetCol = 2 + (monthIndex * 2) + halfIndex; // 1=plant col
+    const activityCellIndex = 2 + (monthIndex * 2) + halfIndex;
     const tbody = table.tBodies && table.tBodies.length ? table.tBodies[0] : table.querySelector('tbody');
     if (!tbody) return;
 
     Array.from(tbody.rows).forEach(row => {
-        const cell = row.children[targetCol - 1];
+        const cell = row.children[activityCellIndex];
         if (cell && cell.tagName === 'TD') cell.classList.add('is-now-col');
+    });
+}
+
+function bindHalfMonthHeaderClicks(tableEl) {
+    if (!tableEl) return;
+
+    const halfMonthHeaders = tableEl.querySelectorAll('thead tr.half-month-header th');
+    halfMonthHeaders.forEach((header, index) => {
+        if (index < 2) return; // Skip the icon + plant columns
+        if (header.dataset.boundHalfMonthClick === 'true') return;
+
+        header.dataset.boundHalfMonthClick = 'true';
+        header.style.cursor = 'pointer';
+        header.title = 'Click to view this period';
+
+        header.addEventListener('click', () => {
+            state.currentHalfMonth = index - 2; // Adjust for icon + plant columns
+            switchView('month');
+            renderMonthView();
+        });
     });
 }
 
@@ -393,10 +494,17 @@ function renderGridView() {
             row.classList.add('flower-row');
         }
 
+        // Prepare tooltip data
+        const spacingLabel = plant.spacing ? `${plant.spacing} in` : '—';
+        const daysLabel = plant.daysToHarvest ? `${plant.daysToHarvest}` : '—';
+        const tooltip = `Spacing: ${spacingLabel}\nDays to harvest: ${daysLabel}`;
+
         // Icon column (sticky)
         const iconCell = document.createElement('th');
-        iconCell.className = 'sticky-col icon-col';
+        iconCell.className = 'sticky-col icon-col col-icon';
         iconCell.scope = 'row';
+        iconCell.dataset.tooltip = tooltip;
+        iconCell.title = tooltip;
 
         const iconContainer = document.createElement('span');
         iconContainer.className = 'plant-icon';
@@ -420,16 +528,12 @@ function renderGridView() {
         const plantNameCell = document.createElement('th');
         plantNameCell.className = 'plant-col';
         plantNameCell.scope = 'row';
-
-        const spacingLabel = plant.spacing ? `${plant.spacing} in` : '—';
-        const daysLabel = plant.daysToHarvest ? `${plant.daysToHarvest}` : '—';
-        const tooltip = `Spacing: ${spacingLabel}\nDays to harvest: ${daysLabel}`;
+        plantNameCell.dataset.tooltip = tooltip;
+        plantNameCell.title = tooltip;
 
         const plantName = document.createElement('span');
         plantName.className = 'plant-name';
         plantName.textContent = plant.name;
-        plantName.dataset.tooltip = tooltip;
-        plantName.title = tooltip;
 
         plantNameCell.appendChild(plantName);
         row.appendChild(plantNameCell);
@@ -500,20 +604,9 @@ function renderGridView() {
 
     applyNowEmphasisToGrid();
 
-    // Add click handlers to half-month headers only
-    const halfMonthHeaders = elements.gridTable.querySelectorAll('thead tr.half-month-header th');
-    halfMonthHeaders.forEach((header, index) => {
-        if (index === 0) return; // Skip the first "Plant" column
-
-        header.style.cursor = 'pointer';
-        header.title = 'Click to view this period';
-
-        header.addEventListener('click', () => {
-            state.currentHalfMonth = index - 1; // Adjust for plant column
-            switchView('month');
-            renderMonthView();
-        });
-    });
+    bindHalfMonthHeaderClicks(document.getElementById('gridStickyHeaderTable'));
+    bindHalfMonthHeaderClicks(elements.gridTable);
+    requestGridStickyHeaderLayoutSync();
 }
 
 function renderTimelineView() {
@@ -903,6 +996,68 @@ if (elements.nextMonth) {
 }
 
 // Initialize
+// Column hover effect
+function initColumnHover() {
+    const table = elements.gridTable;
+    if (!table) return;
+
+    let currentHoverColumn = null;
+
+    function highlightColumn(columnIndex) {
+        // Highlight all cells in this column
+        const headers = table.querySelectorAll(`thead tr th:nth-child(${columnIndex + 1})`);
+        const cells = table.querySelectorAll(`tbody tr td:nth-child(${columnIndex + 1})`);
+
+        headers.forEach(th => th.classList.add('column-hover'));
+        cells.forEach(td => td.classList.add('column-hover'));
+    }
+
+    function clearColumnHover() {
+        const highlighted = table.querySelectorAll('.column-hover');
+        highlighted.forEach(el => el.classList.remove('column-hover'));
+    }
+
+    // Add hover listeners to the table
+    table.addEventListener('mouseover', (e) => {
+        const target = e.target.closest('th, td');
+        if (!target) return;
+
+        // Skip icon and plant columns
+        if (target.classList.contains('icon-col') ||
+            target.classList.contains('plant-col') ||
+            target.classList.contains('sticky-col') ||
+            target.classList.contains('col-icon')) {
+            clearColumnHover();
+            currentHoverColumn = null;
+            return;
+        }
+
+        // Get the column index
+        const row = target.parentElement;
+        const cellIndex = Array.from(row.children).indexOf(target);
+
+        // Only highlight half-month columns (index >= 2)
+        if (cellIndex < 2) {
+            clearColumnHover();
+            currentHoverColumn = null;
+            return;
+        }
+
+        // Only update if different column
+        if (currentHoverColumn !== cellIndex) {
+            clearColumnHover();
+            currentHoverColumn = cellIndex;
+            highlightColumn(cellIndex);
+        }
+    });
+
+    // Clear on mouse leave
+    table.addEventListener('mouseleave', () => {
+        clearColumnHover();
+        currentHoverColumn = null;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Set current half-month based on today's date
     const today = new Date();
@@ -913,6 +1068,8 @@ document.addEventListener('DOMContentLoaded', () => {
     syncViewUI(state.currentView);
 
     // Initial render
+    initGridStickyHeader();
+    initColumnHover();
     updateGreenhouseFilterVisibility();
     filterPlants();
     applyNowEmphasisToGrid();
