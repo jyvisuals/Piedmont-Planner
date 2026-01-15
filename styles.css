@@ -975,7 +975,77 @@ footer a:hover {
         padding: 4px 2px;
     }
 
-    /* Bigger plant icons on mobile */
+    /* Compact header format on mobile: 1/1, 1/2, 2/1, 2/2, etc. */
+    .calendar-table thead tr.half-month-header th:not(.sticky-col) {
+        font-size: 0;
+    }
+
+    .calendar-table thead tr.half-month-header th:not(.sticky-col)::after {
+        font-size: 0.6rem;
+    }
+
+    /* Jan */
+    .calendar-table thead tr.half-month-header th:nth-child(2)::after { content: "1/1"; }
+    .calendar-table thead tr.half-month-header th:nth-child(3)::after { content: "1/2"; }
+    /* Feb */
+    .calendar-table thead tr.half-month-header th:nth-child(4)::after { content: "2/1"; }
+    .calendar-table thead tr.half-month-header th:nth-child(5)::after { content: "2/2"; }
+    /* Mar */
+    .calendar-table thead tr.half-month-header th:nth-child(6)::after { content: "3/1"; }
+    .calendar-table thead tr.half-month-header th:nth-child(7)::after { content: "3/2"; }
+    /* Apr */
+    .calendar-table thead tr.half-month-header th:nth-child(8)::after { content: "4/1"; }
+    .calendar-table thead tr.half-month-header th:nth-child(9)::after { content: "4/2"; }
+    /* May */
+    .calendar-table thead tr.half-month-header th:nth-child(10)::after { content: "5/1"; }
+    .calendar-table thead tr.half-month-header th:nth-child(11)::after { content: "5/2"; }
+    /* Jun */
+    .calendar-table thead tr.half-month-header th:nth-child(12)::after { content: "6/1"; }
+    .calendar-table thead tr.half-month-header th:nth-child(13)::after { content: "6/2"; }
+    /* Jul */
+    .calendar-table thead tr.half-month-header th:nth-child(14)::after { content: "7/1"; }
+    .calendar-table thead tr.half-month-header th:nth-child(15)::after { content: "7/2"; }
+    /* Aug */
+    .calendar-table thead tr.half-month-header th:nth-child(16)::after { content: "8/1"; }
+    .calendar-table thead tr.half-month-header th:nth-child(17)::after { content: "8/2"; }
+    /* Sep */
+    .calendar-table thead tr.half-month-header th:nth-child(18)::after { content: "9/1"; }
+    .calendar-table thead tr.half-month-header th:nth-child(19)::after { content: "9/2"; }
+    /* Oct */
+    .calendar-table thead tr.half-month-header th:nth-child(20)::after { content: "10/1"; }
+    .calendar-table thead tr.half-month-header th:nth-child(21)::after { content: "10/2"; }
+    /* Nov */
+    .calendar-table thead tr.half-month-header th:nth-child(22)::after { content: "11/1"; }
+    .calendar-table thead tr.half-month-header th:nth-child(23)::after { content: "11/2"; }
+    /* Dec */
+    .calendar-table thead tr.half-month-header th:nth-child(24)::after { content: "12/1"; }
+    .calendar-table thead tr.half-month-header th:nth-child(25)::after { content: "12/2"; }
+
+    /* Make only the icon sticky on mobile, not the whole plant column */
+    .calendar-table thead .sticky-col {
+        position: relative !important; /* Disable sticky for header plant column on mobile */
+        -webkit-position: relative !important;
+    }
+
+    .calendar-table tbody .sticky-col {
+        position: relative !important; /* Disable sticky for plant column on mobile */
+        -webkit-position: relative !important;
+        box-shadow: none;
+    }
+
+    .plant-icon {
+        position: sticky;
+        left: 0;
+        background-color: var(--white);
+        z-index: 3;
+        padding-right: 6px;
+        margin-right: 2px;
+    }
+
+    .flower-row .plant-icon {
+        background-color: var(--flower-bg);
+    }
+
     .plant-icon-svg {
         width: 20px;
         height: 20px;
@@ -1071,7 +1141,8 @@ footer a:hover {
     }
 
     .sticky-col {
-        min-width: 100px; /* Ensure plant names are readable */
+        min-width: 70px; /* Narrower on mobile - icon is sticky */
+        max-width: 120px;
     }
 
     /* Month navigation buttons */
