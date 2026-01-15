@@ -48,14 +48,26 @@ const elements = {
 const PREFERRED_VIEW_ORDER = ['grid', 'timeline', 'month'];
 
 const viewUI = {};
-if (elements.gridViewBtn && elements.gridView) {
-    viewUI.grid = { tab: elements.gridViewBtn, panel: elements.gridView };
+// Grid view
+if (elements.gridView) {
+    viewUI.grid = {
+        tab: elements.gridViewBtn || null,
+        panel: elements.gridView
+    };
 }
-if (elements.timelineViewBtn && elements.timelineView) {
-    viewUI.timeline = { tab: elements.timelineViewBtn, panel: elements.timelineView };
+// Timeline view (legacy)
+if (elements.timelineView) {
+    viewUI.timeline = {
+        tab: elements.timelineViewBtn || null,
+        panel: elements.timelineView
+    };
 }
-if (elements.monthViewBtn && elements.monthView) {
-    viewUI.month = { tab: elements.monthViewBtn, panel: elements.monthView };
+// Month view
+if (elements.monthView) {
+    viewUI.month = {
+        tab: elements.monthViewBtn || null,
+        panel: elements.monthView
+    };
 }
 
 const VIEW_ORDER = PREFERRED_VIEW_ORDER.filter(view => viewUI[view]);
@@ -130,15 +142,29 @@ function applyNowEmphasisToGrid() {
 function syncViewUI(view) {
     VIEW_ORDER.forEach(v => {
         const isActive = v === view;
-        const { tab, panel } = viewUI[v];
+        const viewConfig = viewUI[v];
 
-        tab.classList.toggle('active', isActive);
-        tab.setAttribute('aria-selected', String(isActive));
-        tab.tabIndex = isActive ? 0 : -1;
+        if (!viewConfig) return;
 
-        panel.classList.toggle('active', isActive);
-        panel.hidden = !isActive;
+        const { tab, panel } = viewConfig;
+
+        if (tab) {
+            tab.classList.toggle('active', isActive);
+            tab.setAttribute('aria-selected', String(isActive));
+            tab.tabIndex = isActive ? 0 : -1;
+        }
+
+        if (panel) {
+            panel.classList.toggle('active', isActive);
+            panel.hidden = !isActive;
+        }
     });
+
+    // Sync toggle checkbox
+    const monthViewToggle = document.getElementById('monthViewToggle');
+    if (monthViewToggle) {
+        monthViewToggle.checked = view === 'month';
+    }
 }
 
 function handleTabKeydown(e) {
@@ -367,15 +393,10 @@ function renderGridView() {
             row.classList.add('flower-row');
         }
 
-        // Plant name + tooltip (Type / Spacing / Days)
-        const plantHeader = document.createElement('th');
-        plantHeader.className = 'sticky-col plant-col';
-        plantHeader.scope = 'row';
-
-        const spacingLabel = plant.spacing ? `${plant.spacing} in` : '—';
-        const daysLabel = plant.daysToHarvest ? `${plant.daysToHarvest}` : '—';
-
-        const tooltip = `Spacing: ${spacingLabel}\nDays to harvest: ${daysLabel}`;
+        // Icon column (sticky)
+        const iconCell = document.createElement('th');
+        iconCell.className = 'sticky-col icon-col';
+        iconCell.scope = 'row';
 
         const iconContainer = document.createElement('span');
         iconContainer.className = 'plant-icon';
@@ -392,15 +413,26 @@ function renderGridView() {
             iconContainer.textContent = iconData.icon;
         }
 
+        iconCell.appendChild(iconContainer);
+        row.appendChild(iconCell);
+
+        // Plant name column (not sticky)
+        const plantNameCell = document.createElement('th');
+        plantNameCell.className = 'plant-col';
+        plantNameCell.scope = 'row';
+
+        const spacingLabel = plant.spacing ? `${plant.spacing} in` : '—';
+        const daysLabel = plant.daysToHarvest ? `${plant.daysToHarvest}` : '—';
+        const tooltip = `Spacing: ${spacingLabel}\nDays to harvest: ${daysLabel}`;
+
         const plantName = document.createElement('span');
         plantName.className = 'plant-name';
         plantName.textContent = plant.name;
         plantName.dataset.tooltip = tooltip;
         plantName.title = tooltip;
 
-        plantHeader.appendChild(iconContainer);
-        plantHeader.appendChild(plantName);
-        row.appendChild(plantHeader);
+        plantNameCell.appendChild(plantName);
+        row.appendChild(plantNameCell);
 
         // Month columns
         MONTHS.forEach(month => {
@@ -753,15 +785,27 @@ function resetFilters() {
     elements.showFlowersCheckbox.checked = true;
     elements.showGreenhouseCheckbox.checked = true;
 
-    // Reset legend active state
+    // Reset legend active state (remove all active states)
     document.querySelectorAll('.legend-item').forEach(btn => btn.classList.remove('active'));
-    document.querySelector('.legend-item[data-activity="all"]').classList.add('active');
 
     updateGreenhouseFilterVisibility();
     filterPlants();
 }
 
 // Event Listeners
+// Month view toggle checkbox
+const monthViewToggle = document.getElementById('monthViewToggle');
+if (monthViewToggle) {
+    monthViewToggle.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            switchView('month');
+        } else {
+            switchView('grid');
+        }
+    });
+}
+
+// Legacy button support (if they exist)
 if (elements.gridViewBtn) {
     elements.gridViewBtn.addEventListener('click', () => switchView('grid'));
 }
@@ -800,7 +844,6 @@ if (elements.showGreenhouseCheckbox) {
         if (!e.target.checked && (state.filters.activity === 'sg' || state.filters.activity === 'tg')) {
             state.filters.activity = 'all';
             document.querySelectorAll('.legend-item').forEach(btn => btn.classList.remove('active'));
-            document.querySelector('.legend-item[data-activity="all"]').classList.add('active');
         }
 
         updateGreenhouseFilterVisibility();
@@ -808,15 +851,22 @@ if (elements.showGreenhouseCheckbox) {
     });
 }
 
-// Legend item click handlers for activity filtering
+// Legend item click handlers for activity filtering (with toggle)
 document.querySelectorAll('.legend-item').forEach(item => {
     item.addEventListener('click', (e) => {
         const activity = e.currentTarget.dataset.activity;
-        state.filters.activity = activity;
+        const isActive = e.currentTarget.classList.contains('active');
 
-        // Update active state
-        document.querySelectorAll('.legend-item').forEach(btn => btn.classList.remove('active'));
-        e.currentTarget.classList.add('active');
+        if (isActive) {
+            // Toggle off - deactivate and show all
+            e.currentTarget.classList.remove('active');
+            state.filters.activity = 'all';
+        } else {
+            // Activate this filter
+            document.querySelectorAll('.legend-item').forEach(btn => btn.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            state.filters.activity = activity;
+        }
 
         filterPlants();
     });
@@ -824,6 +874,18 @@ document.querySelectorAll('.legend-item').forEach(item => {
 
 if (elements.resetFilters) {
     elements.resetFilters.addEventListener('click', resetFilters);
+}
+
+// Search toggle for mobile
+const searchToggle = document.getElementById('searchToggle');
+if (searchToggle) {
+    searchToggle.addEventListener('click', () => {
+        const filterControls = document.querySelector('.filter-controls');
+        filterControls.classList.toggle('search-expanded');
+        if (filterControls.classList.contains('search-expanded')) {
+            elements.searchInput.focus();
+        }
+    });
 }
 
 if (elements.prevMonth) {
