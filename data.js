@@ -333,6 +333,69 @@ const PLANTS = [
   },
   {
     id: 13,
+    name: "Snapdragons",
+    type: "flower",
+    spacing: "6-12",
+    daysToHarvest: "S = 60-90",
+    months: {
+      jan: { half1: [], half2: ["si"] },
+      feb: { half1: ["si"], half2: ["si"] },
+      mar: { half1: ["si", "t"], half2: ["t"] },
+      apr: { half1: ["t", "s"], half2: ["s"] },
+      may: { half1: [], half2: [] },
+      jun: { half1: [], half2: [] },
+      jul: { half1: [], half2: [] },
+      aug: { half1: [], half2: ["s"] },
+      sep: { half1: ["s"], half2: ["s"] },
+      oct: { half1: [], half2: [] },
+      nov: { half1: [], half2: [] },
+      dec: { half1: [], half2: [] }
+    }
+  },
+  {
+    id: 14,
+    name: "Lavender",
+    type: "flower",
+    spacing: "12-18",
+    daysToHarvest: "T = 90-120",
+    months: {
+      jan: { half1: [], half2: ["si"] },
+      feb: { half1: ["si"], half2: ["si"] },
+      mar: { half1: ["si"], half2: ["t"] },
+      apr: { half1: ["t"], half2: ["t"] },
+      may: { half1: [], half2: [] },
+      jun: { half1: [], half2: [] },
+      jul: { half1: [], half2: [] },
+      aug: { half1: [], half2: [] },
+      sep: { half1: ["t"], half2: ["t"] },
+      oct: { half1: ["t"], half2: [] },
+      nov: { half1: [], half2: [] },
+      dec: { half1: [], half2: [] }
+    }
+  },
+  {
+    id: 15,
+    name: "Stock",
+    type: "flower",
+    spacing: "8-12",
+    daysToHarvest: "S = 60-80",
+    months: {
+      jan: { half1: [], half2: ["si"] },
+      feb: { half1: ["si"], half2: ["si"] },
+      mar: { half1: ["si", "t"], half2: ["t"] },
+      apr: { half1: ["t"], half2: [] },
+      may: { half1: [], half2: [] },
+      jun: { half1: [], half2: [] },
+      jul: { half1: [], half2: [] },
+      aug: { half1: [], half2: [] },
+      sep: { half1: ["s"], half2: ["s"] },
+      oct: { half1: [], half2: [] },
+      nov: { half1: [], half2: [] },
+      dec: { half1: [], half2: [] }
+    }
+  },
+  {
+    id: 16,
     name: "Chives",
     type: "vegetable",
     spacing: "8",
@@ -353,7 +416,7 @@ const PLANTS = [
     }
   },
   {
-    id: 14,
+    id: 17,
     name: "Snap Pea (Bush)",
     type: "vegetable",
     spacing: "2",
@@ -374,7 +437,7 @@ const PLANTS = [
     }
   },
   {
-    id: 15,
+    id: 18,
     name: "Snap Pea (Pole)",
     type: "vegetable",
     spacing: "6",
@@ -395,7 +458,7 @@ const PLANTS = [
     }
   },
   {
-    id: 16,
+    id: 19,
     name: "Peas, Vining",
     type: "vegetable",
     spacing: "2-3",
@@ -416,7 +479,7 @@ const PLANTS = [
     }
   },
   {
-    id: 17,
+    id: 20,
     name: "Peas, Bush",
     type: "vegetable",
     spacing: "4",
@@ -437,7 +500,7 @@ const PLANTS = [
     }
   },
   {
-    id: 18,
+    id: 21,
     name: "Mustard",
     type: "vegetable",
     spacing: "2",
@@ -458,7 +521,7 @@ const PLANTS = [
     }
   },
   {
-    id: 19,
+    id: 22,
     name: "Parsley",
     type: "vegetable",
     spacing: "9-12",
@@ -479,7 +542,7 @@ const PLANTS = [
     }
   },
   {
-    id: 20,
+    id: 23,
     name: "Chard, Swiss",
     type: "vegetable",
     spacing: "6",
@@ -500,7 +563,7 @@ const PLANTS = [
     }
   },
   {
-    id: 21,
+    id: 24,
     name: "Carrots",
     type: "vegetable",
     spacing: "2",
@@ -521,7 +584,7 @@ const PLANTS = [
     }
   },
   {
-    id: 22,
+    id: 25,
     name: "Peppers",
     type: "vegetable",
     spacing: "18",
@@ -542,7 +605,7 @@ const PLANTS = [
     }
   },
   {
-    id: 23,
+    id: 26,
     name: "Tomatoes",
     type: "vegetable",
     spacing: "18",
@@ -563,7 +626,7 @@ const PLANTS = [
     }
   },
   {
-    id: 24,
+    id: 27,
     name: "Strawberries (Bare-root)",
     type: "vegetable",
     spacing: "",
@@ -584,7 +647,7 @@ const PLANTS = [
     }
   },
   {
-    id: 25,
+    id: 28,
     name: "Potatoes (Irish)",
     type: "vegetable",
     spacing: "",
@@ -605,7 +668,7 @@ const PLANTS = [
     }
   },
   {
-    id: 26,
+    id: 29,
     name: "Eggplant",
     type: "vegetable",
     spacing: "24",
@@ -626,7 +689,28 @@ const PLANTS = [
     }
   },
   {
-    id: 27,
+    id: 30,
+    name: "Calendula",
+    type: "flower",
+    spacing: "8-12",
+    daysToHarvest: "S = 50-70",
+    months: {
+      jan: { half1: [], half2: [] },
+      feb: { half1: [], half2: ["si"] },
+      mar: { half1: ["si", "s"], half2: ["s", "t"] },
+      apr: { half1: ["s", "t"], half2: ["s"] },
+      may: { half1: [], half2: [] },
+      jun: { half1: [], half2: [] },
+      jul: { half1: [], half2: [] },
+      aug: { half1: [], half2: ["s"] },
+      sep: { half1: ["s"], half2: ["s"] },
+      oct: { half1: ["s"], half2: [] },
+      nov: { half1: [], half2: [] },
+      dec: { half1: [], half2: [] }
+    }
+  },
+  {
+    id: 31,
     name: "Cabbage",
     type: "vegetable",
     spacing: "12",
@@ -647,7 +731,7 @@ const PLANTS = [
     }
   },
   {
-    id: 28,
+    id: 32,
     name: "Broccoli",
     type: "vegetable",
     spacing: "18",
@@ -668,7 +752,7 @@ const PLANTS = [
     }
   },
   {
-    id: 29,
+    id: 33,
     name: "Cauliflower",
     type: "vegetable",
     spacing: "18",
@@ -689,7 +773,7 @@ const PLANTS = [
     }
   },
   {
-    id: 30,
+    id: 34,
     name: "Yarrow",
     type: "flower",
     spacing: "",
@@ -710,7 +794,7 @@ const PLANTS = [
     }
   },
   {
-    id: 31,
+    id: 35,
     name: "Basil",
     type: "vegetable",
     spacing: "2-8",
@@ -731,7 +815,7 @@ const PLANTS = [
     }
   },
   {
-    id: 32,
+    id: 36,
     name: "Kohlrabi",
     type: "vegetable",
     spacing: "4",
@@ -752,7 +836,7 @@ const PLANTS = [
     }
   },
   {
-    id: 33,
+    id: 37,
     name: "Fennel",
     type: "vegetable",
     spacing: "6-12",
@@ -773,7 +857,7 @@ const PLANTS = [
     }
   },
   {
-    id: 34,
+    id: 38,
     name: "Cilantro",
     type: "vegetable",
     spacing: "2-4",
@@ -794,7 +878,7 @@ const PLANTS = [
     }
   },
   {
-    id: 35,
+    id: 39,
     name: "Turnips",
     type: "vegetable",
     spacing: "2",
@@ -815,7 +899,7 @@ const PLANTS = [
     }
   },
   {
-    id: 36,
+    id: 40,
     name: "Sage",
     type: "vegetable",
     spacing: "",
@@ -836,7 +920,7 @@ const PLANTS = [
     }
   },
   {
-    id: 37,
+    id: 41,
     name: "Marigolds",
     type: "flower",
     spacing: "",
@@ -857,7 +941,7 @@ const PLANTS = [
     }
   },
   {
-    id: 38,
+    id: 42,
     name: "Echinacea",
     type: "flower",
     spacing: "",
@@ -878,7 +962,7 @@ const PLANTS = [
     }
   },
   {
-    id: 39,
+    id: 43,
     name: "Chamomile",
     type: "flower",
     spacing: "",
@@ -899,7 +983,7 @@ const PLANTS = [
     }
   },
   {
-    id: 40,
+    id: 44,
     name: "Moonflower",
     type: "flower",
     spacing: "",
@@ -920,7 +1004,7 @@ const PLANTS = [
     }
   },
   {
-    id: 41,
+    id: 45,
     name: "Parsnips",
     type: "vegetable",
     spacing: "3-4",
@@ -941,7 +1025,7 @@ const PLANTS = [
     }
   },
   {
-    id: 42,
+    id: 46,
     name: "Dill",
     type: "vegetable",
     spacing: "2-4",
@@ -962,7 +1046,7 @@ const PLANTS = [
     }
   },
   {
-    id: 43,
+    id: 47,
     name: "Borage",
     type: "flower",
     spacing: "",
@@ -983,7 +1067,7 @@ const PLANTS = [
     }
   },
   {
-    id: 44,
+    id: 48,
     name: "Beets",
     type: "vegetable",
     spacing: "2",
@@ -1004,7 +1088,7 @@ const PLANTS = [
     }
   },
   {
-    id: 45,
+    id: 49,
     name: "Ginger",
     type: "vegetable",
     spacing: "",
@@ -1025,7 +1109,7 @@ const PLANTS = [
     }
   },
   {
-    id: 46,
+    id: 50,
     name: "Cabbage (Chinese)",
     type: "vegetable",
     spacing: "12",
@@ -1046,7 +1130,7 @@ const PLANTS = [
     }
   },
   {
-    id: 47,
+    id: 51,
     name: "Sunflower",
     type: "flower",
     spacing: "9-24",
@@ -1067,7 +1151,7 @@ const PLANTS = [
     }
   },
   {
-    id: 48,
+    id: 52,
     name: "Squash (Summer)",
     type: "vegetable",
     spacing: "24",
@@ -1088,7 +1172,7 @@ const PLANTS = [
     }
   },
   {
-    id: 49,
+    id: 53,
     name: "Cucumbers",
     type: "vegetable",
     spacing: "12",
@@ -1109,7 +1193,7 @@ const PLANTS = [
     }
   },
   {
-    id: 50,
+    id: 54,
     name: "Zinnias",
     type: "flower",
     spacing: "",
@@ -1130,7 +1214,7 @@ const PLANTS = [
     }
   },
   {
-    id: 51,
+    id: 55,
     name: "Nasturtium",
     type: "flower",
     spacing: "",
@@ -1151,7 +1235,7 @@ const PLANTS = [
     }
   },
   {
-    id: 52,
+    id: 56,
     name: "Corn (Sweet)",
     type: "vegetable",
     spacing: "12",
@@ -1172,7 +1256,7 @@ const PLANTS = [
     }
   },
   {
-    id: 53,
+    id: 57,
     name: "Cantaloupe",
     type: "vegetable",
     spacing: "24",
@@ -1193,7 +1277,7 @@ const PLANTS = [
     }
   },
   {
-    id: 54,
+    id: 58,
     name: "Squash (Winter)",
     type: "vegetable",
     spacing: "36",
@@ -1214,7 +1298,7 @@ const PLANTS = [
     }
   },
   {
-    id: 55,
+    id: 59,
     name: "Potatoes (Sweet)",
     type: "vegetable",
     spacing: "10",
@@ -1235,7 +1319,7 @@ const PLANTS = [
     }
   },
   {
-    id: 56,
+    id: 60,
     name: "Peas (Field)",
     type: "vegetable",
     spacing: "4",
@@ -1256,7 +1340,7 @@ const PLANTS = [
     }
   },
   {
-    id: 57,
+    id: 61,
     name: "Lima Bean (Pole)",
     type: "vegetable",
     spacing: "6",
@@ -1277,7 +1361,7 @@ const PLANTS = [
     }
   },
   {
-    id: 58,
+    id: 62,
     name: "Watermelon",
     type: "vegetable",
     spacing: "60",
@@ -1298,7 +1382,7 @@ const PLANTS = [
     }
   },
   {
-    id: 59,
+    id: 63,
     name: "Okra",
     type: "vegetable",
     spacing: "12",
@@ -1319,7 +1403,7 @@ const PLANTS = [
     }
   },
   {
-    id: 60,
+    id: 64,
     name: "Lima Bean (Bush)",
     type: "vegetable",
     spacing: "6",
@@ -1340,7 +1424,7 @@ const PLANTS = [
     }
   },
   {
-    id: 61,
+    id: 65,
     name: "Pumpkin",
     type: "vegetable",
     spacing: "48",
@@ -1361,7 +1445,7 @@ const PLANTS = [
     }
   },
   {
-    id: 62,
+    id: 66,
     name: "Brussels",
     type: "vegetable",
     spacing: "14-18",
@@ -1382,7 +1466,7 @@ const PLANTS = [
     }
   },
   {
-    id: 63,
+    id: 67,
     name: "Rutabaga",
     type: "vegetable",
     spacing: "4",
@@ -1403,7 +1487,7 @@ const PLANTS = [
     }
   },
   {
-    id: 64,
+    id: 68,
     name: "Garlic",
     type: "vegetable",
     spacing: "4-6",
