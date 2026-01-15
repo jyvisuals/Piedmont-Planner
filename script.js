@@ -290,15 +290,16 @@ function getPlantIcon(plantName) {
         // Flowers
         'Yarrow': 'yarrow',
         'Marigolds': 'marigold',
-        'Moonflower': 'moonflower',
+        'Moonflower': 'moonflower.png',
         'Sunflower': 'sunflower',
         'Calendula': 'calendula.png',
-        'Snapdragons': 'snapdragon.png'
+        'Snapdragons': 'snapdragon.png',
+        'Lavender': 'lavender.png',
+        'Zinnias': 'zinnia.png'
     };
 
     // Emoji icons for flowers without SVG/PNG
     const emojiFlowers = {
-        'Zinnias': '🌺',          // Bright hibiscus-like flower
         'Nasturtium': '🌼',       // Yellow/orange daisy
         'Stock': '🌸',            // Pink blossom for fragrant stock
         'Echinacea': '🌸',        // Purple coneflower
