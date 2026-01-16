@@ -29,20 +29,20 @@ const LEGEND = {
 
 const TASKS = {
   jan: {
-    half1: "Order seeds; clean and sharpen tools; prune dormant fruit trees and grapes; inspect stored pantry crops; check grow lights",
-    half2: "Send soil test to NC State; inventory potting mix/trays; plan bed layout; organize seed storage; take hardwood cuttings (figs, grapes, blueberries)"
+    half1: "Order seeds; clean and sharpen tools; prune dormant fruit trees and grapes; inspect stored pantry crops; check grow lights; purge vent greenhouse on warm days; scout for winter pests (aphids, whiteflies); secondary frost protection for temps below 25°F",
+    half2: "Send soil test to NC State; inventory potting mix/trays; plan bed layout; organize seed storage; take hardwood cuttings (figs, grapes, blueberries); purge vent greenhouse on warm days; scout for winter pests (aphids, whiteflies); secondary frost protection for temps below 25°F"
   },
   feb: {
-    half1: "Finish fruit tree pruning; spread compost (no till); check irrigation lines; check hardwood cuttings for callus/roots",
-    half2: "Prune roses and woody herbs; clean greenhouse glazing; scrub seedling trays; top-dress berries with compost"
+    half1: "Finish fruit tree pruning; spread compost (no till); check irrigation lines; check hardwood cuttings for callus/roots; purge vent greenhouse on warm days; scout for winter pests (aphids, whiteflies); leach greenhouse soil for salt buildup if needed",
+    half2: "Prune roses and woody herbs; clean greenhouse glazing; scrub seedling trays; top-dress berries with compost; purge vent greenhouse on warm days; scout for winter pests (aphids, whiteflies); leach greenhouse soil for salt buildup if needed"
   },
   mar: {
-    half1: "Harden off cool-weather seedlings; weed early; set up trellises; check raised beds for rot; start sweet potato slips from tubers",
+    half1: "Harden off cool-weather seedlings; weed early; set up trellises; check raised beds for rot; start sweet potato slips from tubers; leach greenhouse soil for salt buildup if needed",
     half2: "Check irrigation pressure; set up heavy-duty tomato cages; side-dress overwintered crops; clean rain barrels"
   },
   apr: {
-    half1: "Watch for \"False Spring\" (covers ready); harden off warm-season seedlings; weed; thin root crops; divide clumping herbs (chives/mint)",
-    half2: "Scout for aphids on brassicas; side-dress heavy feeders; protect strawberry blooms; install insect netting"
+    half1: "Watch for \"False Spring\" (covers ready); harden off warm-season seedlings; weed; thin root crops; divide clumping herbs (chives/mint); wait for 60°F soil at 4\" before transplanting tomatoes",
+    half2: "Scout for aphids on brassicas; side-dress heavy feeders; protect strawberry blooms; install insect netting; wait for 60°F soil at 4\" before transplanting tomatoes"
   },
   may: {
     half1: "Mulch heavily; scout for potato beetles; hill up potatoes; install drip tape; take softwood cuttings of tender herbs (lemon verbena, stevia)",
@@ -50,7 +50,7 @@ const TASKS = {
   },
   jun: {
     half1: "Harvest garlic scapes; Stop watering onions/garlic; deadhead flowers; root tomato suckers in water (for late-season backup plants)",
-    half2: "Harvest Garlic & Onions (cure in shade); summer prune water sprouts; shade cloth on greenhouse; harvest herbs for drying"
+    half2: "Harvest Garlic & Onions (cure in shade); summer prune water sprouts; shade cloth on greenhouse when temps reach 85°F; harvest herbs for drying"
   },
   jul: {
     half1: "Prune blackberry/raspberry canes; pull bolted lettuce; deep water fruit trees; turn compost pile; take cuttings of annual flowers (coleus, zinnias)",
@@ -69,12 +69,12 @@ const TASKS = {
     half2: "Cut back asparagus ferns; heavy mulch for winter; drain hoses; final harvest of tender crops before frost"
   },
   nov: {
-    half1: "Collect leaves for compost; winterize irrigation; clean/store cages; dig up tender bulbs (dahlia); take hardwood cuttings of currants/elderberry",
-    half2: "Protect citrus/tender plants; seal greenhouse drafts; clean and oil tools; harvest final root crops"
+    half1: "Collect leaves for compost; winterize irrigation; clean/store cages; dig up tender bulbs (dahlia); take hardwood cuttings of currants/elderberry; prepare secondary frost protection for temps below 25°F",
+    half2: "Protect citrus/tender plants; seal greenhouse drafts; clean and oil tools; harvest final root crops; prepare secondary frost protection for temps below 25°F"
   },
   dec: {
-    half1: "Tool maintenance; structural repairs to beds; check greenhouse heater; inspect stored harvest",
-    half2: "Review season notes; plan next year's map; order seeds early; rest"
+    half1: "Tool maintenance; structural repairs to beds; check greenhouse heater; inspect stored harvest; purge vent greenhouse on warm days; scout for winter pests (aphids, whiteflies); secondary frost protection for temps below 25°F",
+    half2: "Review season notes; plan next year's map; order seeds early; rest; purge vent greenhouse on warm days; scout for winter pests (aphids, whiteflies); secondary frost protection for temps below 25°F"
   }
 };
 
@@ -198,9 +198,9 @@ const PLANTS = [
       may: { half1: [], half2: [] },
       jun: { half1: [], half2: [] },
       jul: { half1: [], half2: [] },
-      aug: { half1: [], half2: [] },
+      aug: { half1: [], half2: ["s"] },
       sep: { half1: ["s"], half2: ["s"] },
-      oct: { half1: ["s"], half2: ["s"] },
+      oct: { half1: ["s"], half2: [] },
       nov: { half1: ["sg"], half2: ["sg"] },
       dec: { half1: [], half2: [] }
     }
@@ -233,15 +233,15 @@ const PLANTS = [
     spacing: "4",
     daysToHarvest: "90-120",
     months: {
-      jan: { half1: ["si"], half2: ["si"] },
-      feb: { half1: ["t"], half2: ["t"] },
+      jan: { half1: [], half2: [] },
+      feb: { half1: [], half2: [] },
       mar: { half1: [], half2: [] },
       apr: { half1: [], half2: [] },
       may: { half1: [], half2: [] },
       jun: { half1: [], half2: [] },
       jul: { half1: [], half2: [] },
       aug: { half1: [], half2: [] },
-      sep: { half1: [], half2: [] },
+      sep: { half1: ["s"], half2: ["s"] },
       oct: { half1: ["s"], half2: ["s"] },
       nov: { half1: [], half2: [] },
       dec: { half1: [], half2: [] }
@@ -576,9 +576,9 @@ const PLANTS = [
       may: { half1: [], half2: [] },
       jun: { half1: [], half2: [] },
       jul: { half1: [], half2: [] },
-      aug: { half1: [], half2: [] },
+      aug: { half1: [], half2: ["s"] },
       sep: { half1: ["s"], half2: ["s"] },
-      oct: { half1: ["s"], half2: ["s"] },
+      oct: { half1: ["s"], half2: [] },
       nov: { half1: ["sg"], half2: [] },
       dec: { half1: [], half2: [] }
     }
@@ -891,9 +891,9 @@ const PLANTS = [
       may: { half1: [], half2: [] },
       jun: { half1: [], half2: [] },
       jul: { half1: [], half2: [] },
-      aug: { half1: [], half2: [] },
+      aug: { half1: [], half2: ["s"] },
       sep: { half1: ["s"], half2: ["s"] },
-      oct: { half1: ["s"], half2: ["s"] },
+      oct: { half1: ["s"], half2: [] },
       nov: { half1: [], half2: [] },
       dec: { half1: [], half2: [] }
     }
@@ -905,10 +905,10 @@ const PLANTS = [
     spacing: "",
     daysToHarvest: "",
     months: {
-      jan: { half1: [], half2: [] },
-      feb: { half1: [], half2: [] },
-      mar: { half1: [], half2: ["t"] },
-      apr: { half1: ["t"], half2: [] },
+      jan: { half1: [], half2: ["si"] },
+      feb: { half1: ["si"], half2: ["si"] },
+      mar: { half1: ["s"], half2: ["s", "t"] },
+      apr: { half1: ["s", "t"], half2: ["s"] },
       may: { half1: [], half2: [] },
       jun: { half1: [], half2: [] },
       jul: { half1: [], half2: [] },
