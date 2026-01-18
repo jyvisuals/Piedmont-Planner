@@ -10,6 +10,9 @@ A beautiful, interactive planting calendar for Zone 8a gardeners in the Piedmont
   - **Grid View**: Traditional spreadsheet-style table with all plants and months
   - **Month View**: Month-by-month breakdown of planting activities
 
+- **Plant Detail Panel**
+  - Click a plant name to open a slide-in panel with spacing, days-to-harvest, and guide notes (varieties + tips when available)
+
 - **Powerful Filtering**
   - Search plants by name
   - Toggle flower visibility

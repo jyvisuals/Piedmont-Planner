@@ -1508,3 +1508,237 @@ const PLANTS = [
     }
   }
 ];
+// Plant Guide Data - integrated from carrboro_plant_guide.csv
+
+const PLANT_GUIDE = {
+  "Arugula": {
+    varietiesText: `Astro (fast, mild), Rocket (classic), Sylvetta (wild/perennial, peppery)`,
+    tipsText: `Rich soil improves leaf size. Consistent moisture prevents bitterness. Light shade extends harvest. Harvest outer leaves first for cut-and-come-again.`
+  }, 
+  "Lettuce, Head": {
+    varietiesText: `Dano (red romaine, Piedmont favorite +++), Winter Density (Bibb-Romaine cross, cold hardy), Rouge d'Hiver (red, cold hardy), Buttercrunch (reliable butterhead), Jericho (heat tolerant romaine), Muir (Batavian, heat tolerant)`,
+    tipsText: `Loose soil + compost for good heads. Mulch to cool roots. Avoid excess nitrogen late in growth. Red/high-anthocyanin varieties have better cold tolerance. Seed goes dormant in hot soil—refrigerate seeds 2 days before summer sowing.`
+  }, 
+  "Radishes": {
+    varietiesText: `Hakurei (salad turnip—sweet, eaten raw +++), French Breakfast (mild, elongated), Easter Egg (color mix), Cherry Belle (classic), Daikon (large, mild)`,
+    tipsText: `Keep soil evenly moist to prevent pithy roots. Thin early for size. Add potassium for best flavor. Interplant between slower crops to maximize space.`
+  }, 
+  "Lettuce, Leaf": {
+    varietiesText: `Merlot (darkest red, cold hardy), New Red Fire (heat tolerant), Red Sails (slow bolt), Green Star (reliable), Oakleaf/Tango (heat tolerant)`,
+    tipsText: `Harvest outer leaves only for continuous production. Mulch to reduce heat stress. Tolerates partial shade. Red varieties have superior cold hardiness and mold resistance. Seed goes dormant in hot soil.`
+  }, 
+  "Onions, Green": {
+    varietiesText: `Evergreen Hardy White (perennial), White Lisbon (classic), Warrior (vigorous bunching), Tokyo Long White (mild)`,
+    tipsText: `Shallow planting keeps stems tender. Steady nitrogen improves leaf growth. Can plant thickly and harvest as scallions.`
+  }, 
+  "Spinach": {
+    varietiesText: `Space (smooth leaf, fast, mildew resistant), Tyee (semi-savoy, upright, overwintering standard), Bloomsdale (savoy, best flavor—better for fall), Olympia (smooth, rapid)`,
+    tipsText: `High organic matter boosts leaf size. Mulch for soil moisture. Smooth-leaf types easier to clean and less prone to rot. Upright varieties keep leaves off soil. pH 6.5-7.0 preferred.`
+  }, 
+  "Celery": {
+    varietiesText: `Utah Tall (classic flavor), Tango (compact, bolt resistant), Ventura (heat tolerant)`,
+    tipsText: `Heavy feeder—amend with compost + calcium. Constant moisture essential. Blanch stalks by hilling soil or using collars for milder flavor.`
+  }, 
+  "Onions, Bulb": {
+    varietiesText: `Candy (sweet, intermediate day), Patterson (storage, intermediate), Texas Legend (short day), Red Creole (short day, stores well)`,
+    tipsText: `Use intermediate or short-day varieties for NC—avoid long-day types. Starting from seed superior to sets (sets often bolt). Heavy feeders. Well-drained soil critical. Phosphorus at planting helps bulb development.`
+  }, 
+  "Leek": {
+    varietiesText: `King Richard (fast, tender), Lancelot (disease resistant), Megaton (large), Bandit (winter hardy)`,
+    tipsText: `Hill soil up stems to blanch. Rich soil improves diameter. Heavy feeder. Consistent moisture throughout growth.`
+  }, 
+  "Kale": {
+    varietiesText: `Lacinato Rainbow (cold/heat tolerant, anthocyanin-rich +++), Red Ursa (frilly, tender, very cold hardy, late bolt +++), Vates (dwarf curly, very cold hardy), Lacinato/Toscano (upright habit), Red Russian (tender), Winterbor (curly, cold hardy), Redbor (tall)`,
+    tipsText: `Remove lower leaves for airflow. Tolerates poor soil but thrives with compost. Flavor sweetens after frost. Bt for cabbage worms. Russian/Siberian types stay tender longer. Tall varieties reduce bottom rot. Use floating row covers to exclude pests.`
+  }, 
+  "Collard Greens": {
+    varietiesText: `Senposai (cabbage/mustard cross, massive yield—must grow +++), Champion (slow to bolt), Flash (hybrid, fast regrowth), Georgia Southern (heirloom, heat tolerant), Morris Heading (forms loose heads)`,
+    tipsText: `Extremely forgiving. Harvest outer leaves continuously. Responds well to nitrogen. Bt for caterpillars. Flavor improves dramatically after frost.`
+  }, 
+  "Bok Choy": {
+    varietiesText: `Joi Choi (bolt resistant, huge white stalks), Mei Qing Choi (baby, green stem), Win-Win Choi (heat tolerant)`,
+    tipsText: `Loose soil prevents root stress. Mulch keeps stems tender. Consistent moisture essential. Floating row cover for flea beetles. Extremely bolt-sensitive to temperature swings.`
+  }, 
+  "Chives": {
+    varietiesText: `Common chives (reliable), Garlic chives (flat leaves, garlic flavor), Profusion (sterile, no reseeding)`,
+    tipsText: `Divide every few years to maintain vigor. Prefers well-drained soil. Low maintenance perennial. Deadhead to prevent unwanted spreading.`
+  }, 
+  "Snap Pea (Bush)": {
+    varietiesText: `Sugar Ann (compact, early), Cascadia (disease resistant), Little Marvel (sweet)`,
+    tipsText: `Inoculate seed with rhizobia for nitrogen fixation. Keep roots cool with mulch. No support needed but small trellis helps keep pods clean. Pick frequently.`
+  }, 
+  "Snap Pea (Pole)": {
+    varietiesText: `Super Sugar Snap (classic, vigorous), Sugar Snap (original variety), Mammoth Melting Sugar (large pods)`,
+    tipsText: `Trellis (6'+) improves airflow and yield. Pick often to extend production. Inoculate seeds. Add phosphorus at planting.`
+  }, 
+  "Peas, Vining": {
+    varietiesText: `Oregon Sugar Pod (snow pea), Alderman/Tall Telephone (heirloom shelling), Wando (shelling, heat tolerant), Lincoln (sweet, disease resistant)`,
+    tipsText: `Nitrogen fixation improves soil for following crops. Trellising reduces mildew. Consistent moisture especially at flowering. Mulch to keep roots cool. Inoculate seeds.`
+  }, 
+  "Peas, Bush": {
+    varietiesText: `Little Marvel (sweet, compact), Green Arrow (shelling, disease resistant), Tom Thumb (containers)`,
+    tipsText: `Even moisture improves pod fill. No heavy nitrogen needed—peas fix their own. Inoculate seeds. Great for intensive planting.`
+  }, 
+  "Mustard": {
+    varietiesText: `Giant Red Mustard (trap crop for flea beetles, spicy), Mizuna (mild, feathery), Florida Broadleaf (large), Southern Giant Curled (classic), Tatsoi (rosette, very cold tolerant)`,
+    tipsText: `Cut young for best flavor. Tolerates poor soil. Self-sows readily. Giant Red Mustard works as trap crop to lure flea beetles away from other brassicas.`
+  }, 
+  "Parsley": {
+    varietiesText: `Italian Flat Leaf (best flavor), Titan (vigorous flat leaf), Moss Curled (decorative)`,
+    tipsText: `Deep roots benefit from loose soil. Cut outer stems to regrow. Soak seeds overnight—slow to germinate. Heavy nitrogen feeder. Biennial.`
+  }, 
+  "Chard, Swiss": {
+    varietiesText: `Fordhook Giant (green, most cold/heat tolerant), Bright Lights (colorful, less hardy), Peppermint (pink stems)`,
+    tipsText: `Mulch deeply. Remove outer leaves for continuous production. Highly heat tolerant—produces spring through fall. Heavy nitrogen feeder.`
+  }, 
+  "Carrots": {
+    varietiesText: `Napoli (sweetens after frost, colors early in low light), Scarlet Nantes (superior flavor ++), Purple Dragon (purple exterior), Danvers 126 (good for heavy soil), Chantenay (short—heavy clay soil)`,
+    tipsText: `Deeply loosened soil essential—forking common in clay. Thin aggressively for straight roots. Cover seeded rows with board or burlap to retain moisture until germination (14-21 days). Add potassium for flavor.`
+  }, 
+  "Peppers": {
+    varietiesText: `Carmen (bull's horn, early, sweeter than bells ++), Early Pimiento (very early, thick walls +++), Flavorburst (yellow bell), California Wonder (classic bell), Jalapeño Early (reliable hot), Jalafuego (hot), Olympus (sweet)`,
+    tipsText: `Mulch + calcium (bone meal/gypsum) prevent blossom end rot. Stake early. Avoid excess nitrogen. Consistent watering. Don't plant in cold wet clay—stunts roots permanently.`
+  }, 
+  "Tomatoes": {
+    varietiesText: `Mountain Girl (compact, only variety to score perfect 5 in local taste test—Wild Mountain Seeds), Mountain Regina (highest producer in Durham trials, compact form), Lemon Boy Plus (most reliable/resilient in 2025 trial, long season), Better Boy Plus (resilient, 124-day harvest), Celebrity Plus (last standing in Briggs trial, excellent disease resistance), Carbon (black, largest fruit, excellent complex flavor), Rose de Berne (pink, crack resistant +++), Cherokee Purple (NC heirloom, superior flavor—prone to cat-facing/cracking), Sun Gold (cherry, high sugar), Mountain Magic/Fresh (NCSU, blight resistant)`,
+    tipsText: `Prune lower leaves for airflow. Mulch heavily. Consistent watering critical to prevent cracking. Deep transplanting—bury 2/3 of stem. Single-leader pruning essential for disease-prone heirlooms. Add calcium. Cherokee Purple prone to cat-facing (cold damage) and concentric cracking—needs extra airflow. Grafting onto disease-resistant rootstock (RST, DRO) extends season—keep graft union ABOVE soil. 'Plus' hybrid varieties show superior disease resistance and longer harvest windows in local trials.`
+  }, 
+  "Strawberries (Bare-root)": {
+    varietiesText: `Chandler (NC Piedmont standard, high yield, excellent flavor), Camarosa (large firm fruit, heat tolerant), Sweet Charlie (early, high sugar)`,
+    tipsText: `Full sun. Plant plugs on black plastic mulch. Remove early flowers for root establishment. Straw mulch helps. Plant with crown at soil level. Use row covers to protect blossoms from late frost.`
+  }, 
+  "Potatoes (Irish)": {
+    varietiesText: `Kennebec (standard white, disease resistant), Yukon Gold (buttery, early), Red Pontiac (waxy)`,
+    tipsText: `Hill soil to prevent greening. Loose soil improves tuber size. Use certified seed potatoes. Use straw mulch to protect shoots from late frost. Cure before storage. Rotate planting location annually.`
+  }, 
+  "Eggplant": {
+    varietiesText: `Orient Express (Asian, early, cool-tolerant), Ping Tung (long Asian, tender), Ichiban (long, productive), Nadia (black, productive), Black Beauty (classic), Fairy Tale (small, tender)`,
+    tipsText: `Stake early. Remove early flowers for vigor. Loves heat + compost. Harvest when skin is glossy (dull = overripe). Flea beetles riddle leaves—use insect netting or row cover until plants are large enough to withstand damage.`
+  }, 
+  "Cabbage": {
+    varietiesText: `Early Jersey Wakefield (heirloom, pointed, overwinters well), Bravo (disease resistant), Stonehead (compact, disease resistant), Green Acre (reliable)`,
+    tipsText: `Firm soil improves heads. Row cover deters worms. Steady moisture prevents splitting. Heavy feeder—amend with compost and nitrogen-rich fertilizer. Bt for caterpillars (cabbage loopers ubiquitous).`
+  }, 
+  "Broccoli": {
+    varietiesText: `Packman (early, productive), Arcadia (cold tolerant), Belstar (heat tolerant, disease resistant), Green Magic (widely adapted), Waltham 29 (side shoots)`,
+    tipsText: `Harvest main head early to encourage side shoots. Heavy feeder—amend with nitrogen-rich fertilizer. Consistent moisture. Bt for worms. Side-shoot varieties extend harvest significantly.`
+  }, 
+  "Cauliflower": {
+    varietiesText: `Snow Crown (easiest for beginners), Amazing (self-blanching), Snowball (classic), Cheddar (orange, heat tolerant), Graffiti (purple)`,
+    tipsText: `Consistent moisture critical. Blanch heads if sun-sensitive by tying leaves over head. Heavy feeder. Self-blanching varieties reduce labor.`
+  }, 
+  "Basil": {
+    varietiesText: `Genovese (classic pesto), Prospera (downy mildew resistant), Eleonora (mildew resistant), Italian Large Leaf (productive), Thai (spicy, heat tolerant)`,
+    tipsText: `Pinch frequently for bushier plants. Good drainage prevents rot. Choose mildew-resistant varieties—downy mildew is common in humid conditions.`
+  }, 
+  "Kohlrabi": {
+    varietiesText: `Winner (white, tender), Early White Vienna (quick), Kolibri (purple, sweet), Kossak (giant, stays tender)`,
+    tipsText: `Harvest young for tenderness (2-3" except Kossak). Consistent moisture prevents woodiness.`
+  }, 
+  "Fennel": {
+    varietiesText: `Orion (bolt resistant, large bulbs), Florence (classic), Zefa Fino (quick, reliable)`,
+    tipsText: `Deep soil for bulbs. Avoid disturbance once established. Direct sow preferred—doesn't transplant well. Harvest bulb when 3" across.`
+  }, 
+  "Cilantro": {
+    varietiesText: `Santo (slow bolt), Calypso (very slow bolt), Caribe (large leaves, bolt resistant)`,
+    tipsText: `Succession sowing extends harvest. Partial shade reduces bolting. Let some bolt for coriander seed harvest. Bolts instantly in heat—cool season only.`
+  }, 
+  "Turnips": {
+    varietiesText: `Hakurei (Japanese salad turnip, eat raw +++), Purple Top White Globe (traditional), Scarlet Queen (red, quick)`,
+    tipsText: `Loose soil improves root shape. Mulch for sweetness. Greens are edible and nutritious. Harvest roots small for best texture.`
+  }, 
+  "Sage": {
+    varietiesText: `Common culinary sage (standard), Berggarten (large leaves, rarely flowers), Tricolor (ornamental, edible)`,
+    tipsText: `Excellent drainage required—hates wet feet in NC clay. Add sand/gravel to planting area. Perennial. Prune after flowering to maintain shape.`
+  }, 
+  "Parsnips": {
+    varietiesText: `Hollow Crown (heirloom, large), Lancer (sweet, uniform), Harris Model (shorter, faster)`,
+    tipsText: `Deep loose soil essential. Very slow germination (14-21 days)—cover rows with board/burlap to retain moisture. Tastes significantly better after hard frost—leave in ground. Can overwinter.`
+  }, 
+  "Dill": {
+    varietiesText: `Bouquet (quick, good for pickles), Fernleaf (compact, slow bolt), Mammoth (tall), Dukat (leafy, excellent flavor)`,
+    tipsText: `Direct sow preferred—doesn't transplant well. Attracts beneficial insects. Self-sows readily. Tall varieties may need staking. Bolts in heat—cool season only.`
+  }, 
+  "Beets": {
+    varietiesText: `Detroit Dark Red (classic, reliable), Early Wonder (quick), Chioggia (candy striped, mild), Bull's Blood (deep red, great greens), Touchstone Gold (doesn't bleed)`,
+    tipsText: `Thin early—seed is a cluster. Steady moisture improves size and sweetness. Greens are edible and nutritious. Add boron for healthy roots.`
+  }, 
+  "Ginger": {
+    varietiesText: `Bubba (large rhizomes), Chinese Yellow (vigorous), Common Culinary. Note: Grocery store ginger often treated to prevent sprouting—buy seed ginger.`,
+    tipsText: `Needs warmth + rich moist soil. Thrives in greenhouse or protected beds. Pre-sprout rhizomes in pots on heat mats. Harvest as 'baby ginger' (cream-colored, no skin)—tender, fiber-free, freezes well.`
+  }, 
+  "Cabbage (Chinese)": {
+    varietiesText: `Blues (Napa, disease resistant), Napa Michihili (tall), Wong Bok (barrel-shaped), Rubicon (mini), Tokyo Bekana (loose head, bolt resistant)`,
+    tipsText: `Loose soil prevents splitting. Consistent moisture essential. Floating row cover for flea beetles. Extremely bolt-sensitive to temperature swings. Grows fast even in low light.`
+  }, 
+  "Squash (Summer)": {
+    varietiesText: `Zephyr (bicolor crookneck, nutty), Costata Romanesco (ribbed zucchini, best flavor), Success PM (powdery mildew resistant), Dunja (zucchini, mildew tolerant), Tatume/Calabacita (vining, vine borer resistant)`,
+    tipsText: `Powdery mildew resistant varieties important. Harvest frequently at 6-8". Good airflow matters. Row covers until flowering for vine borer protection—must remove or hand-pollinate when flowers appear.`
+  }, 
+  "Cucumbers": {
+    varietiesText: `Marketmore 76 (slicing, disease resistant), Diva (sweet, seedless, spineless), General Lee (slicing), Calypso (pickling), Socrates (parthenocarpic—no pollination needed)`,
+    tipsText: `Trellis for airflow and straight fruit. Consistent moisture prevents bitterness. Harvest daily at peak. Row cover early for cucumber beetles. Parthenocarpic varieties ideal for enclosed growing. Water at base—never overhead—to prevent downy mildew.`
+  }, 
+  "Corn (Sweet)": {
+    varietiesText: `Silver Queen (white, classic SU), Ambrosia (bicolor, excellent SE), Bodacious (SE, sweet), Incredible (sugary enhanced), Peaches and Cream (bicolor)`,
+    tipsText: `Heavy feeder—side dress when knee high. Block planting (not single rows) essential for pollination. Consistent moisture at tasseling critical. Do not plant super-sweet (sh2) near standard types—cross-pollination turns kernels starchy.`
+  }, 
+  "Cantaloupe": {
+    varietiesText: `Athena (disease resistant, firm, commercial standard), Ambrosia (exceptional flavor), Sugar Cube (personal size, mildew resistant)`,
+    tipsText: `Needs heat. Mulch conserves moisture (black plastic warms soil). Reduce watering as fruit ripens for sweetness. Harvest at slip stage. Water at base to keep leaves dry—downy mildew common.`
+  }, 
+  "Squash (Winter)": {
+    varietiesText: `Waltham Butternut (classic, vine borer resistant), Seminole Pumpkin (very disease/heat tolerant), Delicata (quick, sweet), Honeynut (mini butternut, exceptional flavor)`,
+    tipsText: `Long vines need space. Very disease tolerant varieties available. Minimal pruning needed. Cure in sun 10 days after harvest. Leave 2" stem. Store at 50-55°F.`
+  }, 
+  "Potatoes (Sweet)": {
+    varietiesText: `Covington (NC standard, high yield, disease resistant), Beauregard (orange, reliable), O'Henry (white, sweet)`,
+    tipsText: `Loose soil improves root formation. Vines sprawl aggressively. Build ridges for easy harvest. Cure at high heat/humidity (85°F) for a week after harvest to convert starch to sugar. Store at 55-60°F.`
+  }, 
+  "Peas (Field)": {
+    varietiesText: `Iron & Clay (cowpea, heat tolerant), Pinkeye Purple Hull (Southern pea), Mississippi Silver (Southern pea), Austrian Winter (cover crop)`,
+    tipsText: `Ultimate survival crop—thrives in heat and drought that kills everything else. Excellent soil builder and cover crop. Minimal care required. Fixes nitrogen for following crops.`
+  }, 
+  "Lima Bean (Pole)": {
+    varietiesText: `King of the Garden (heirloom, large), Christmas/Large Speckled (flavorful)`,
+    tipsText: `Requires sturdy 8' trellis. Long season. Heat tolerant. Pick when pods are plump but before yellowing. Dust seeds with rhizobium inoculant.`
+  }, 
+  "Watermelon": {
+    varietiesText: `Crimson Sweet (classic, disease resistant), Sugar Baby (icebox size), Moon and Stars (heirloom, beautiful), Charleston Gray (oblong, wilt resistant)`,
+    tipsText: `Needs heat. Consistent moisture prevents splitting. Black plastic mulch beneficial. Thump test—deep hollow sound. Tendril near fruit dries when ripe. Water at base to prevent downy mildew.`
+  }, 
+  "Okra": {
+    varietiesText: `Clemson Spineless (standard, reliable), Red Burgundy (ornamental and edible), Hill Country Red (productive), Jambalaya (compact)`,
+    tipsText: `Loves heat. Soak seeds 12 hours to speed germination. Harvest pods small (3-4") for tenderness—large pods become woody. Harvest every 1-2 days. Cut rather than pull pods.`
+  }, 
+  "Lima Bean (Bush)": {
+    varietiesText: `Henderson (baby lima, quick, reliable), Fordhook 242 (large, heat tolerant), Dixie Butterpea (Southern heirloom)`,
+    tipsText: `Compact. Reliable yields. Moderate feeding. Pick when pods are plump. Needs consistent moisture at flowering. Dust seeds with rhizobium inoculant.`
+  }, 
+  "Pumpkin": {
+    varietiesText: `Small Sugar/New England Pie (small, sweet flesh), Connecticut Field (classic jack-o-lantern), Jarrahdale (blue, excellent flavor), Long Island Cheese (tan, cooking)`,
+    tipsText: `Allow space—vines sprawl. Watch for squash vine borers. Slip board under developing fruit to prevent rot. Cure in sun. Leave 4" stem.`
+  }, 
+  "Brussels Sprouts": {
+    varietiesText: `Diablo (uniform, productive), Jade Cross (heat tolerant, reliable), Gustus (sweet), Long Island Improved (heirloom, hardy)`,
+    tipsText: `Difficult in NC due to heat. Stake tall plants. Remove lower leaves for airflow. Flavor improves dramatically after frost. Top plant 3-4 weeks before expected harvest to speed maturity.`
+  }, 
+  "Rutabaga": {
+    varietiesText: `American Purple Top (classic, yellow flesh, sweet), Laurentian (large, smooth), Joan (quick)`,
+    tipsText: `Loose soil improves roots. Steady moisture critical. Thin to 6". Tastes significantly better after hard frost—leave in ground. Can overwinter with heavy mulch.`
+  }, 
+  "Garlic": {
+    varietiesText: `German Extra Hardy (hardneck, excellent flavor, surprisingly good in NC), Inchelium Red (softneck, stores well), Lorz Italian (softneck, mild), Chesnok Red (roasting)`,
+    tipsText: `Mulch heavily. Needs winter cold to divide into bulbs. Remove scapes for bulb size (hardneck types). Harvest when lower 3-4 leaves brown. Cure 2-4 weeks in dry shade. Heavy feeder.`
+  }
+};
+
+// Helper function to get plant guide data
+function getPlantGuide(plantName) {
+  return PLANT_GUIDE[plantName] || null;
+}
+
+// Check if a plant has guide data available
+function hasGuideData(plantName) {
+  return PLANT_GUIDE.hasOwnProperty(plantName);
+}

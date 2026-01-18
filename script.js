@@ -536,6 +536,13 @@ function renderGridView() {
         plantName.textContent = plant.name;
 
         plantNameCell.appendChild(plantName);
+
+        // Make both icon cell and name cell clickable if guide data exists
+        if (hasGuideData(plant.name)) {
+            bindPlantDetailTrigger(iconCell, plant);
+            bindPlantDetailTrigger(plantNameCell, plant);
+        }
+
         row.appendChild(plantNameCell);
 
         // Month columns
@@ -766,6 +773,7 @@ function renderMonthView() {
             const nameEl = document.createElement('div');
             nameEl.className = 'month-plant-name';
             nameEl.textContent = plant.name;
+
             infoContainer.appendChild(nameEl);
 
             if (plant.spacing) {
@@ -784,6 +792,12 @@ function renderMonthView() {
 
             card.appendChild(iconContainer);
             card.appendChild(infoContainer);
+
+            // Make entire card clickable if guide data exists
+            if (hasGuideData(plant.name)) {
+                bindPlantDetailTrigger(card, plant);
+            }
+
             plantsGrid.appendChild(card);
         });
 
@@ -1058,6 +1072,236 @@ function initColumnHover() {
     });
 }
 
+// ============================================
+// Plant Detail Panel Functions
+// ============================================
+
+const plantDetailPanelState = {
+    currentPlant: null,
+    returnFocusEl: null
+};
+
+function isPlantDetailPanelOpen() {
+    const panel = document.getElementById('plantDetailPanel');
+    return !!(panel && !panel.hasAttribute('hidden'));
+}
+
+function bindPlantDetailTrigger(el, plant) {
+    if (!el) return;
+
+    el.classList.add('plant-name-clickable');
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-haspopup', 'dialog');
+    el.tabIndex = 0;
+
+    const open = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openPlantDetailPanel(plant);
+    };
+
+    el.addEventListener('click', open);
+    el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            open(e);
+        }
+    });
+}
+
+function formatSpacingForDisplay(spacing) {
+    if (!spacing) return '—';
+    const normalized = String(spacing).trim();
+    if (!normalized) return '—';
+    if (/[a-z]/i.test(normalized)) return normalized;
+    return `${normalized.replace(/-/g, '–')} in`;
+}
+
+function splitCommaOutsideParens(text) {
+    const value = String(text || '').trim();
+    if (!value) return [];
+
+    const items = [];
+    let depth = 0;
+    let current = '';
+
+    for (const ch of value) {
+        if (ch === '(') depth += 1;
+        if (ch === ')') depth = Math.max(0, depth - 1);
+
+        if (ch === ',' && depth === 0) {
+            const trimmed = current.trim();
+            if (trimmed) items.push(trimmed);
+            current = '';
+            continue;
+        }
+
+        current += ch;
+    }
+
+    const trimmed = current.trim();
+    if (trimmed) items.push(trimmed);
+    return items;
+}
+
+function renderPlantDetailGuide(plant) {
+    const panelVarieties = document.getElementById('panelVarieties');
+    const panelTips = document.getElementById('panelTips');
+
+    const guideData = getPlantGuide(plant.name);
+
+    panelVarieties.innerHTML = '';
+    if (guideData && guideData.varietiesText) {
+        const list = document.createElement('ul');
+        list.className = 'panel-bullets';
+        splitCommaOutsideParens(guideData.varietiesText).forEach(itemText => {
+            const li = document.createElement('li');
+            li.textContent = itemText;
+            list.appendChild(li);
+        });
+        panelVarieties.appendChild(list);
+    } else {
+        panelVarieties.innerHTML = '<div class="panel-empty-note">No variety notes yet.</div>';
+    }
+
+    panelTips.innerHTML = '';
+    if (guideData && guideData.tipsText) {
+        const list = document.createElement('ul');
+        list.className = 'panel-bullets';
+        guideData.tipsText
+            .split('. ')
+            .map(s => s.trim())
+            .filter(Boolean)
+            .forEach(sentence => {
+                const li = document.createElement('li');
+                li.textContent = sentence.endsWith('.') ? sentence : `${sentence}.`;
+                list.appendChild(li);
+            });
+        panelTips.appendChild(list);
+    } else {
+        panelTips.innerHTML = '<div class="panel-empty-note">No growing tips yet.</div>';
+    }
+}
+
+function renderPlantDetailPanelContent(plant) {
+    const panelPlantName = document.getElementById('panelPlantName');
+    const panelPlantIcon = document.getElementById('panelPlantIcon');
+    const panelSpacing = document.getElementById('panelSpacing');
+    const panelDaysToHarvest = document.getElementById('panelDaysToHarvest');
+
+    panelPlantName.textContent = plant.name;
+
+    const iconData = plant.type === 'flower' ? getFlowerIcon(plant.name) : getPlantIcon(plant.name);
+    panelPlantIcon.innerHTML = '';
+    if (iconData.type === 'svg') {
+        const img = document.createElement('img');
+        img.src = iconData.path;
+        img.alt = plant.name;
+        panelPlantIcon.appendChild(img);
+    } else {
+        panelPlantIcon.textContent = iconData.icon;
+    }
+
+    panelSpacing.textContent = formatSpacingForDisplay(plant.spacing);
+    panelDaysToHarvest.textContent = plant.daysToHarvest || '—';
+
+    renderPlantDetailGuide(plant);
+}
+
+function openPlantDetailPanel(plant) {
+    const panel = document.getElementById('plantDetailPanel');
+    const closePanelBtn = document.getElementById('closePanelBtn');
+    if (!panel) return;
+
+    plantDetailPanelState.returnFocusEl = document.activeElement;
+    plantDetailPanelState.currentPlant = plant;
+
+    renderPlantDetailPanelContent(plant);
+
+    panel.removeAttribute('hidden');
+    panel.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('panel-open');
+
+    if (closePanelBtn) {
+        closePanelBtn.focus({ preventScroll: true });
+    }
+}
+
+function closePlantDetailPanel() {
+    const panel = document.getElementById('plantDetailPanel');
+    if (!panel) return;
+
+    panel.setAttribute('hidden', '');
+    panel.setAttribute('aria-hidden', 'true');
+
+    // Wait for animation to finish before restoring focus
+    setTimeout(() => {
+        document.body.classList.remove('panel-open');
+
+        if (panel.hasAttribute('hidden')) {
+            panel.hidden = true;
+        }
+
+        const returnFocusEl = plantDetailPanelState.returnFocusEl;
+        plantDetailPanelState.currentPlant = null;
+        plantDetailPanelState.returnFocusEl = null;
+
+        if (returnFocusEl && document.contains(returnFocusEl)) {
+            returnFocusEl.focus({ preventScroll: true });
+        }
+    }, 300);
+}
+
+function initPlantDetailPanel() {
+    const closePanelBtn = document.getElementById('closePanelBtn');
+    const panelOverlay = document.getElementById('panelOverlay');
+    const panel = document.getElementById('plantDetailPanel');
+
+    if (!closePanelBtn || !panelOverlay || !panel) return;
+
+    // Close button
+    closePanelBtn.addEventListener('click', closePlantDetailPanel);
+
+    // Click overlay to close
+    panelOverlay.addEventListener('click', closePlantDetailPanel);
+
+    // ESC key to close
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (panel.hasAttribute('hidden')) return;
+        closePlantDetailPanel();
+    });
+
+    // Focus trap while panel is open
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Tab') return;
+        if (panel.hasAttribute('hidden')) return;
+
+        const focusables = Array.from(
+            panel.querySelectorAll(
+                'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            )
+        ).filter(el => el.getClientRects().length > 0);
+
+        if (focusables.length === 0) return;
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement;
+
+        if (e.shiftKey && active === first) {
+            e.preventDefault();
+            last.focus();
+            return;
+        }
+
+        if (!e.shiftKey && active === last) {
+            e.preventDefault();
+            first.focus();
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Set current half-month based on today's date
     const today = new Date();
@@ -1070,6 +1314,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial render
     initGridStickyHeader();
     initColumnHover();
+    initPlantDetailPanel();
     updateGreenhouseFilterVisibility();
     filterPlants();
     applyNowEmphasisToGrid();

@@ -163,6 +163,51 @@
         </main>
     </div>
 
+    <!-- Plant Detail Panel (slides in from right) -->
+    <div id="plantDetailPanel" class="plant-detail-panel" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="panelPlantName" aria-describedby="panelBody">
+        <div class="panel-overlay" id="panelOverlay" aria-hidden="true"></div>
+        <div class="panel-content" role="document">
+            <div class="panel-header">
+                <div class="panel-title-row">
+                    <span class="panel-plant-icon" id="panelPlantIcon"></span>
+                    <div class="panel-title-stack">
+                        <h2 id="panelPlantName">Plant Name</h2>
+                        <div class="panel-quick-meta" aria-label="Plant quick facts">
+                            <div class="quick-meta-item">
+                                <span class="quick-meta-label">Spacing</span>
+                                <span class="quick-meta-value" id="panelSpacing">--</span>
+                            </div>
+                            <div class="quick-meta-item">
+                                <span class="quick-meta-label">Days</span>
+                                <span class="quick-meta-value" id="panelDaysToHarvest">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button id="closePanelBtn" class="panel-close-btn" type="button" aria-label="Close panel">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="panel-body" id="panelBody">
+                <div class="panel-section" id="varietiesSection">
+                    <h3 class="section-title">Recommended Varieties</h3>
+                    <div class="varieties-content" id="panelVarieties">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="panel-section" id="tipsSection">
+                    <h3 class="section-title">Growing Tips</h3>
+                    <div class="tips-content" id="panelTips">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer class="mini-footer">
         <p>built with <svg width="12" height="12" viewBox="0 0 24 24" fill="#999999" style="display: inline-block; vertical-align: middle;"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> by <a href="https://jyvisuals.com" target="_blank" rel="noopener noreferrer">jyvisuals.com</a></p>
     </footer>
