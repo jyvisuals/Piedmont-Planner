@@ -12,9 +12,12 @@
     --gray-10: #1a1a1a;
     --gray-20: #333333;
     --gray-30: #4d4d4d;
+    --gray-40: #666666;
+    --gray-50: #808080;
     --gray-80: #cccccc;
     --gray-90: #e5e5e5;
     --gray-95: #f5f5f5;
+    --gray-98: #fafafa;
 
     --paper: #f7f5ef;
     --paper-grid: rgba(0, 0, 0, 0.035);
@@ -24,6 +27,8 @@
     --blue: #1d3557;
     --yellow: #ffc300;
     --green: #2a9d8f;
+    --primary-green: #2a9d8f;
+    --secondary-green: #1d3557;
 
     /* Activity Colors - Simplified Palette */
     /* Greenhouse indicated by border, not color */

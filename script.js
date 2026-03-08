@@ -483,7 +483,7 @@ function renderGridView() {
     tbody.innerHTML = '';
 
     if (state.filteredPlants.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="25" class="no-results">No plants found matching your filters</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="26" class="no-results">No plants found matching your filters</td></tr>';
         applyNowEmphasisToGrid();
         return;
     }
@@ -500,9 +500,8 @@ function renderGridView() {
         const tooltip = `Spacing: ${spacingLabel}\nDays to harvest: ${daysLabel}`;
 
         // Icon column (sticky)
-        const iconCell = document.createElement('th');
+        const iconCell = document.createElement('td');
         iconCell.className = 'sticky-col icon-col col-icon';
-        iconCell.scope = 'row';
         iconCell.dataset.tooltip = tooltip;
         iconCell.title = tooltip;
 
