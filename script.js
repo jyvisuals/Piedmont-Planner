@@ -45,7 +45,6 @@ const elements = {
     nextMonth: document.getElementById('nextMonth')
 };
 
-const DATASET_STORAGE_KEY = 'piedmontPlannerDataset';
 const CURRENT_DATASET = window.__APP_DATASET__ || 'v1';
 
 const PREFERRED_VIEW_ORDER = ['grid', 'timeline', 'month'];
@@ -153,13 +152,14 @@ function initDatasetSwitch() {
             const nextDataset = btn.dataset.dataset;
             if (!nextDataset || nextDataset === CURRENT_DATASET) return;
 
-            try {
-                window.localStorage.setItem(DATASET_STORAGE_KEY, nextDataset);
-            } catch (error) {
-                // Ignore storage errors and still try a reload.
+            const nextUrl = new URL(window.location.href);
+            if (nextDataset === 'v2') {
+                nextUrl.searchParams.delete('dataset');
+            } else {
+                nextUrl.searchParams.set('dataset', nextDataset);
             }
 
-            window.location.reload();
+            window.location.href = nextUrl.toString();
         });
     });
 }

@@ -233,22 +233,13 @@
     <!-- <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="jyounpenn" data-description="Support me on Buy me a coffee!" data-color="#BD5FFF" data-position="Right" data-x_margin="18" data-y_margin="18"></script> -->
     <script>
         (function () {
-            const DATASET_STORAGE_KEY = 'piedmontPlannerDataset';
             const datasetFiles = {
                 v1: 'data.js',
                 v2: 'data.carrboro-review.js'
             };
-
-            let selectedDataset = 'v2';
-
-            try {
-                const storedDataset = window.localStorage.getItem(DATASET_STORAGE_KEY);
-                if (storedDataset && datasetFiles[storedDataset]) {
-                    selectedDataset = storedDataset;
-                }
-            } catch (error) {
-                // Ignore storage errors and fall back to v2.
-            }
+            const params = new URLSearchParams(window.location.search);
+            const requestedDataset = params.get('dataset');
+            const selectedDataset = datasetFiles[requestedDataset] ? requestedDataset : 'v2';
 
             window.__APP_DATASET__ = selectedDataset;
 
