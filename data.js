@@ -1,5 +1,27 @@
 // Planting Calendar Data
 // Zone 8a - Piedmont Region
+//
+// Data model:
+// - Each crop has a `months` object with `half1` and `half2` arrays for each month.
+// - `half1` means the first half of the month; `half2` means the second half.
+// - Multiple codes in one half-month mean multiple actions are reasonable in that slot.
+//
+// Timing codes:
+// - `s`  = sow/direct-seed outdoors
+// - `si` = sow indoors in trays/soil blocks for later transplanting
+// - `sg` = sow in protected culture such as an unheated greenhouse, cold frame, or similar cover
+// - `t`  = transplant outdoors
+// - `tg` = transplant into protected culture such as an unheated greenhouse or cold frame
+// - `B`  = plant bulbs, cloves, or sets
+// - `h`  = harvest
+// - `o`  = other / special handling
+//
+// Derivation notes:
+// - This file is the baseline dataset used by the app as `V1`.
+// - It reflects the original planner timings and local growing assumptions that existed before
+//   the Carrboro-specific source audit.
+// - It is useful as the comparison track, but it was not normalized crop-by-crop against a
+//   single Piedmont source stack in the way `data.carrboro-review.js` was.
 
 const MONTHS = [
   { id: "jan", name: "January", short: "Jan" },
@@ -19,12 +41,12 @@ const MONTHS = [
 const LEGEND = {
   si: "Sow Indoors",
   t: "Transplant",
-  s: "Sow Outdoors",
+  s: "Sow Outdoors / Bulbs & Sets",
   sg: "Sow Greenhouse",
   tg: "Transplant Greenhouse",
   h: "Harvest",
   o: "Other",
-  B: "Bulb Planting"
+  B: "Outdoors (Bulbs / Sets)"
 };
 
 const TASKS = {
@@ -86,17 +108,17 @@ const PLANTS = [
     spacing: "6-9",
     daysToHarvest: "40-50",
     months: {
-      jan: { half1: ["sg", "si"], half2: ["sg", "si"] },
-      feb: { half1: ["s", "sg"], half2: ["s", "sg"] },
+      jan: { half1: [], half2: [] },
+      feb: { half1: ["s"], half2: ["s"] },
       mar: { half1: ["s"], half2: ["s"] },
       apr: { half1: [], half2: [] },
       may: { half1: [], half2: [] },
       jun: { half1: [], half2: [] },
       jul: { half1: [], half2: [] },
-      aug: { half1: [], half2: [] },
+      aug: { half1: ["s"], half2: ["s"] },
       sep: { half1: ["s"], half2: ["s"] },
-      oct: { half1: ["s"], half2: ["s"] },
-      nov: { half1: ["sg"], half2: ["sg"] },
+      oct: { half1: ["sg"], half2: ["sg"] },
+      nov: { half1: [], half2: [] },
       dec: { half1: [], half2: [] }
     }
   },
@@ -107,16 +129,16 @@ const PLANTS = [
     spacing: "10",
     daysToHarvest: "T = 45-60, S = 70-85",
     months: {
-      jan: { half1: ["sg", "si"], half2: ["sg", "si"] },
-      feb: { half1: ["sg", "si"], half2: ["si"] },
-      mar: { half1: ["s", "t"], half2: ["s", "t"] },
-      apr: { half1: [], half2: [] },
+      jan: { half1: [], half2: ["si"] },
+      feb: { half1: ["s", "si"], half2: ["s", "si"] },
+      mar: { half1: ["s"], half2: ["t"] },
+      apr: { half1: ["t"], half2: ["t"] },
       may: { half1: [], half2: [] },
       jun: { half1: [], half2: [] },
       jul: { half1: [], half2: [] },
-      aug: { half1: ["si"], half2: ["si"] },
-      sep: { half1: ["s", "t"], half2: ["s", "t"] },
-      oct: { half1: ["t"], half2: ["tg"] },
+      aug: { half1: ["si"], half2: ["s", "si"] },
+      sep: { half1: ["s"], half2: ["t"] },
+      oct: { half1: ["t", "sg"], half2: ["sg"] },
       nov: { half1: [], half2: [] },
       dec: { half1: [], half2: [] }
     }
@@ -128,17 +150,17 @@ const PLANTS = [
     spacing: "1",
     daysToHarvest: "20-25",
     months: {
-      jan: { half1: ["sg"], half2: ["sg"] },
-      feb: { half1: ["s", "sg"], half2: ["s"] },
+      jan: { half1: [], half2: [] },
+      feb: { half1: ["s"], half2: ["s"] },
       mar: { half1: ["s"], half2: ["s"] },
-      apr: { half1: [], half2: [] },
-      may: { half1: [], half2: [] },
-      jun: { half1: [], half2: [] },
+      apr: { half1: ["s"], half2: ["s"] },
+      may: { half1: ["s"], half2: ["s"] },
+      jun: { half1: ["s"], half2: ["s"] },
       jul: { half1: [], half2: [] },
-      aug: { half1: [], half2: [] },
-      sep: { half1: ["s"], half2: ["s"] },
-      oct: { half1: ["s"], half2: ["s"] },
-      nov: { half1: ["sg"], half2: [] },
+      aug: { half1: ["s"], half2: ["s"] },
+      sep: { half1: ["s"], half2: [] },
+      oct: { half1: ["sg"], half2: ["sg"] },
+      nov: { half1: [], half2: [] },
       dec: { half1: [], half2: [] }
     }
   },
@@ -149,17 +171,17 @@ const PLANTS = [
     spacing: "6",
     daysToHarvest: "S = 40-50, T = 15-25",
     months: {
-      jan: { half1: ["sg", "si"], half2: ["sg", "si"] },
-      feb: { half1: ["s", "sg"], half2: ["s"] },
+      jan: { half1: ["si"], half2: ["si"] },
+      feb: { half1: ["s", "t", "si"], half2: ["s", "t", "si"] },
       mar: { half1: ["s", "t"], half2: ["s", "t"] },
-      apr: { half1: ["s"], half2: [] },
+      apr: { half1: ["s", "t"], half2: ["s", "t"] },
       may: { half1: [], half2: [] },
-      jun: { half1: [], half2: [] },
-      jul: { half1: [], half2: [] },
-      aug: { half1: ["si"], half2: ["s"] },
+      jun: { half1: [], half2: ["si"] },
+      jul: { half1: ["si"], half2: ["si"] },
+      aug: { half1: ["s", "t", "si"], half2: ["s", "t"] },
       sep: { half1: ["s", "t"], half2: ["s", "t"] },
-      oct: { half1: ["s"], half2: ["sg"] },
-      nov: { half1: ["sg"], half2: [] },
+      oct: { half1: ["sg"], half2: ["sg"] },
+      nov: { half1: [], half2: [] },
       dec: { half1: [], half2: [] }
     }
   },
@@ -171,15 +193,15 @@ const PLANTS = [
     daysToHarvest: "60-70, 42-56",
     months: {
       jan: { half1: ["sg", "si"], half2: ["sg", "si"] },
-      feb: { half1: ["s"], half2: ["s"] },
+      feb: { half1: ["s", "sg"], half2: ["s", "sg"] },
       mar: { half1: ["s"], half2: ["s"] },
-      apr: { half1: ["s"], half2: [] },
+      apr: { half1: [], half2: [] },
       may: { half1: [], half2: [] },
-      jun: { half1: [], half2: [] },
-      jul: { half1: [], half2: [] },
-      aug: { half1: ["s"], half2: ["s"] },
-      sep: { half1: ["s"], half2: ["s"] },
-      oct: { half1: ["sg"], half2: [] },
+      jun: { half1: [], half2: ["si"] },
+      jul: { half1: ["si"], half2: ["si"] },
+      aug: { half1: [], half2: ["t"] },
+      sep: { half1: ["s", "t"], half2: [] },
+      oct: { half1: ["sg"], half2: ["sg"] },
       nov: { half1: [], half2: [] },
       dec: { half1: [], half2: [] }
     }
@@ -191,17 +213,17 @@ const PLANTS = [
     spacing: "6",
     daysToHarvest: "50-60",
     months: {
-      jan: { half1: ["sg", "si"], half2: ["sg", "si"] },
-      feb: { half1: ["s", "sg"], half2: ["s", "sg"] },
+      jan: { half1: [], half2: [] },
+      feb: { half1: [], half2: ["s"] },
       mar: { half1: ["s"], half2: ["s"] },
-      apr: { half1: [], half2: [] },
-      may: { half1: [], half2: [] },
-      jun: { half1: [], half2: [] },
+      apr: { half1: ["s"], half2: ["s"] },
+      may: { half1: ["s"], half2: ["s"] },
+      jun: { half1: ["s"], half2: ["s"] },
       jul: { half1: [], half2: [] },
-      aug: { half1: [], half2: ["s"] },
+      aug: { half1: ["s"], half2: ["s"] },
       sep: { half1: ["s"], half2: ["s"] },
-      oct: { half1: ["s"], half2: [] },
-      nov: { half1: ["sg"], half2: ["sg"] },
+      oct: { half1: ["s", "sg"], half2: ["sg"] },
+      nov: { half1: [], half2: [] },
       dec: { half1: [], half2: [] }
     }
   },
@@ -213,13 +235,13 @@ const PLANTS = [
     daysToHarvest: "T = 40-70, S = 120-150**",
     months: {
       jan: { half1: ["si"], half2: ["si"] },
-      feb: { half1: ["si"], half2: ["si"] },
-      mar: { half1: ["si"], half2: [] },
-      apr: { half1: ["tg"], half2: ["t"] },
-      may: { half1: ["t"], half2: [] },
-      jun: { half1: [], half2: [] },
-      jul: { half1: [], half2: [] },
-      aug: { half1: [], half2: [] },
+      feb: { half1: [], half2: ["t"] },
+      mar: { half1: ["t"], half2: ["t", "si"] },
+      apr: { half1: ["si"], half2: ["si"] },
+      may: { half1: ["si"], half2: ["si"] },
+      jun: { half1: [], half2: ["t"] },
+      jul: { half1: ["t"], half2: ["t"] },
+      aug: { half1: ["t"], half2: [] },
       sep: { half1: [], half2: [] },
       oct: { half1: [], half2: [] },
       nov: { half1: [], half2: [] },
@@ -233,18 +255,18 @@ const PLANTS = [
     spacing: "4",
     daysToHarvest: "90-120",
     months: {
-      jan: { half1: [], half2: [] },
-      feb: { half1: [], half2: [] },
-      mar: { half1: [], half2: [] },
+      jan: { half1: ["s", "sg"], half2: ["s", "sg"] },
+      feb: { half1: ["s", "sg"], half2: ["s", "sg"] },
+      mar: { half1: ["s", "B"], half2: ["s", "B"] },
       apr: { half1: [], half2: [] },
       may: { half1: [], half2: [] },
       jun: { half1: [], half2: [] },
       jul: { half1: [], half2: [] },
-      aug: { half1: [], half2: [] },
+      aug: { half1: ["s"], half2: ["s"] },
       sep: { half1: ["s"], half2: ["s"] },
       oct: { half1: ["s"], half2: ["s"] },
-      nov: { half1: [], half2: [] },
-      dec: { half1: [], half2: [] }
+      nov: { half1: ["s"], half2: ["s"] },
+      dec: { half1: ["s"], half2: ["s"] }
     }
   },
   {
@@ -255,11 +277,11 @@ const PLANTS = [
     daysToHarvest: "T = 50-80, S = 120-150",
     months: {
       jan: { half1: ["si"], half2: ["si"] },
-      feb: { half1: ["si"], half2: ["si"] },
-      mar: { half1: [], half2: [] },
-      apr: { half1: ["t"], half2: ["t"] },
-      may: { half1: [], half2: [] },
-      jun: { half1: [], half2: [] },
+      feb: { half1: ["si"], half2: ["s", "t", "si"] },
+      mar: { half1: ["s", "t", "si"], half2: ["s", "t", "si"] },
+      apr: { half1: ["s", "t"], half2: ["s", "t"] },
+      may: { half1: ["s", "t"], half2: ["s", "t"] },
+      jun: { half1: ["s", "t"], half2: ["s", "t"] },
       jul: { half1: [], half2: [] },
       aug: { half1: [], half2: [] },
       sep: { half1: [], half2: [] },
@@ -275,16 +297,16 @@ const PLANTS = [
     spacing: "6",
     daysToHarvest: "14-22, 40-50",
     months: {
-      jan: { half1: [], half2: ["sg", "si"] },
-      feb: { half1: ["sg", "si"], half2: ["si", "sg"] },
-      mar: { half1: ["si"], half2: ["s", "t"] },
-      apr: { half1: ["s", "t"], half2: [] },
-      may: { half1: [], half2: [] },
-      jun: { half1: [], half2: [] },
-      jul: { half1: [], half2: [] },
-      aug: { half1: ["si"], half2: ["si"] },
+      jan: { half1: ["sg", "si"], half2: ["sg", "si"] },
+      feb: { half1: ["sg", "si"], half2: ["sg", "s", "t"] },
+      mar: { half1: ["s", "t"], half2: ["s", "t"] },
+      apr: { half1: ["s", "t"], half2: ["s", "t"] },
+      may: { half1: ["s", "t"], half2: ["s", "t"] },
+      jun: { half1: ["s", "t"], half2: ["s", "t"] },
+      jul: { half1: ["si"], half2: ["si"] },
+      aug: { half1: ["s", "t", "si"], half2: ["s", "t"] },
       sep: { half1: ["s", "t"], half2: ["s", "t"] },
-      oct: { half1: ["t"], half2: ["tg"] },
+      oct: { half1: ["sg"], half2: ["sg"] },
       nov: { half1: [], half2: [] },
       dec: { half1: [], half2: [] }
     }

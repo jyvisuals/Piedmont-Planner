@@ -45,6 +45,9 @@ const elements = {
     nextMonth: document.getElementById('nextMonth')
 };
 
+const DATASET_STORAGE_KEY = 'piedmontPlannerDataset';
+const CURRENT_DATASET = window.__APP_DATASET__ || 'v1';
+
 const PREFERRED_VIEW_ORDER = ['grid', 'timeline', 'month'];
 
 const viewUI = {};
@@ -90,7 +93,7 @@ function updateResultsSummary() {
     if (state.filters.search) filters.push(`search: "${state.filters.search}"`);
     if (!state.filters.showFlowers) filters.push('flowers hidden');
     if (!state.filters.showGreenhouse) filters.push('greenhouse hidden');
-    if (state.filters.activity !== 'all') filters.push(`activity: ${state.filters.activity.toUpperCase()}`);
+    if (state.filters.activity !== 'all') filters.push(`activity: ${getDisplayActivityCode(state.filters.activity).toUpperCase()}`);
 
     elements.resultsSummary.textContent = filters.length
         ? `Showing ${shown} of ${total} plants. Filters: ${filters.join(', ')}.`
@@ -119,6 +122,30 @@ function requestGridStickyHeaderLayoutSync() {
     requestAnimationFrame(() => {
         gridStickyHeader.syncRequested = false;
         syncGridStickyHeaderLayout();
+    });
+}
+
+function initDatasetSwitch() {
+    const datasetButtons = Array.from(document.querySelectorAll('.dataset-switch-btn'));
+    if (datasetButtons.length === 0) return;
+
+    datasetButtons.forEach(btn => {
+        const isActive = btn.dataset.dataset === CURRENT_DATASET;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
+
+        btn.addEventListener('click', () => {
+            const nextDataset = btn.dataset.dataset;
+            if (!nextDataset || nextDataset === CURRENT_DATASET) return;
+
+            try {
+                window.localStorage.setItem(DATASET_STORAGE_KEY, nextDataset);
+            } catch (error) {
+                // Ignore storage errors and still try a reload.
+            }
+
+            window.location.reload();
+        });
     });
 }
 
@@ -261,11 +288,6 @@ function syncViewUI(view) {
         }
     });
 
-    // Sync toggle checkbox
-    const monthViewToggle = document.getElementById('monthViewToggle');
-    if (monthViewToggle) {
-        monthViewToggle.checked = view === 'month';
-    }
 }
 
 function handleTabKeydown(e) {
@@ -296,6 +318,237 @@ function filterGreenhouseActivities(activities) {
     return activities;
 }
 
+function normalizeActivityCode(activity) {
+    if (activity === 'o') return '*';
+    if (activity === 'B') return 's';
+    return activity;
+}
+
+function getDisplayActivityCode(activity) {
+    if (activity === 'o') return '*';
+    if (activity === 'B') return 's/b';
+    return activity;
+}
+
+function formatActivityList(activities) {
+    return activities.map(getDisplayActivityCode).join(', ').toUpperCase();
+}
+
+function getNormalizedHalfMonthActivities(plant, halfMonthIndex) {
+    if (halfMonthIndex < 0 || halfMonthIndex >= MONTHS.length * 2) {
+        return [];
+    }
+
+    const monthIndex = Math.floor(halfMonthIndex / 2);
+    const isFirstHalf = halfMonthIndex % 2 === 0;
+    const monthId = MONTHS[monthIndex].id;
+    const monthData = plant.months[monthId];
+
+    if (!monthData) {
+        return [];
+    }
+
+    const activities = isFirstHalf ? monthData.half1 : monthData.half2;
+    return activities.map(normalizeActivityCode);
+}
+
+function getMonthViewEdgeState(plant, activityCode, halfMonthIndex) {
+    const normalizedActivity = normalizeActivityCode(activityCode);
+    const previousActivities = getNormalizedHalfMonthActivities(plant, halfMonthIndex - 1);
+    const nextActivities = getNormalizedHalfMonthActivities(plant, halfMonthIndex + 1);
+
+    return {
+        startsNow: !previousActivities.includes(normalizedActivity),
+        endsNow: !nextActivities.includes(normalizedActivity)
+    };
+}
+
+function sortMonthGroupPlants(plants, activityCode, halfMonthIndex) {
+    const confidenceRank = {
+        high: 0,
+        medium: 1,
+        low: 2
+    };
+
+    const getStageRank = (edgeState) => {
+        if (edgeState.startsNow && !edgeState.endsNow) return 0;
+        if (!edgeState.startsNow && !edgeState.endsNow) return 1;
+        if (edgeState.endsNow && !edgeState.startsNow) return 2;
+
+        // Single-window items count as "new" so they surface at the front.
+        return 0;
+    };
+
+    return [...plants].sort((leftPlant, rightPlant) => {
+        const leftEdgeState = getMonthViewEdgeState(leftPlant, activityCode, halfMonthIndex);
+        const rightEdgeState = getMonthViewEdgeState(rightPlant, activityCode, halfMonthIndex);
+        const stageComparison = getStageRank(leftEdgeState) - getStageRank(rightEdgeState);
+        if (stageComparison !== 0) return stageComparison;
+
+        const typeComparison = Number(leftPlant.type !== 'vegetable') - Number(rightPlant.type !== 'vegetable');
+        if (typeComparison !== 0) return typeComparison;
+
+        const leftConfidence = getPlantReviewConfidenceMeta(leftPlant.name)?.value ?? null;
+        const rightConfidence = getPlantReviewConfidenceMeta(rightPlant.name)?.value ?? null;
+        const leftConfidenceRank = leftConfidence in confidenceRank ? confidenceRank[leftConfidence] : Number.MAX_SAFE_INTEGER;
+        const rightConfidenceRank = rightConfidence in confidenceRank ? confidenceRank[rightConfidence] : Number.MAX_SAFE_INTEGER;
+        const confidenceComparison = leftConfidenceRank - rightConfidenceRank;
+
+        if (confidenceComparison !== 0) return confidenceComparison;
+
+        return leftPlant.name.localeCompare(rightPlant.name);
+    });
+}
+
+function getFirstActiveHalfMonth(plant) {
+    for (let monthIndex = 0; monthIndex < MONTHS.length; monthIndex += 1) {
+        const monthId = MONTHS[monthIndex].id;
+        const monthData = plant.months[monthId];
+
+        if (!monthData) continue;
+        if (monthData.half1.length > 0) return monthIndex * 2;
+        if (monthData.half2.length > 0) return monthIndex * 2 + 1;
+    }
+
+    return Number.MAX_SAFE_INTEGER;
+}
+
+function getFirstActiveActivities(plant) {
+    const firstHalfMonth = getFirstActiveHalfMonth(plant);
+    if (!Number.isFinite(firstHalfMonth) || firstHalfMonth === Number.MAX_SAFE_INTEGER) {
+        return [];
+    }
+
+    const monthIndex = Math.floor(firstHalfMonth / 2);
+    const isFirstHalf = firstHalfMonth % 2 === 0;
+    const monthId = MONTHS[monthIndex].id;
+    const monthData = plant.months[monthId];
+
+    if (!monthData) {
+        return [];
+    }
+
+    return (isFirstHalf ? monthData.half1 : monthData.half2).map(normalizeActivityCode);
+}
+
+function getGridGroupKey(plant) {
+    const normalizedName = plant.name.toLowerCase();
+    const groupMatchers = [
+        [/pea/, 'pea'],
+        [/lettuce/, 'lettuce'],
+        [/onion/, 'onion'],
+        [/squash/, 'squash'],
+        [/cabbage/, 'cabbage'],
+        [/bean/, 'bean'],
+        [/potato/, 'potato'],
+        [/tomato/, 'tomato'],
+        [/pepper/, 'pepper'],
+        [/melon|cantaloupe|watermelon/, 'melon'],
+        [/brassel|brussels|broccoli|cauliflower|kale|collard|bok choy|kohlrabi|rutabaga|turnip|mustard/, 'brassica'],
+        [/carrot|beet|radish|parsnip/, 'root'],
+        [/basil|cilantro|dill|fennel|parsley|sage|chive/, 'herb'],
+        [/sunflower|zinnia|nasturtium|marigold|snapdragon|stock|yarrow|lavender|echinacea|chamomile|moonflower|calendula|borage/, 'flower']
+    ];
+
+    for (const [matcher, groupKey] of groupMatchers) {
+        if (matcher.test(normalizedName)) {
+            return groupKey;
+        }
+    }
+
+    return normalizedName
+        .replace(/\([^)]*\)/g, '')
+        .replace(/,/g, ' ')
+        .trim();
+}
+
+function sortGridPlants(plants) {
+    const firstActivityRank = {
+        si: 0,
+        s: 1,
+        t: 2,
+        h: 3,
+        sg: 4,
+        tg: 5,
+        '*': 6
+    };
+
+    const getFirstActivityRank = (plant) => {
+        const activities = getFirstActiveActivities(plant);
+        if (activities.length === 0) return Number.MAX_SAFE_INTEGER;
+
+        const ranks = activities.map(activity => {
+            return activity in firstActivityRank ? firstActivityRank[activity] : Number.MAX_SAFE_INTEGER;
+        });
+
+        return Math.min(...ranks);
+    };
+
+    return [...plants].sort((leftPlant, rightPlant) => {
+        const firstHalfMonthComparison = getFirstActiveHalfMonth(leftPlant) - getFirstActiveHalfMonth(rightPlant);
+        if (firstHalfMonthComparison !== 0) return firstHalfMonthComparison;
+
+        const firstActivityComparison = getFirstActivityRank(leftPlant) - getFirstActivityRank(rightPlant);
+        if (firstActivityComparison !== 0) return firstActivityComparison;
+
+        const groupComparison = getGridGroupKey(leftPlant).localeCompare(getGridGroupKey(rightPlant));
+        if (groupComparison !== 0) return groupComparison;
+
+        const typeComparison = Number(leftPlant.type !== 'vegetable') - Number(rightPlant.type !== 'vegetable');
+        if (typeComparison !== 0) return typeComparison;
+
+        return leftPlant.name.localeCompare(rightPlant.name);
+    });
+}
+
+function renderActivityTokens(container, activities, { compact = false } = {}) {
+    container.replaceChildren();
+
+    activities.forEach((activity, index) => {
+        if (index > 0) {
+            container.appendChild(document.createTextNode(compact ? ',' : ', '));
+        }
+
+        const token = document.createElement('span');
+        token.className = 'activity-token';
+
+        if (activity === 'h') {
+            token.classList.add('activity-token-h');
+        }
+
+        token.textContent = getDisplayActivityCode(activity).toUpperCase();
+        container.appendChild(token);
+    });
+}
+
+function getPrimaryVisualActivity(activities) {
+    const nonHarvestActivities = activities.filter(activity => activity !== 'h');
+    return nonHarvestActivities[0] || activities[0] || null;
+}
+
+function applyActivityCellVisuals(activityDiv, activities, { greenhouse = false, filteredOut = false } = {}) {
+    const hasHarvest = activities.includes('h');
+    const backgroundActivities = activities.filter(activity => activity !== 'h');
+    const harvestOnly = hasHarvest && backgroundActivities.length === 0;
+
+    if (filteredOut) {
+        activityDiv.className = 'activity-cell has-activity filtered-out';
+    } else {
+        activityDiv.className = greenhouse ? 'activity-cell has-activity greenhouse' : 'activity-cell has-activity';
+        activityDiv.style.backgroundColor = harvestOnly
+            ? 'var(--color-h)'
+            : backgroundActivities.length > 0
+                ? blendColors(backgroundActivities)
+                : 'transparent';
+    }
+
+    if (harvestOnly) {
+        activityDiv.classList.add('harvest-only');
+    }
+
+    renderActivityTokens(activityDiv, activities);
+}
+
 function getActivityColor(activity) {
     const colors = {
         'si': 'activity-si',
@@ -303,7 +556,10 @@ function getActivityColor(activity) {
         's': 'activity-s',
         'sg': 'activity-sg',
         'tg': 'activity-tg',
-        'h': 'activity-h'
+        'h': 'activity-h',
+        'o': 'activity-special',
+        '*': 'activity-special',
+        'B': 'activity-s'
     };
     return colors[activity] || 'activity-t';
 }
@@ -316,9 +572,10 @@ function getActivityColorValue(activity) {
         'sg': '#93C47D',  // Same green - greenhouse indicated by border
         't': '#B4A7D6',   // Lavender - transplant
         'tg': '#B4A7D6',  // Same lavender - greenhouse indicated by border
-        'h': '#E6B84D',   // Warm gold - harvest (rarely used)
+        'h': '#d8c27a',   // Muted gold - harvest (rarely used)
         'B': '#9B7EBD',   // Purple - bulbs
-        'o': '#A8B5A8'    // Neutral sage - other
+        'o': '#A8B5A8',   // Legacy special-handling code
+        '*': '#A8B5A8'    // Special handling
     };
     return colors[activity] || '#B4A7D6';
 }
@@ -346,7 +603,7 @@ function blendColors(activities) {
 }
 
 function createActivityBadge(activity) {
-    return `<span class="activity-badge ${getActivityColor(activity)}">${activity}</span>`;
+    return `<span class="activity-badge ${getActivityColor(activity)}">${getDisplayActivityCode(activity)}</span>`;
 }
 
 // SVG Icon Mapping with Emoji Fallbacks
@@ -360,7 +617,7 @@ function getPlantIcon(plantName) {
         'Bok Choy': 'bok-choy',
         'Borage': 'borage',
         'Broccoli': 'broccoli',
-        'Brussels': 'brussels',
+        'Brussels Sprouts': 'brussels',
         'Cabbage': 'cabbage',
         'Cabbage (Chinese)': 'cabbage-chinese',
         'Cantaloupe': 'cantaloupe',
@@ -477,6 +734,41 @@ function filterPlants() {
     renderCurrentView();
 }
 
+function getPlantReviewTooltip(plant) {
+    const confidenceMeta = getPlantReviewConfidenceMeta(plant.name);
+    const confidenceLine = confidenceMeta ? `\nConfidence: ${confidenceMeta.label}` : '';
+
+    if (typeof getPlantReviewNote !== 'function') return confidenceLine;
+
+    const reviewNote = getPlantReviewNote(plant.name);
+    if (!reviewNote) return confidenceLine;
+
+    return `${confidenceLine}\n\nV2 review note: ${reviewNote}`;
+}
+
+function getPlantReviewConfidenceMeta(plantName) {
+    if (typeof getPlantReviewConfidence !== 'function') return null;
+
+    const confidence = getPlantReviewConfidence(plantName);
+    if (!confidence) return null;
+
+    return {
+        value: confidence,
+        label: `${confidence.charAt(0).toUpperCase()}${confidence.slice(1)} confidence`
+    };
+}
+
+function createReviewConfidenceBadge(plantName) {
+    const confidenceMeta = getPlantReviewConfidenceMeta(plantName);
+    if (!confidenceMeta) return null;
+
+    const badge = document.createElement('span');
+    badge.className = `review-confidence-badge review-confidence-${confidenceMeta.value}`;
+    badge.setAttribute('aria-label', confidenceMeta.label);
+    badge.title = confidenceMeta.label;
+    return badge;
+}
+
 // Rendering Functions
 function renderGridView() {
     const tbody = elements.gridTableBody;
@@ -488,7 +780,9 @@ function renderGridView() {
         return;
     }
 
-    state.filteredPlants.forEach(plant => {
+    const sortedPlants = sortGridPlants(state.filteredPlants);
+
+    sortedPlants.forEach(plant => {
         const row = document.createElement('tr');
         if (plant.type === 'flower') {
             row.classList.add('flower-row');
@@ -497,7 +791,7 @@ function renderGridView() {
         // Prepare tooltip data
         const spacingLabel = plant.spacing ? `${plant.spacing} in` : '—';
         const daysLabel = plant.daysToHarvest ? `${plant.daysToHarvest}` : '—';
-        const tooltip = `Spacing: ${spacingLabel}\nDays to harvest: ${daysLabel}`;
+        const tooltip = `Spacing: ${spacingLabel}\nDays to harvest: ${daysLabel}${getPlantReviewTooltip(plant)}`;
 
         // Icon column (sticky)
         const iconCell = document.createElement('td');
@@ -534,7 +828,16 @@ function renderGridView() {
         plantName.className = 'plant-name';
         plantName.textContent = plant.name;
 
-        plantNameCell.appendChild(plantName);
+        const plantNameRow = document.createElement('span');
+        plantNameRow.className = 'plant-name-row';
+        plantNameRow.appendChild(plantName);
+
+        const confidenceBadge = createReviewConfidenceBadge(plant.name);
+        if (confidenceBadge) {
+            plantNameRow.appendChild(confidenceBadge);
+        }
+
+        plantNameCell.appendChild(plantNameRow);
 
         // Make both icon cell and name cell clickable if guide data exists
         if (hasGuideData(plant.name)) {
@@ -552,22 +855,16 @@ function renderGridView() {
             const half1Cell = document.createElement('td');
             const filteredHalf1 = filterGreenhouseActivities(monthData.half1);
             const hasHalf1Activity = filteredHalf1.length > 0;
-            const matchesFilter = state.filters.activity === 'all' || monthData.half1.includes(state.filters.activity);
+            const matchesFilter = state.filters.activity === 'all' || monthData.half1.some(activity => normalizeActivityCode(activity) === state.filters.activity);
 
             if (hasHalf1Activity) {
                 const activityDiv = document.createElement('div');
                 const isGreenhouse = state.filters.showGreenhouse && monthData.half1.some(a => a === 'sg' || a === 'tg');
 
-                // Only show color if cell matches activity filter
-                if (matchesFilter) {
-                    activityDiv.className = isGreenhouse ? 'activity-cell has-activity greenhouse' : 'activity-cell has-activity';
-                    activityDiv.style.backgroundColor = blendColors(filteredHalf1);
-                    activityDiv.textContent = filteredHalf1.join(', ').toUpperCase();
-                } else {
-                    // Faded out when not matching filter
-                    activityDiv.className = 'activity-cell has-activity filtered-out';
-                    activityDiv.textContent = filteredHalf1.join(', ').toUpperCase();
-                }
+                applyActivityCellVisuals(activityDiv, filteredHalf1, {
+                    greenhouse: isGreenhouse,
+                    filteredOut: !matchesFilter
+                });
                 half1Cell.appendChild(activityDiv);
             } else {
                 const activityDiv = document.createElement('div');
@@ -580,22 +877,16 @@ function renderGridView() {
             const half2Cell = document.createElement('td');
             const filteredHalf2 = filterGreenhouseActivities(monthData.half2);
             const hasHalf2Activity = filteredHalf2.length > 0;
-            const matchesFilter2 = state.filters.activity === 'all' || monthData.half2.includes(state.filters.activity);
+            const matchesFilter2 = state.filters.activity === 'all' || monthData.half2.some(activity => normalizeActivityCode(activity) === state.filters.activity);
 
             if (hasHalf2Activity) {
                 const activityDiv = document.createElement('div');
                 const isGreenhouse = state.filters.showGreenhouse && monthData.half2.some(a => a === 'sg' || a === 'tg');
 
-                // Only show color if cell matches activity filter
-                if (matchesFilter2) {
-                    activityDiv.className = isGreenhouse ? 'activity-cell has-activity greenhouse' : 'activity-cell has-activity';
-                    activityDiv.style.backgroundColor = blendColors(filteredHalf2);
-                    activityDiv.textContent = filteredHalf2.join(', ').toUpperCase();
-                } else {
-                    // Faded out when not matching filter
-                    activityDiv.className = 'activity-cell has-activity filtered-out';
-                    activityDiv.textContent = filteredHalf2.join(', ').toUpperCase();
-                }
+                applyActivityCellVisuals(activityDiv, filteredHalf2, {
+                    greenhouse: isGreenhouse,
+                    filteredOut: !matchesFilter2
+                });
                 half2Cell.appendChild(activityDiv);
             } else {
                 const activityDiv = document.createElement('div');
@@ -649,9 +940,14 @@ function renderTimelineView() {
             const half1 = document.createElement('div');
             half1.className = 'timeline-half';
             if (monthData.half1.length > 0) {
-                const mainActivity = monthData.half1[0];
-                half1.classList.add(getActivityColor(mainActivity));
-                half1.textContent = monthData.half1.join(',');
+                const mainActivity = getPrimaryVisualActivity(monthData.half1);
+                if (mainActivity) {
+                    half1.classList.add(getActivityColor(mainActivity));
+                }
+                if (monthData.half1.length === 1 && monthData.half1[0] === 'h') {
+                    half1.classList.add('harvest-only');
+                }
+                renderActivityTokens(half1, monthData.half1, { compact: true });
             }
             monthDiv.appendChild(half1);
 
@@ -659,9 +955,14 @@ function renderTimelineView() {
             const half2 = document.createElement('div');
             half2.className = 'timeline-half';
             if (monthData.half2.length > 0) {
-                const mainActivity = monthData.half2[0];
-                half2.classList.add(getActivityColor(mainActivity));
-                half2.textContent = monthData.half2.join(',');
+                const mainActivity = getPrimaryVisualActivity(monthData.half2);
+                if (mainActivity) {
+                    half2.classList.add(getActivityColor(mainActivity));
+                }
+                if (monthData.half2.length === 1 && monthData.half2[0] === 'h') {
+                    half2.classList.add('harvest-only');
+                }
+                renderActivityTokens(half2, monthData.half2, { compact: true });
             }
             monthDiv.appendChild(half2);
 
@@ -702,9 +1003,10 @@ function renderMonthView() {
     const activityGroups = {
         'si': { name: 'Sow Indoors', plants: [] },
         'sg': { name: 'Sow Greenhouse', plants: [] },
-        's': { name: 'Sow Outdoors', plants: [] },
+        's': { name: 'Sow Outdoors / Bulbs & Sets', plants: [] },
         't': { name: 'Transplant', plants: [] },
         'tg': { name: 'Transplant Greenhouse', plants: [] },
+        '*': { name: 'Special Handling', plants: [] },
         'h': { name: 'Harvest', plants: [] }
     };
 
@@ -714,10 +1016,11 @@ function renderMonthView() {
         const activities = isFirstHalf ? monthData.half1 : monthData.half2;
 
         activities.forEach(activity => {
-            if (activityGroups[activity]) {
+            const normalizedActivity = normalizeActivityCode(activity);
+            if (activityGroups[normalizedActivity]) {
                 // Check if plant already added to this activity group
-                if (!activityGroups[activity].plants.find(p => p.id === plant.id)) {
-                    activityGroups[activity].plants.push(plant);
+                if (!activityGroups[normalizedActivity].plants.find(p => p.id === plant.id)) {
+                    activityGroups[normalizedActivity].plants.push(plant);
                 }
             }
         });
@@ -734,20 +1037,38 @@ function renderMonthView() {
     Object.entries(activityGroups).forEach(([activityCode, group]) => {
         if (group.plants.length === 0) return;
 
+        const sortedPlants = sortMonthGroupPlants(group.plants, activityCode, state.currentHalfMonth);
+
         const section = document.createElement('div');
         section.className = 'month-activity-section';
 
         const header = document.createElement('h3');
         header.className = 'month-activity-header';
-        header.innerHTML = `<span class="legend-badge ${getActivityColor(activityCode)}">${activityCode}</span> ${group.name}`;
+        const displayCode = activityCode === 's' ? 'S/B' : getDisplayActivityCode(activityCode).toUpperCase();
+        header.innerHTML = `<span class="legend-badge ${getActivityColor(activityCode)}">${displayCode}</span> ${group.name}`;
         section.appendChild(header);
 
         const plantsGrid = document.createElement('div');
         plantsGrid.className = 'month-plants-grid';
 
-        group.plants.forEach(plant => {
+        sortedPlants.forEach(plant => {
             const card = document.createElement('div');
             card.className = plant.type === 'flower' ? 'month-plant-card flower-card' : 'month-plant-card';
+            const edgeState = getMonthViewEdgeState(plant, activityCode, state.currentHalfMonth);
+
+            if (edgeState.startsNow) {
+                card.classList.add('month-plant-card--new');
+            }
+
+            if (edgeState.endsNow) {
+                card.classList.add('month-plant-card--ending');
+            }
+
+            const reviewTooltip = getPlantReviewTooltip(plant).trim();
+            if (reviewTooltip) {
+                card.dataset.tooltip = reviewTooltip;
+                card.title = reviewTooltip;
+            }
 
             const iconData = plant.type === 'flower' ? getFlowerIcon(plant.name) : getPlantIcon(plant.name);
 
@@ -773,7 +1094,16 @@ function renderMonthView() {
             nameEl.className = 'month-plant-name';
             nameEl.textContent = plant.name;
 
-            infoContainer.appendChild(nameEl);
+            const titleRow = document.createElement('div');
+            titleRow.className = 'month-plant-title-row';
+            titleRow.appendChild(nameEl);
+
+            const confidenceBadge = createReviewConfidenceBadge(plant.name);
+            if (confidenceBadge) {
+                titleRow.appendChild(confidenceBadge);
+            }
+
+            infoContainer.appendChild(titleRow);
 
             if (plant.spacing) {
                 const spacingEl = document.createElement('div');
@@ -899,19 +1229,6 @@ function resetFilters() {
 }
 
 // Event Listeners
-// Month view toggle checkbox
-const monthViewToggle = document.getElementById('monthViewToggle');
-if (monthViewToggle) {
-    monthViewToggle.addEventListener('change', (e) => {
-        if (e.target.checked) {
-            switchView('month');
-        } else {
-            switchView('grid');
-        }
-    });
-}
-
-// Legacy button support (if they exist)
 if (elements.gridViewBtn) {
     elements.gridViewBtn.addEventListener('click', () => switchView('grid'));
 }
@@ -984,13 +1301,58 @@ if (elements.resetFilters) {
 
 // Search toggle for mobile
 const searchToggle = document.getElementById('searchToggle');
-if (searchToggle) {
+const filterControls = document.querySelector('.filter-controls');
+
+function isMobileSearchViewport() {
+    return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function setSearchExpanded(expanded, { focusInput = false } = {}) {
+    if (!searchToggle || !filterControls || !elements.searchInput) return;
+
+    const isExpanded = expanded && isMobileSearchViewport();
+    filterControls.classList.toggle('search-expanded', isExpanded);
+    searchToggle.setAttribute('aria-expanded', String(isExpanded));
+    searchToggle.setAttribute('aria-label', isExpanded ? 'Close search' : 'Open search');
+    searchToggle.textContent = isExpanded ? '✕' : '🔍';
+
+    if (focusInput && isExpanded) {
+        elements.searchInput.focus();
+    }
+}
+
+if (searchToggle && filterControls && elements.searchInput) {
+    setSearchExpanded(false);
+
     searchToggle.addEventListener('click', () => {
-        const filterControls = document.querySelector('.filter-controls');
-        filterControls.classList.toggle('search-expanded');
-        if (filterControls.classList.contains('search-expanded')) {
-            elements.searchInput.focus();
+        const isExpanded = filterControls.classList.contains('search-expanded');
+        setSearchExpanded(!isExpanded, { focusInput: !isExpanded });
+
+        if (isExpanded) {
+            searchToggle.focus();
         }
+    });
+
+    elements.searchInput.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+
+        setSearchExpanded(false);
+        searchToggle.focus();
+    });
+
+    filterControls.addEventListener('focusout', () => {
+        if (!isMobileSearchViewport()) return;
+
+        requestAnimationFrame(() => {
+            if (document.activeElement && filterControls.contains(document.activeElement)) return;
+            if (elements.searchInput.value.trim()) return;
+            setSearchExpanded(false);
+        });
+    });
+
+    window.addEventListener('resize', () => {
+        if (isMobileSearchViewport()) return;
+        setSearchExpanded(false);
     });
 }
 
@@ -1301,7 +1663,7 @@ function initPlantDetailPanel() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
     // Set current half-month based on today's date
     const today = new Date();
     const monthIndex = today.getMonth();
@@ -1314,7 +1676,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initGridStickyHeader();
     initColumnHover();
     initPlantDetailPanel();
+    initDatasetSwitch();
     updateGreenhouseFilterVisibility();
     filterPlants();
     applyNowEmphasisToGrid();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp, { once: true });
+} else {
+    initApp();
+}

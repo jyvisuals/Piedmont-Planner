@@ -18,10 +18,20 @@
             <div class="header-content">
                 <div class="header-top">
                     <h1><span class="title-main">Piedmont Planner</span><span class="title-zone">: Zone 8a Planting Calendar</span></h1>
-                    <label class="view-toggle-checkbox">
-                        <input type="checkbox" id="monthViewToggle">
-                        <span>Month View</span>
-                    </label>
+                    <div class="view-switch-wrap">
+                        <div class="view-switch" role="tablist" aria-label="Calendar views">
+                            <button id="gridViewBtn" class="view-switch-btn active" type="button" role="tab" aria-selected="true" aria-controls="gridView">
+                                Grid
+                            </button>
+                            <button id="monthViewBtn" class="view-switch-btn" type="button" role="tab" aria-selected="false" aria-controls="monthView" tabindex="-1">
+                                Month
+                            </button>
+                        </div>
+                        <div class="dataset-switch" role="group" aria-label="Dataset version">
+                            <button id="datasetV1Btn" class="dataset-switch-btn" type="button" data-dataset="v1" aria-pressed="false" title="Use the current timing dataset">V1</button>
+                            <button id="datasetV2Btn" class="dataset-switch-btn" type="button" data-dataset="v2" aria-pressed="false" title="Use the Carrboro review dataset">V2</button>
+                        </div>
+                    </div>
                 </div>
                 <p class="subtitle subtitle-desktop">A comprehensive guide to planting vegetables and flowers throughout the year in the NC Piedmont</p>
                 <p class="subtitle subtitle-mobile">(Zone 8a Planting Calendar)</p>
@@ -44,8 +54,8 @@
                             <span class="legend-badge activity-sg">sg</span>
                             <span>Greenhouse</span>
                         </button>
-                        <button class="legend-item" data-activity="s" data-tooltip="Sow seeds directly outdoors" type="button">
-                            <span class="legend-badge activity-s">s</span>
+                        <button class="legend-item" data-activity="s" data-tooltip="Sow seeds directly outdoors, or plant bulbs, cloves, or sets outdoors" type="button">
+                            <span class="legend-badge activity-s">s/b</span>
                             <span>Outdoors</span>
                         </button>
                         <button class="legend-item" data-activity="t" data-tooltip="Transplant seedlings outdoors" type="button">
@@ -56,12 +66,16 @@
                             <span class="legend-badge activity-tg">tg</span>
                             <span>Transplant (GH)</span>
                         </button>
+                        <button class="legend-item" data-activity="*" data-tooltip="Requires special handling such as heat-managed germination or overwinter prep" type="button">
+                            <span class="legend-badge activity-special">*</span>
+                            <span>Special</span>
+                        </button>
                     </div>
                 </div>
 
                 <div class="control-group filter-group">
                     <div class="filter-controls" role="group" aria-label="Filters">
-                        <button id="searchToggle" class="search-toggle" type="button" aria-label="Toggle search">🔍</button>
+                        <button id="searchToggle" class="search-toggle" type="button" aria-label="Open search" aria-controls="searchInput" aria-expanded="false">🔍</button>
                         <label class="sr-only" for="searchInput">Search plants</label>
                         <input type="text" id="searchInput" placeholder="Search plants..." class="search-input" autocomplete="off" spellcheck="false" aria-describedby="resultsSummary">
 
@@ -84,7 +98,7 @@
             </div>
 
             <!-- Grid View -->
-            <div id="gridView" class="view active" aria-label="Grid view">
+            <div id="gridView" class="view active" role="tabpanel" aria-labelledby="gridViewBtn">
                 <div id="gridStickyHeader" class="grid-sticky-header" aria-hidden="true"></div>
                 <div class="table-container">
                     <table id="gridTable" class="calendar-table">
@@ -148,7 +162,7 @@
             </div>
 
             <!-- Month View -->
-            <div id="monthView" class="view" aria-label="Month view" hidden>
+            <div id="monthView" class="view" role="tabpanel" aria-labelledby="monthViewBtn" hidden>
                 <div class="month-selector">
                     <div class="month-title-with-nav">
                         <h2 id="currentMonthTitle">January</h2>
@@ -213,7 +227,36 @@
     </footer>
 
     <!-- <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="jyounpenn" data-description="Support me on Buy me a coffee!" data-color="#BD5FFF" data-position="Right" data-x_margin="18" data-y_margin="18"></script> -->
-    <script src="data.js"></script>
-    <script src="script.js"></script>
+    <script>
+        (function () {
+            const DATASET_STORAGE_KEY = 'piedmontPlannerDataset';
+            const datasetFiles = {
+                v1: 'data.js',
+                v2: 'data.carrboro-review.js'
+            };
+
+            let selectedDataset = 'v1';
+
+            try {
+                const storedDataset = window.localStorage.getItem(DATASET_STORAGE_KEY);
+                if (storedDataset && datasetFiles[storedDataset]) {
+                    selectedDataset = storedDataset;
+                }
+            } catch (error) {
+                // Ignore storage errors and fall back to v1.
+            }
+
+            window.__APP_DATASET__ = selectedDataset;
+
+            const dataScript = document.createElement('script');
+            dataScript.src = datasetFiles[selectedDataset];
+            dataScript.onload = function () {
+                const appScript = document.createElement('script');
+                appScript.src = 'script.js';
+                document.body.appendChild(appScript);
+            };
+            document.body.appendChild(dataScript);
+        }());
+    </script>
 </body>
 </html>

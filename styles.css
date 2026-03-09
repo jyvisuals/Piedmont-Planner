@@ -37,9 +37,9 @@
     --color-sg: #93C47D;  /* Same green (greenhouse = border) */
     --color-t: #B4A7D6;   /* Lavender - transplant */
     --color-tg: #B4A7D6;  /* Same lavender (greenhouse = border) */
-    --color-h: #E6B84D;   /* Warm gold - harvest */
+    --color-h: #d8c27a;   /* Muted gold - harvest */
     --color-B: #9B7EBD;   /* Purple - bulbs */
-    --color-o: #A8B5A8;   /* Neutral sage - other */
+    --color-special: #A8B5A8;   /* Neutral sage - special handling */
 
     /* Null cell alternating shades */
     --empty-cell-odd: #fafafa;
@@ -175,61 +175,99 @@ header {
 
 .header-top {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
-    gap: 0px;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
-.view-toggle-checkbox {
+.view-switch-wrap {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.view-switch {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px;
+    border: 1px solid var(--gray-80);
+    border-radius: 16px;
+    background-color: var(--white);
+    gap: 4px;
+}
+
+.view-switch-btn {
+    border: 0;
+    background: transparent;
+    color: var(--gray-30);
+    padding: 8px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.view-switch-btn:hover {
+    background-color: var(--gray-95);
+    color: var(--black);
+}
+
+.view-switch-btn.active {
+    background-color: var(--black);
+    color: var(--white);
+}
+
+.view-switch-hint {
+    margin: 0;
+    font-size: 0.7rem;
+    color: var(--gray-30);
+    max-width: 240px;
+    text-align: right;
+}
+
+.header-switch-meta {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 10px;
-    cursor: pointer;
-    padding: 6px 12px;
-    background-color: var(--white);
+}
+
+.dataset-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
     border: 1px solid var(--gray-80);
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    border-radius: 999px;
+    background: var(--gray-95);
 }
 
-.view-toggle-checkbox:hover {
-    background-color: var(--gray-95);
-    border-color: var(--black);
-}
-
-.view-toggle-checkbox input[type="checkbox"] {
-    position: relative;
-    width: 44px;
-    height: 24px;
-    appearance: none;
-    background-color: var(--gray-80);
-    border-radius: 12px;
+.dataset-switch-btn {
+    border: 0;
+    background: transparent;
+    color: var(--gray-30);
+    padding: 3px 7px;
+    border-radius: 999px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
-.view-toggle-checkbox input[type="checkbox"]::before {
-    content: '';
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    top: 2px;
-    left: 2px;
-    background-color: var(--white);
-    transition: transform 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+.dataset-switch-btn:hover {
+    color: var(--black);
 }
 
-.view-toggle-checkbox input[type="checkbox"]:checked {
-    background-color: #6fa8dc;
-}
-
-.view-toggle-checkbox input[type="checkbox"]:checked::before {
-    transform: translateX(20px);
+.dataset-switch-btn.active {
+    background: var(--black);
+    color: var(--white);
 }
 
 main {
@@ -523,11 +561,15 @@ header h1 {
 .activity-si { background-color: var(--color-si); color: rgba(0, 0, 0, 0.3); }
 .activity-t { background-color: var(--color-t); color: rgba(0, 0, 0, 0.3); }
 .activity-s { background-color: var(--color-s); color: rgba(0, 0, 0, 0.3); }
-.activity-sg { background-color: var(--color-sg); color: rgba(0, 0, 0, 0.3); border-bottom: 3px solid rgba(0, 0, 0, 0.25); }
-.activity-tg { background-color: var(--color-tg); color: rgba(0, 0, 0, 0.3); border-bottom: 3px solid rgba(0, 0, 0, 0.25); }
-.activity-h { background-color: var(--color-h); color: rgba(0, 0, 0, 0.3); }
-.activity-o { background-color: var(--color-o); color: rgba(0, 0, 0, 0.3); }
-.activity-B { background-color: var(--color-B); color: rgba(0, 0, 0, 0.3); }
+.activity-sg { background-color: var(--color-sg); color: rgba(0, 0, 0, 0.3); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25); }
+.activity-tg { background-color: var(--color-tg); color: rgba(0, 0, 0, 0.3); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25); }
+.activity-h {
+    background-color: transparent;
+    color: var(--gray-20);
+}
+.activity-o,
+.activity-special { background-color: var(--color-special); color: rgba(0, 0, 0, 0.3); }
+.activity-B { background-color: var(--color-s); color: rgba(0, 0, 0, 0.3); }
 
 /* Views */
 .view {
@@ -791,6 +833,39 @@ body.has-grid-sticky-header #gridTable thead {
     min-width: 0;
 }
 
+.plant-name-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.review-confidence-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    width: 10px;
+    height: 10px;
+    flex: 0 0 auto;
+    border: 1px solid transparent;
+}
+
+.review-confidence-high {
+    background-color: #3f8f4e;
+    border-color: #2d6a39;
+}
+
+.review-confidence-medium {
+    background-color: #c9921f;
+    border-color: #9d6d09;
+}
+
+.review-confidence-low {
+    background-color: #c45a43;
+    border-color: #953c29;
+}
+
 .plant-marker {
     width: 8px;
     height: 8px;
@@ -945,6 +1020,8 @@ body.has-grid-sticky-header #gridTable thead {
 }
 
 .activity-cell.has-activity {
+    flex-direction: row;
+    flex-wrap: wrap;
     font-size: 0.55rem;
     font-weight: 800;
     color: rgba(0, 0, 0, 0.3);
@@ -953,8 +1030,31 @@ body.has-grid-sticky-header #gridTable thead {
     padding: 2px 1px;
 }
 
+.activity-token {
+    display: inline;
+    color: inherit;
+}
+
+.activity-token-h {
+    color: var(--color-h);
+}
+
+.timeline-half {
+    white-space: nowrap;
+}
+
 .activity-cell.greenhouse {
-    border-bottom: 3px solid rgba(0, 0, 0, 0.25);
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+}
+
+.activity-cell.harvest-only,
+.timeline-half.harvest-only {
+    background-color: var(--color-h);
+}
+
+.activity-cell.harvest-only .activity-token-h,
+.timeline-half.harvest-only .activity-token-h {
+    color: rgba(0, 0, 0, 0.3);
 }
 
 .activity-cell.filtered-out {
@@ -1039,18 +1139,69 @@ body.has-grid-sticky-header #gridTable thead {
 }
 
 .month-plant-card {
+    --month-edge-left: transparent;
+    --month-edge-right: transparent;
+    --month-edge-left-glow: transparent;
+    --month-edge-right-glow: transparent;
     border: 1px solid var(--gray-80);
     border-radius: 6px;
     padding: 8px;
     background-color: var(--white);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    box-shadow:
+        inset 5px 0 0 var(--month-edge-left),
+        inset -5px 0 0 var(--month-edge-right),
+        inset 12px 0 0 var(--month-edge-left-glow),
+        inset -12px 0 0 var(--month-edge-right-glow);
     display: flex;
     gap: 12px;
     align-items: center;
 }
 
+.month-plant-card--new {
+    --month-edge-left: rgba(73, 134, 197, 0.92);
+    --month-edge-left-glow: rgba(73, 134, 197, 0.18);
+}
+
+.month-plant-card--ending {
+    --month-edge-right: rgba(184, 145, 52, 0.92);
+    --month-edge-right-glow: rgba(184, 145, 52, 0.18);
+}
+
 .month-plant-card:hover {
     border-color: var(--gray-30);
+}
+
+.month-plant-card[data-tooltip] {
+    position: relative;
+}
+
+.month-plant-card[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+    width: min(260px, calc(100vw - 32px));
+    padding: 8px 10px;
+    background-color: var(--black);
+    color: var(--white);
+    border: 1px solid var(--black);
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-weight: 400;
+    line-height: 1.45;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 20;
+    white-space: normal;
+    text-align: left;
+}
+
+.month-plant-card[data-tooltip]:hover::after,
+.month-plant-card[data-tooltip]:focus-within::after {
+    opacity: 1;
 }
 
 .month-plant-card.flower-card {
@@ -1087,6 +1238,13 @@ body.has-grid-sticky-header #gridTable thead {
     font-size: 0.9rem;
     font-weight: 600;
     letter-spacing: -0.01em;
+}
+
+.month-plant-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
 }
 
 .month-plant-spacing,
@@ -1208,38 +1366,33 @@ footer a:hover {
         display: block;
     }
 
-    /* Compact month view toggle on mobile */
-    .view-toggle-checkbox {
-        padding: 0;
-        border: none;
-        background: none;
-        font-size: 0.6rem;
+    .view-switch-wrap {
+        width: 100%;
+        align-items: stretch;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .view-switch {
+        width: 100%;
+    }
+
+    .view-switch-btn {
+        flex: 1 1 0;
+        padding: 8px 10px;
+        font-size: 0.64rem;
+    }
+
+    .view-switch-hint {
+        font-size: 0.62rem;
+        max-width: none;
+        text-align: left;
+    }
+
+    .header-switch-meta {
+        flex-direction: column;
+        align-items: flex-start;
         gap: 6px;
-    }
-
-    .view-toggle-checkbox input[type="checkbox"] {
-        width: 34px;
-        height: 20px;
-    }
-
-    .view-toggle-checkbox input[type="checkbox"]::before {
-        width: 16px;
-        height: 16px;
-    }
-
-    .view-toggle-checkbox input[type="checkbox"]:checked::before {
-        transform: translateX(14px);
-    }
-
-    /* Compact view toggle on mobile */
-    .view-toggle {
-        width: auto;
-    }
-
-    .view-toggle .btn {
-        padding: 4px 12px;
-        font-size: 0.6rem;
-        min-height: 32px;
     }
 
     .controls {
@@ -1285,6 +1438,7 @@ footer a:hover {
         display: flex;
         align-items: center;
         justify-content: center;
+        min-width: 38px;
         padding: 3px 10px;
         font-size: 1.1rem;
         background: var(--white);
@@ -1300,6 +1454,12 @@ footer a:hover {
         border-color: var(--black);
     }
 
+    .search-toggle[aria-expanded="true"] {
+        background-color: var(--black);
+        color: var(--white);
+        border-color: var(--black);
+    }
+
     /* Hide search input initially on mobile */
     .filter-controls .search-input {
         display: none;
@@ -1311,11 +1471,6 @@ footer a:hover {
         flex: 0 1 auto;
         width: 120px;
         min-width: 100px;
-    }
-
-    /* Hide toggle when search is expanded */
-    .filter-controls.search-expanded .search-toggle {
-        display: none;
     }
 
     .filter-controls .checkbox-label {
