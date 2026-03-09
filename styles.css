@@ -567,6 +567,10 @@ header h1 {
     background-color: transparent;
     color: var(--gray-20);
 }
+.legend-badge.activity-h {
+    background-color: var(--color-h);
+    color: rgba(0, 0, 0, 0.45);
+}
 .activity-o,
 .activity-special { background-color: var(--color-special); color: rgba(0, 0, 0, 0.3); }
 .activity-B { background-color: var(--color-s); color: rgba(0, 0, 0, 0.3); }

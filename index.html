@@ -66,6 +66,10 @@
                             <span class="legend-badge activity-tg">tg</span>
                             <span>Transplant (GH)</span>
                         </button>
+                        <button class="legend-item" data-activity="h" data-tooltip="Harvest crops in this half-month" type="button">
+                            <span class="legend-badge activity-h">h</span>
+                            <span>Harvest</span>
+                        </button>
                         <button class="legend-item" data-activity="*" data-tooltip="Requires special handling such as heat-managed germination or overwinter prep" type="button">
                             <span class="legend-badge activity-special">*</span>
                             <span>Special</span>
@@ -235,7 +239,7 @@
                 v2: 'data.carrboro-review.js'
             };
 
-            let selectedDataset = 'v1';
+            let selectedDataset = 'v2';
 
             try {
                 const storedDataset = window.localStorage.getItem(DATASET_STORAGE_KEY);
@@ -243,7 +247,7 @@
                     selectedDataset = storedDataset;
                 }
             } catch (error) {
-                // Ignore storage errors and fall back to v1.
+                // Ignore storage errors and fall back to v2.
             }
 
             window.__APP_DATASET__ = selectedDataset;
