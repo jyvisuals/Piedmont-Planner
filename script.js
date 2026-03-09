@@ -49,6 +49,17 @@ const DATASET_STORAGE_KEY = 'piedmontPlannerDataset';
 const CURRENT_DATASET = window.__APP_DATASET__ || 'v1';
 
 const PREFERRED_VIEW_ORDER = ['grid', 'timeline', 'month'];
+const DEER_FRIENDLY_FLOWERS = new Set([
+    'Snapdragons',
+    'Lavender',
+    'Stock',
+    'Yarrow',
+    'Calendula',
+    'Marigolds',
+    'Echinacea',
+    'Chamomile',
+    'Borage'
+]);
 
 const viewUI = {};
 // Grid view
@@ -98,6 +109,10 @@ function updateResultsSummary() {
     elements.resultsSummary.textContent = filters.length
         ? `Showing ${shown} of ${total} plants. Filters: ${filters.join(', ')}.`
         : `Showing ${shown} of ${total} plants.`;
+}
+
+function isDeerFriendlyFlower(plant) {
+    return plant.type === 'flower' && DEER_FRIENDLY_FLOWERS.has(plant.name);
 }
 
 function updateGreenhouseFilterVisibility() {
@@ -1101,6 +1116,15 @@ function renderMonthView() {
             const confidenceBadge = createReviewConfidenceBadge(plant.name);
             if (confidenceBadge) {
                 titleRow.appendChild(confidenceBadge);
+            }
+
+            if (isDeerFriendlyFlower(plant)) {
+                const deerBadge = document.createElement('span');
+                deerBadge.className = 'month-plant-deer-badge';
+                deerBadge.textContent = '🦌';
+                deerBadge.title = 'Deer friendly flower';
+                deerBadge.setAttribute('aria-label', 'Deer friendly flower');
+                titleRow.appendChild(deerBadge);
             }
 
             infoContainer.appendChild(titleRow);
