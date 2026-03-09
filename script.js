@@ -367,6 +367,21 @@ function getNormalizedHalfMonthActivities(plant, halfMonthIndex) {
     return activities.map(normalizeActivityCode);
 }
 
+function getNormalizedMonthActivities(plant, monthIndex) {
+    if (monthIndex < 0 || monthIndex >= MONTHS.length) {
+        return [];
+    }
+
+    const monthId = MONTHS[monthIndex].id;
+    const monthData = plant.months[monthId];
+
+    if (!monthData) {
+        return [];
+    }
+
+    return [...monthData.half1, ...monthData.half2].map(normalizeActivityCode);
+}
+
 function getMonthViewEdgeState(plant, activityCode, halfMonthIndex) {
     const normalizedActivity = normalizeActivityCode(activityCode);
     const previousActivities = getNormalizedHalfMonthActivities(plant, halfMonthIndex - 1);
@@ -477,40 +492,107 @@ function getGridGroupKey(plant) {
         .trim();
 }
 
+const GRID_ACTIVITY_RANK = {
+    si: 0,
+    s: 1,
+    t: 2,
+    sg: 3,
+    tg: 4,
+    h: 5,
+    '*': 6
+};
+
+function getBestActivityRank(activities, activityRankMap) {
+    if (activities.length === 0) return Number.MAX_SAFE_INTEGER;
+
+    const ranks = activities.map(activity => {
+        return activity in activityRankMap ? activityRankMap[activity] : Number.MAX_SAFE_INTEGER;
+    });
+
+    return Math.min(...ranks);
+}
+
+function getClosestRelevantHalfMonth(plant) {
+    const currentHalfMonth = state.currentHalfMonth;
+    let nextMatch = null;
+    let previousMatch = null;
+
+    for (let halfMonthIndex = currentHalfMonth + 1; halfMonthIndex < MONTHS.length * 2; halfMonthIndex += 1) {
+        const activities = getNormalizedHalfMonthActivities(plant, halfMonthIndex);
+        if (activities.length === 0) continue;
+
+        nextMatch = {
+            distance: Math.abs(halfMonthIndex - currentHalfMonth),
+            directionRank: 0,
+            activityRank: getBestActivityRank(activities, GRID_ACTIVITY_RANK)
+        };
+        break;
+    }
+
+    for (let halfMonthIndex = currentHalfMonth - 1; halfMonthIndex >= 0; halfMonthIndex -= 1) {
+        const activities = getNormalizedHalfMonthActivities(plant, halfMonthIndex);
+        if (activities.length === 0) continue;
+
+        previousMatch = {
+            distance: Math.abs(halfMonthIndex - currentHalfMonth),
+            directionRank: 1,
+            activityRank: getBestActivityRank(activities, GRID_ACTIVITY_RANK)
+        };
+        break;
+    }
+
+    if (nextMatch) {
+        return nextMatch;
+    }
+
+    if (previousMatch) {
+        return previousMatch;
+    }
+
+    return {
+        distance: Number.MAX_SAFE_INTEGER,
+        directionRank: Number.MAX_SAFE_INTEGER,
+        activityRank: Number.MAX_SAFE_INTEGER
+    };
+}
+
 function sortGridPlants(plants) {
-    const firstActivityRank = {
-        si: 0,
-        s: 1,
-        t: 2,
-        h: 3,
-        sg: 4,
-        tg: 5,
-        '*': 6
-    };
-
-    const getFirstActivityRank = (plant) => {
-        const activities = getFirstActiveActivities(plant);
-        if (activities.length === 0) return Number.MAX_SAFE_INTEGER;
-
-        const ranks = activities.map(activity => {
-            return activity in firstActivityRank ? firstActivityRank[activity] : Number.MAX_SAFE_INTEGER;
-        });
-
-        return Math.min(...ranks);
-    };
-
     return [...plants].sort((leftPlant, rightPlant) => {
+        const leftCurrentHalfMonthActivityRank = getBestActivityRank(
+            getNormalizedHalfMonthActivities(leftPlant, state.currentHalfMonth),
+            GRID_ACTIVITY_RANK
+        );
+        const rightCurrentHalfMonthActivityRank = getBestActivityRank(
+            getNormalizedHalfMonthActivities(rightPlant, state.currentHalfMonth),
+            GRID_ACTIVITY_RANK
+        );
+        const currentActivityComparison = leftCurrentHalfMonthActivityRank - rightCurrentHalfMonthActivityRank;
+        if (currentActivityComparison !== 0) return currentActivityComparison;
+
         const firstHalfMonthComparison = getFirstActiveHalfMonth(leftPlant) - getFirstActiveHalfMonth(rightPlant);
         if (firstHalfMonthComparison !== 0) return firstHalfMonthComparison;
 
-        const firstActivityComparison = getFirstActivityRank(leftPlant) - getFirstActivityRank(rightPlant);
+        const leftFirstActivityRank = getBestActivityRank(getFirstActiveActivities(leftPlant), GRID_ACTIVITY_RANK);
+        const rightFirstActivityRank = getBestActivityRank(getFirstActiveActivities(rightPlant), GRID_ACTIVITY_RANK);
+        const firstActivityComparison = leftFirstActivityRank - rightFirstActivityRank;
         if (firstActivityComparison !== 0) return firstActivityComparison;
-
-        const groupComparison = getGridGroupKey(leftPlant).localeCompare(getGridGroupKey(rightPlant));
-        if (groupComparison !== 0) return groupComparison;
 
         const typeComparison = Number(leftPlant.type !== 'vegetable') - Number(rightPlant.type !== 'vegetable');
         if (typeComparison !== 0) return typeComparison;
+
+        const leftClosest = getClosestRelevantHalfMonth(leftPlant);
+        const rightClosest = getClosestRelevantHalfMonth(rightPlant);
+        const nearbyActivityComparison = leftClosest.activityRank - rightClosest.activityRank;
+        if (nearbyActivityComparison !== 0) return nearbyActivityComparison;
+
+        const distanceComparison = leftClosest.distance - rightClosest.distance;
+        if (distanceComparison !== 0) return distanceComparison;
+
+        const directionComparison = leftClosest.directionRank - rightClosest.directionRank;
+        if (directionComparison !== 0) return directionComparison;
+
+        const groupComparison = getGridGroupKey(leftPlant).localeCompare(getGridGroupKey(rightPlant));
+        if (groupComparison !== 0) return groupComparison;
 
         return leftPlant.name.localeCompare(rightPlant.name);
     });
@@ -623,15 +705,21 @@ function createActivityBadge(activity) {
 
 // SVG Icon Mapping with Emoji Fallbacks
 function getPlantIcon(plantName) {
-    // Map plant names to SVG icon filenames
+    // Map plant names to local SVG/PNG icon filenames
     const svgIconMap = {
         // Vegetables
         'Arugula': 'arugula',
+        'Asparagus': 'asparagus',
         'Basil': 'basil',
         'Beets': 'beet',
+        'Beans, Snap (Bush)': 'lima-bean',
+        'Beans, Snap (Pole)': 'lima-bean',
+        'Blackberries': 'blackberry',
         'Bok Choy': 'bok-choy',
         'Borage': 'borage',
+        'Blueberries': 'blueberry',
         'Broccoli': 'broccoli',
+        'Brussels': 'brussels',
         'Brussels Sprouts': 'brussels',
         'Cabbage': 'cabbage',
         'Cabbage (Chinese)': 'cabbage-chinese',
@@ -659,8 +747,11 @@ function getPlantIcon(plantName) {
         'Lettuce, Leaf': 'lettuce-leaf',
         'Lima Bean (Bush)': 'lima-bean',
         'Lima Bean (Pole)': 'lima-bean',
+        'Mint': 'mint',
         'Mustard': 'mustard',
+        'Nasturtium': 'nasturtium',
         'Okra': 'okra',
+        'Oregano': 'oregano',
         'Onions, Bulb': 'onion',
         'Onions, Green': 'green-onion',
         'Parsley': 'parsley',
@@ -675,13 +766,16 @@ function getPlantIcon(plantName) {
         'Potatoes (Sweet)': 'sweet-potato',
         'Pumpkin': 'pumpkin',
         'Radishes': 'radish',
+        'Rosemary': 'rosemary',
         'Rutabaga': 'rutabaga',
         'Sage': 'sage',
         'Spinach': 'spinach',
         'Squash (Summer)': 'summer-squash',
         'Squash (Winter)': 'winter-squash',
+        'Stock': 'snapdragon.png',
         'Strawberries (Bare-root)': 'strawberry',
         'Sunflower': 'sunflower',
+        'Thyme': 'thyme',
         'Tomatoes': 'tomato',
         'Turnips': 'turnip',
         'Watermelon': 'watermelon',
@@ -689,33 +783,20 @@ function getPlantIcon(plantName) {
         // Flowers
         'Yarrow': 'yarrow',
         'Marigolds': 'marigold',
-        'Moonflower': 'moonflower.png',
+        'Moonflower': 'moonflower.svg',
         'Sunflower': 'sunflower',
         'Calendula': 'calendula.png',
         'Snapdragons': 'snapdragon.png',
         'Lavender': 'lavender.png',
-        'Zinnias': 'zinnia.png'
+        'Zinnias': 'zinnia.svg'
     };
-
-    // Emoji icons for flowers without SVG/PNG
-    const emojiFlowers = {
-        'Nasturtium': '🌼',       // Yellow/orange daisy
-        'Stock': '🌸',            // Pink blossom for fragrant stock
-        'Echinacea': '🌸',        // Purple coneflower
-        'Chamomile': '🌼'         // Small white daisy
-    };
-
-    // Check for emoji flower first
-    if (emojiFlowers[plantName]) {
-        return { type: 'emoji', icon: emojiFlowers[plantName] };
-    }
 
     // Check for SVG/PNG icon
     if (svgIconMap[plantName]) {
         const iconFile = svgIconMap[plantName];
         // If filename already includes extension, use as-is; otherwise add .svg
         const path = iconFile.includes('.') ? `icons/${iconFile}` : `icons/${iconFile}.svg`;
-        return { type: 'svg', path: path };
+        return { type: 'svg', path };
     }
 
     // Default fallback
@@ -749,27 +830,19 @@ function filterPlants() {
     renderCurrentView();
 }
 
-function getPlantReviewTooltip(plant) {
-    const confidenceMeta = getPlantReviewConfidenceMeta(plant.name);
-    const confidenceLine = confidenceMeta ? `\nConfidence: ${confidenceMeta.label}` : '';
-
-    if (typeof getPlantReviewNote !== 'function') return confidenceLine;
-
-    const reviewNote = getPlantReviewNote(plant.name);
-    if (!reviewNote) return confidenceLine;
-
-    return `${confidenceLine}\n\nV2 review note: ${reviewNote}`;
-}
-
 function getPlantReviewConfidenceMeta(plantName) {
     if (typeof getPlantReviewConfidence !== 'function') return null;
 
     const confidence = getPlantReviewConfidence(plantName);
     if (!confidence) return null;
+    const score = typeof getPlantReviewConfidenceScore === 'function'
+        ? getPlantReviewConfidenceScore(plantName)
+        : null;
+    const scoreSuffix = typeof score === 'number' ? ` (${score}/5)` : '';
 
     return {
         value: confidence,
-        label: `${confidence.charAt(0).toUpperCase()}${confidence.slice(1)} confidence`
+        label: `${confidence.charAt(0).toUpperCase()}${confidence.slice(1)} confidence${scoreSuffix}`
     };
 }
 
@@ -780,8 +853,104 @@ function createReviewConfidenceBadge(plantName) {
     const badge = document.createElement('span');
     badge.className = `review-confidence-badge review-confidence-${confidenceMeta.value}`;
     badge.setAttribute('aria-label', confidenceMeta.label);
-    badge.title = confidenceMeta.label;
     return badge;
+}
+
+function renderPlantDetailReview(plant) {
+    const panelReview = document.getElementById('panelReview');
+
+    const confidenceMeta = getPlantReviewConfidenceMeta(plant.name);
+    const evidenceSources = typeof getPlantReviewEvidenceSources === 'function'
+        ? getPlantReviewEvidenceSources(plant.name)
+        : [];
+    const reviewNote = typeof getPlantReviewNote === 'function'
+        ? getPlantReviewNote(plant.name)
+        : null;
+    const greenhouseConfidence = typeof getPlantGreenhouseConfidence === 'function'
+        ? getPlantGreenhouseConfidence(plant.name)
+        : null;
+    const greenhouseNote = typeof getPlantGreenhouseNote === 'function'
+        ? getPlantGreenhouseNote(plant.name)
+        : null;
+
+    if (!panelReview) return;
+
+    panelReview.innerHTML = '';
+
+    const reviewItems = [];
+    if (confidenceMeta) {
+        reviewItems.push({
+            label: 'Overall',
+            text: confidenceMeta.label
+        });
+    }
+    if (evidenceSources.length > 0) {
+        reviewItems.push({
+            label: 'Evidence',
+            links: evidenceSources
+        });
+    }
+    if (greenhouseConfidence) {
+        reviewItems.push({
+            label: 'Greenhouse support',
+            text: `${greenhouseConfidence.charAt(0).toUpperCase()}${greenhouseConfidence.slice(1)}`
+        });
+    }
+    if (reviewNote) {
+        reviewItems.push({
+            label: 'Timing note',
+            text: reviewNote
+        });
+    }
+    if (greenhouseNote) {
+        reviewItems.push({
+            label: 'Greenhouse note',
+            text: greenhouseNote
+        });
+    }
+
+    if (reviewItems.length === 0) {
+        panelReview.innerHTML = '<div class="panel-empty-note">No timing notes yet.</div>';
+        return;
+    }
+
+    const list = document.createElement('ul');
+    list.className = 'panel-bullets';
+    reviewItems.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'panel-review-item';
+
+        const label = document.createElement('span');
+        label.className = 'panel-review-label';
+        label.textContent = `${item.label}:`;
+
+        li.appendChild(label);
+        li.appendChild(document.createTextNode(' '));
+
+        if (item.links) {
+            const linkList = document.createElement('span');
+            linkList.className = 'panel-review-links';
+
+            item.links.forEach(source => {
+                const link = document.createElement('a');
+                link.className = 'panel-review-link';
+                link.href = source.url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = source.label;
+                linkList.appendChild(link);
+            });
+
+            li.appendChild(linkList);
+        } else {
+            const text = document.createElement('span');
+            text.textContent = item.text;
+            li.appendChild(text);
+        }
+
+        list.appendChild(li);
+    });
+    panelReview.appendChild(list);
 }
 
 // Rendering Functions
@@ -803,16 +972,9 @@ function renderGridView() {
             row.classList.add('flower-row');
         }
 
-        // Prepare tooltip data
-        const spacingLabel = plant.spacing ? `${plant.spacing} in` : '—';
-        const daysLabel = plant.daysToHarvest ? `${plant.daysToHarvest}` : '—';
-        const tooltip = `Spacing: ${spacingLabel}\nDays to harvest: ${daysLabel}${getPlantReviewTooltip(plant)}`;
-
         // Icon column (sticky)
         const iconCell = document.createElement('td');
         iconCell.className = 'sticky-col icon-col col-icon';
-        iconCell.dataset.tooltip = tooltip;
-        iconCell.title = tooltip;
 
         const iconContainer = document.createElement('span');
         iconContainer.className = 'plant-icon';
@@ -836,8 +998,6 @@ function renderGridView() {
         const plantNameCell = document.createElement('th');
         plantNameCell.className = 'plant-col';
         plantNameCell.scope = 'row';
-        plantNameCell.dataset.tooltip = tooltip;
-        plantNameCell.title = tooltip;
 
         const plantName = document.createElement('span');
         plantName.className = 'plant-name';
@@ -1077,12 +1237,6 @@ function renderMonthView() {
 
             if (edgeState.endsNow) {
                 card.classList.add('month-plant-card--ending');
-            }
-
-            const reviewTooltip = getPlantReviewTooltip(plant).trim();
-            if (reviewTooltip) {
-                card.dataset.tooltip = reviewTooltip;
-                card.title = reviewTooltip;
             }
 
             const iconData = plant.type === 'flower' ? getFlowerIcon(plant.name) : getPlantIcon(plant.name);
@@ -1590,6 +1744,7 @@ function renderPlantDetailPanelContent(plant) {
     panelSpacing.textContent = formatSpacingForDisplay(plant.spacing);
     panelDaysToHarvest.textContent = plant.daysToHarvest || '—';
 
+    renderPlantDetailReview(plant);
     renderPlantDetailGuide(plant);
 }
 

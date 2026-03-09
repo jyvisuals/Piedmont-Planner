@@ -1794,10 +1794,22 @@ footer a:hover {
 .calendar-table thead tr.half-month-header th.is-now {
     background: var(--gray-90);
     color: var(--black);
+    box-shadow: inset 2px 0 0 var(--black);
 }
 
 .calendar-table td.is-now-col {
     background-color: transparent;
+    box-shadow: inset 2px 0 0 var(--black);
+}
+
+.calendar-table td.is-now-col .activity-cell {
+    box-shadow: inset 2px 0 0 var(--black);
+}
+
+.calendar-table td.is-now-col .activity-cell.greenhouse {
+    box-shadow:
+        inset 2px 0 0 var(--black),
+        inset 0 -3px 0 rgba(0, 0, 0, 0.25);
 }
 
 /* Clickable plant cells and cards */
@@ -2075,6 +2087,43 @@ body.panel-open {
     border: 1px dashed var(--gray-80);
     border-radius: 10px;
     padding: 12px 14px;
+}
+
+.panel-review-item {
+    color: var(--gray-20);
+}
+
+.panel-review-label {
+    font-weight: 700;
+    color: var(--black);
+}
+
+.panel-review-links {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    vertical-align: top;
+}
+
+.panel-review-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--gray-80);
+    background: var(--gray-98);
+    color: var(--gray-20);
+    font-size: 0.85rem;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.panel-review-link:hover,
+.panel-review-link:focus-visible {
+    background: var(--white);
+    border-color: var(--gray-50);
+    color: var(--black);
 }
 
 /* Mobile Responsive */

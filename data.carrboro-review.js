@@ -24,6 +24,9 @@
 // - `si` was added only where transplant timing implied a real indoor-start lead.
 // - `sg` and `tg` were kept conservative and only used where protected culture was directly
 //   supported or strongly implied by the source stack.
+// - Greenhouse expansions in this file are intentionally narrow: only edge slots already
+//   supported by the review notes were promoted into `sg`/`tg`, rather than assuming every
+//   cold-tolerant crop deserves a protected-culture lane.
 // - Flowers, perennials, strawberries, ginger, and similar edge cases are lower-confidence than
 //   annual vegetables because the Carrboro/Piedmont sources are less explicit for them.
 
@@ -134,7 +137,7 @@ const PLANTS = [
     daysToHarvest: "T = 45-60, S = 70-85",
     months: {
       jan: { half1: [], half2: ["si"] },
-      feb: { half1: ["s", "si"], half2: ["s", "si", "tg"] },
+      feb: { half1: ["s", "si"], half2: ["s", "si", "sg", "tg"] },
       mar: { half1: ["s", "si", "tg"], half2: ["t"] },
       apr: { half1: ["t", "h"], half2: ["t", "h"] },
       may: { half1: ["h"], half2: [] },
@@ -142,7 +145,7 @@ const PLANTS = [
       jul: { half1: ["si"], half2: ["si"] },
       aug: { half1: ["si"], half2: ["s", "t", "tg", "*"] },
       sep: { half1: ["s", "t", "tg", "*"], half2: ["t", "h"] },
-      oct: { half1: ["t", "h"], half2: ["h"] },
+      oct: { half1: ["t", "sg", "h"], half2: ["h"] },
       nov: { half1: ["h"], half2: [] },
       dec: { half1: [], half2: [] }
     }
@@ -176,7 +179,7 @@ const PLANTS = [
     daysToHarvest: "S = 40-50, T = 15-25",
     months: {
       jan: { half1: ["si"], half2: ["si"] },
-      feb: { half1: ["s", "t", "si"], half2: ["s", "t", "si", "tg"] },
+      feb: { half1: ["s", "t", "si"], half2: ["s", "t", "si", "sg", "tg"] },
       mar: { half1: ["s", "t", "tg", "h"], half2: ["s", "t", "h"] },
       apr: { half1: ["s", "t", "h"], half2: ["s", "t", "h"] },
       may: { half1: ["h"], half2: [] },
@@ -184,7 +187,7 @@ const PLANTS = [
       jul: { half1: ["si"], half2: ["si"] },
       aug: { half1: ["s", "t", "si"], half2: ["s", "t", "tg", "*"] },
       sep: { half1: ["s", "t", "tg", "*", "h"], half2: ["s", "t", "h"] },
-      oct: { half1: ["h"], half2: ["h"] },
+      oct: { half1: ["sg", "h"], half2: ["sg", "h"] },
       nov: { half1: ["h"], half2: [] },
       dec: { half1: [], half2: [] }
     }
@@ -260,7 +263,7 @@ const PLANTS = [
     daysToHarvest: "90-120",
     months: {
       jan: { half1: ["si"], half2: ["s", "si"] },
-      feb: { half1: ["s", "*"], half2: ["s", "t"] },
+      feb: { half1: ["s", "tg", "*"], half2: ["s", "t"] },
       mar: { half1: ["t"], half2: ["t"] },
       apr: { half1: ["t"], half2: [] },
       may: { half1: [], half2: [] },
@@ -311,7 +314,7 @@ const PLANTS = [
       aug: { half1: ["s", "t", "si"], half2: ["s", "t", "si"] },
       sep: { half1: ["s", "t", "h"], half2: ["s", "t", "h"] },
       oct: { half1: ["s", "t", "h"], half2: ["sg", "h"] },
-      nov: { half1: ["sg", "h"], half2: ["h"] },
+      nov: { half1: ["sg", "h"], half2: ["sg", "h"] },
       dec: { half1: ["h"], half2: ["h"] }
     }
   },
@@ -332,7 +335,7 @@ const PLANTS = [
       aug: { half1: ["s", "t", "h"], half2: ["s", "t", "h"] },
       sep: { half1: ["s", "t", "h"], half2: ["h"] },
       oct: { half1: ["sg", "h"], half2: ["sg", "h"] },
-      nov: { half1: ["sg", "h"], half2: ["h"] },
+      nov: { half1: ["sg", "h"], half2: ["sg", "h"] },
       dec: { half1: ["h"], half2: [] }
     }
   },
@@ -352,7 +355,7 @@ const PLANTS = [
       jul: { half1: [], half2: ["si"] },
       aug: { half1: ["si"], half2: ["t"] },
       sep: { half1: ["t", "tg"], half2: ["t", "h"] },
-      oct: { half1: ["h"], half2: ["h"] },
+      oct: { half1: ["tg", "h"], half2: ["h"] },
       nov: { half1: [], half2: [] },
       dec: { half1: [], half2: [] }
     }
@@ -372,8 +375,8 @@ const PLANTS = [
       jun: { half1: [], half2: [] },
       jul: { half1: [], half2: [] },
       aug: { half1: [], half2: [] },
-      sep: { half1: [], half2: [] },
-      oct: { half1: [], half2: [] },
+      sep: { half1: ["t"], half2: ["t"] },
+      oct: { half1: ["t"], half2: [] },
       nov: { half1: [], half2: [] },
       dec: { half1: [], half2: [] }
     }
@@ -563,7 +566,7 @@ const PLANTS = [
       aug: { half1: ["s", "t", "si"], half2: ["s", "t"] },
       sep: { half1: ["s", "t", "*", "h"], half2: ["s", "t", "h"] },
       oct: { half1: ["sg", "h"], half2: ["sg", "h"] },
-      nov: { half1: ["sg", "h"], half2: [] },
+      nov: { half1: ["sg", "h"], half2: ["sg", "h"] },
       dec: { half1: [], half2: [] }
     }
   },
@@ -584,7 +587,7 @@ const PLANTS = [
       aug: { half1: ["s", "t"], half2: ["s", "t", "h"] },
       sep: { half1: ["s", "t", "h"], half2: ["h"] },
       oct: { half1: ["sg", "h"], half2: ["sg", "h"] },
-      nov: { half1: ["sg", "h"], half2: ["h"] },
+      nov: { half1: ["sg", "h"], half2: ["sg", "h"] },
       dec: { half1: ["h"], half2: [] }
     }
   },
@@ -604,7 +607,7 @@ const PLANTS = [
       jul: { half1: ["s", "*", "h"], half2: ["*", "h"] },
       aug: { half1: ["s", "*"], half2: ["s", "*"] },
       sep: { half1: ["s", "*"], half2: ["s", "*"] },
-      oct: { half1: ["s", "sg", "*"], half2: [] },
+      oct: { half1: ["s", "sg", "*"], half2: ["sg", "*"] },
       nov: { half1: ["h"], half2: ["h"] },
       dec: { half1: ["h"], half2: ["h"] }
     }
@@ -751,7 +754,7 @@ const PLANTS = [
       jul: { half1: ["si"], half2: ["si", "t"] },
       aug: { half1: ["si", "t"], half2: ["t"] },
       sep: { half1: ["t"], half2: ["h"] },
-      oct: { half1: ["h"], half2: ["h"] },
+      oct: { half1: ["tg", "h"], half2: ["h"] },
       nov: { half1: ["h"], half2: [] },
       dec: { half1: [], half2: [] }
     }
@@ -772,7 +775,7 @@ const PLANTS = [
       jul: { half1: ["si"], half2: ["si"] },
       aug: { half1: ["si", "t"], half2: ["t"] },
       sep: { half1: ["t"], half2: [] },
-      oct: { half1: ["h"], half2: ["h"] },
+      oct: { half1: ["tg", "h"], half2: ["h"] },
       nov: { half1: ["h"], half2: [] },
       dec: { half1: [], half2: [] }
     }
@@ -793,7 +796,7 @@ const PLANTS = [
       jul: { half1: ["si"], half2: ["si"] },
       aug: { half1: ["si", "s", "t"], half2: ["s", "t"] },
       sep: { half1: ["s", "t"], half2: ["s", "t"] },
-      oct: { half1: ["h"], half2: ["h"] },
+      oct: { half1: ["tg", "h"], half2: ["h"] },
       nov: { half1: ["h"], half2: [] },
       dec: { half1: [], half2: [] }
     }
@@ -808,13 +811,13 @@ const PLANTS = [
       jan: { half1: [], half2: [] },
       feb: { half1: [], half2: ["si"] },
       mar: { half1: ["si"], half2: ["si"] },
-      apr: { half1: [], half2: ["t"] },
+      apr: { half1: ["t"], half2: ["t"] },
       may: { half1: ["t"], half2: [] },
       jun: { half1: [], half2: [] },
       jul: { half1: [], half2: [] },
       aug: { half1: [], half2: [] },
-      sep: { half1: [], half2: [] },
-      oct: { half1: [], half2: [] },
+      sep: { half1: ["t"], half2: ["t"] },
+      oct: { half1: ["t"], half2: [] },
       nov: { half1: [], half2: [] },
       dec: { half1: [], half2: [] }
     }
@@ -898,7 +901,7 @@ const PLANTS = [
       jul: { half1: [], half2: [] },
       aug: { half1: [], half2: ["s"] },
       sep: { half1: ["s"], half2: ["s"] },
-      oct: { half1: ["s", "h"], half2: ["h"] },
+      oct: { half1: ["s", "h"], half2: ["sg", "h"] },
       nov: { half1: ["h"], half2: [] },
       dec: { half1: [], half2: [] }
     }
@@ -1045,7 +1048,7 @@ const PLANTS = [
       jul: { half1: [], half2: [] },
       aug: { half1: [], half2: ["s", "*"] },
       sep: { half1: ["s", "*"], half2: [] },
-      oct: { half1: [], half2: [] },
+      oct: { half1: ["sg", "*"], half2: [] },
       nov: { half1: [], half2: [] },
       dec: { half1: [], half2: [] }
     }
@@ -2014,18 +2017,18 @@ const PLANT_GUIDE = {
 
 const PLANT_REVIEW_NOTES = {
   "Arugula": "Kept this as a cool-season direct-sow crop. NC State Central NC shows sowing in Feb-Mar and Aug-Sep; I removed the winter greenhouse timing because the Piedmont sources did not justify it.",
-  "Lettuce, Head": "I moved fall lettuce transplanting earlier. The Piedmont guide supports an early fall establishment window beginning in mid-August with season extension, so V2 now adds outdoor transplanting in late August and early September and marks those slots with `*` for heat-management during establishment.",
+  "Lettuce, Head": "I moved fall lettuce transplanting earlier. The Piedmont guide supports an early fall establishment window beginning in mid-August with season extension, so V2 now adds outdoor transplanting in late August and early September, marks those slots with `*` for heat-management during establishment, and keeps only very small protected-culture shoulders: late February for spring sowing under cover and October for protected late-fall succession.",
   "Radishes": "I tightened this back to a true spring/fall radish pattern. The broad May-June sowing run was too optimistic for Piedmont quality, so V2 now ends spring around early April and extends the main fall window into early October instead.",
-  "Lettuce, Leaf": "Leaf lettuce now mirrors the earlier fall-establishment logic used for head lettuce. The August-to-early-September transplant slots remain active, but they now also carry `*` to signal that heat management matters during establishment.",
+  "Lettuce, Leaf": "Leaf lettuce now mirrors the earlier fall-establishment logic used for head lettuce. The August-to-early-September transplant slots remain active, but they now also carry `*` to signal that heat management matters during establishment. I also restored narrow `sg` shoulders in late February and October because protected baby-leaf succession is easier to support there than broad winter outdoor sowing.",
   "Onions, Green": "I converted this away from a seed-led row and toward sets. The Piedmont guide is clearer here than the earlier mixed interpretation, so V2 now uses `B` for the spring and late-summer planting windows instead of broad `s` timing.",
   "Spinach": "I tightened spinach into a more realistic cool-season row. The old May-June outdoor sowing run was too broad, so V2 now drops those slots, keeps the mid-August establishment restart with `*`, and restores explicit outdoor sowing in late October and early November for overwinter spinach, alongside protected-culture support. The November sow slot is flagged as overwintering intent, not a same-fall harvest move.",
   "Celery": "Converted this to a transplant-led schedule. NC State lists outdoor planting primarily as transplant timing; indoor starts were added ahead of those windows because direct sow is not realistic here.",
-  "Onions, Bulb": "This was one of the biggest corrections. Instead of treating bulb onions like a near year-round sowing crop, V2 now separates the real seed windows from the transplant window: seed in fall and late winter, start seedlings in December-January, and transplant from mid-February into early spring. The early-February slot is now flagged as protection-dependent rather than a normal open-field transplant window.",
+  "Onions, Bulb": "This was one of the biggest corrections. Instead of treating bulb onions like a near year-round sowing crop, V2 now separates the real seed windows from the transplant window: seed in fall and late winter, start seedlings in December-January, and transplant from mid-February into early spring. The early-February slot is now marked with `tg` plus `*` to show that it is a protection-dependent transplant window rather than a normal open-field move.",
   "Leek": "Treated as a transplant-oriented allium with spring S/T timing from the Central NC calendar. Indoor starts were limited to the lead-in for those transplant windows.",
-  "Kale": "Tightened this into a cool-season spring and fall crop. Central NC supports S/T in late winter-spring and again late summer-fall; the remaining fall `sg` slot is only a protected-culture shoulder for early winter, not part of the core outdoor window.",
-  "Collard Greens": "Rebuilt this from the NC State Central NC collard row. Spring is transplant-led from late February through June, with a July-September fall S/T window; the fall `sg` slot is only a modest season-extension shoulder for protected greens.",
-  "Bok Choy": "Narrowed this sharply. The NC State Central NC calendar shows bok choy mainly as a transplant crop in late March and again late August through September; the remaining `tg` slot is only a small fall protected-culture shoulder rather than part of the main transplant window.",
-  "Snapdragons": "Trimmed this to a spring indoor-start and spring transplant schedule. Peregrine lists half-hardy flowers for late winter through mid-April, and Johnny's places snapdragon at 8-10 weeks before frost-free transplanting, so V2 keeps the earlier cool-season spring pattern rather than treating it like a warm annual.",
+  "Kale": "Tightened this into a cool-season spring and fall crop. Central NC supports S/T in late winter-spring and again late summer-fall; the remaining fall `sg` slots are only a protected-culture shoulder for early winter, not part of the core outdoor window.",
+  "Collard Greens": "Rebuilt this from the NC State Central NC collard row. Spring is transplant-led from late February through June, with a July-September fall S/T window; the fall `sg` slots are only a modest season-extension shoulder for protected greens.",
+  "Bok Choy": "Narrowed this sharply. The NC State Central NC calendar shows bok choy mainly as a transplant crop in late March and again late August through September; the remaining `tg` slots are only a small fall protected-culture shoulder rather than part of the main transplant window, with the outer edge extending into early October under cover.",
+  "Snapdragons": "I widened this beyond the old spring-only row. Clemson and NC Extension both treat snapdragons as cool-season plants that can be set out in fall as well as late winter or early spring, so V2 now keeps the spring indoor-start lane but also adds a fall transplant window from September into early October instead of pretending this is only a spring annual.",
   "Lavender": "I tightened this with Johnny's plus UGA herb guidance. Johnny's recommends starting lavender 8-10 weeks before last frost and transplanting after last frost, while UGA lists lavender as a spring/fall perennial herb in the South, so V2 now uses a later spring set-out and a narrower fall transplant window.",
   "Stock": "Narrowed this to a spring indoor-start and spring transplant pattern. Johnny's places stock at about 5-6 weeks before frost-free transplanting, and I removed the unsupported fall direct-sow entry rather than pretending the local source stack supports a second season here.",
   "Chives": "Left this mostly intact and slightly broadened spring transplanting. Johnny's and Southern herb guidance support chives as a perennial herb typically started for spring set-out, but they do not give a strong Carrboro half-month calendar, so V2 keeps the conservative late-winter seed-start and early-spring transplant pattern.",
@@ -2034,30 +2037,30 @@ const PLANT_REVIEW_NOTES = {
   "Peas, Vining": "Expanded this to the full NC State outdoor sowing window and removed the greenhouse placeholder. After review, the fall sowing lane is now reduced to September only and carries `*`, since fall peas in the Piedmont are often too unreliable to present as a normal August start.",
   "Peas, Bush": "Same adjustment as other peas: no greenhouse placeholder, broader direct-sow timing from the NC State calendar for spring, but a more conservative fall lane. August sowing is removed and September sowing is flagged with `*` because fall peas are a marginal Piedmont move rather than a dependable one.",
   "Mustard": "Rebuilt this around the NC State Central NC mustard row. V2 removes the winter greenhouse assumption and uses a long direct-sow run from late winter into mid-June, plus the late-summer/early-fall sowing cycle.",
-  "Parsley": "I kept parsley's spring and fall S/T structure, but the September half1 slot is now explicitly marked as a primary fall planting point and carries `*` to indicate the crop's summer slowdown and fall reflush behavior.",
-  "Chard, Swiss": "Aligned this to the NC State Swiss chard row: spring S/T from March into April, then a fall cycle in August and early September. I added a narrow `si` lead-in ahead of those transplant windows because Swiss chard is commonly started 5-6 weeks before set-out, and I kept only a small fall `sg` window for protected cool-season greens.",
-  "Carrots": "I reclassified the hottest part of carrot season. V2 now starts the fall-sowing lane earlier, in late June and early July, but keeps those early slots flagged with `*` because they are heat-managed establishment rather than easy sowings. The October edge remains the overwintering side of the row, not the main fall-harvest start.",
+  "Parsley": "I kept parsley's spring and fall S/T structure, but the September half1 slot is now explicitly marked as a primary fall planting point and carries `*` to indicate the crop's summer slowdown and fall reflush behavior. The protected fall shoulder now runs one extra half-slot into late November, but it remains a modest herb extension rather than a full winter production lane.",
+  "Chard, Swiss": "Aligned this to the NC State Swiss chard row: spring S/T from March into April, then a fall cycle in August and early September. I added a narrow `si` lead-in ahead of those transplant windows because Swiss chard is commonly started 5-6 weeks before set-out, and I kept only a small fall `sg` window for protected cool-season greens that trails into mid-November.",
+  "Carrots": "I reclassified the hottest part of carrot season. V2 now starts the fall-sowing lane earlier, in late June and early July, but keeps those early slots flagged with `*` because they are heat-managed establishment rather than easy sowings. The October edge remains the overwintering side of the row, not the main fall-harvest start, so the added late-October `sg` slot is only a protected overwinter shoulder.",
   "Peppers": "Kept peppers as a transplant-led crop but removed the speculative greenhouse transplant flag and the weak late-summer transplant carryover. Outdoor transplanting now follows the core spring Central NC row, with indoor starts only as the lead-in to those spring transplant windows.",
   "Tomatoes": "Trimmed this back to an indoor-start plus outdoor-transplant schedule and removed the greenhouse transplant flag. I also removed the late-summer transplant carryover so the outdoor `t` window stays on the core spring-to-early-summer Central NC timing instead of implying a high-confidence second planting run.",
   "Strawberries (Bare-root)": "I corrected this back toward the stronger Piedmont pattern. V2 now includes the main fall planting window in late September to early October for reliable spring-bearing establishment, while keeping spring bare-root planting only as a `*`-flagged fallback because it is more of an establishment move than the standard high-yield Piedmont timing.",
   "Potatoes (Irish)": "Left this essentially intact because the baseline already matched the NC State Central NC Irish potato row closely: plant tubers from mid-February through early April.",
   "Eggplant": "Kept eggplant transplant-led and removed the greenhouse transplant flag. I also removed the late-summer transplant carryover so the schedule reflects the core spring transplant window only, with indoor starts limited to the lead-in for that window.",
   "Calendula": "I tightened this with Clemson and Johnny's. Clemson treats pot marigold as a hardy/half-hardy annual that can be sown in fall or planted in late winter to early spring, while Johnny's frames calendula as a direct-sown annual with a short transplant lead; V2 keeps the cool-season spring/fall pattern but trims the fall sowing to the later shoulder.",
-  "Cabbage": "Expanded this to the full NC State Central NC transplant row: late winter through early April, then again from mid-July into early September. Indoor starts were added only as the lead-in to those transplant windows.",
-  "Broccoli": "Aligned this with the NC State Central NC broccoli transplant windows. V2 now reflects the broad spring transplant span plus the late-summer/fall transplant cycle, with indoor starts back-timed from those slots.",
-  "Cauliflower": "Converted this to the mixed sow/transplant pattern shown on the Central NC calendar. The reviewed version carries S/T in late winter and again from August into mid-September, with indoor starts only where transplant timing implies them.",
-  "Yarrow": "I shifted this later and grounded it in Johnny's plus UGA herb guidance. Johnny's recommends sowing 8-10 weeks before planting out and transplanting after hardening, while UGA lists yarrow as a spring/fall perennial herb in the South; V2 stays conservative by keeping the transplant-led spring schedule rather than adding a broad direct-sow window.",
+  "Cabbage": "Expanded this to the full NC State Central NC transplant row: late winter through early April, then again from mid-July into early September. Indoor starts were added only as the lead-in to those transplant windows, and the added October `tg` half-slot is only a narrow protected-culture shoulder at the outer fall edge.",
+  "Broccoli": "Aligned this with the NC State Central NC broccoli transplant windows. V2 now reflects the broad spring transplant span plus the late-summer/fall transplant cycle, with indoor starts back-timed from those slots. I added only a single October `tg` shoulder beyond the outdoor fall window.",
+  "Cauliflower": "Converted this to the mixed sow/transplant pattern shown on the Central NC calendar. The reviewed version carries S/T in late winter and again from August into mid-September, with indoor starts only where transplant timing implies them. The new October `tg` slot is only a protected outer-edge shoulder, not a broader greenhouse season.",
+  "Yarrow": "I revised this to match the actual perennial-planting pattern better. The spring indoor-start lane stays, but Clemson's perennial guidance and the NC State toolbox both support planting or dividing yarrow in spring and fall, so V2 now includes a fall transplant window instead of pretending the crop only moves in spring.",
   "Basil": "Expanded this to match the NC State Central NC basil row: sow or transplant from May through mid-July. The indoor-start lead-in stays limited to April, and the old spring start was too early for Carrboro warmth.",
   "Kohlrabi": "Rebuilt this from the NC State Central NC kohlrabi row. V2 now uses a long spring S/T span from late winter into early summer plus a smaller August-September fall cycle.",
   "Fennel": "Shifted this to direct-sow timing from the NC State Florence fennel row and the herb-handbook guidance that fennel does not transplant well. Spring sowing now runs March-April, with a second sowing window in July-August.",
-  "Cilantro": "I extended the fall cilantro window. The older row was too narrow, so V2 now carries the late-August through early-October sowing run that better matches Piedmont fall and overwinter cilantro practice.",
+  "Cilantro": "I extended the fall cilantro window. The older row was too narrow, so V2 now carries the late-August through early-October sowing run that better matches Piedmont fall and overwinter cilantro practice, plus a small late-October `sg` shoulder for protected overwinter starts.",
   "Turnips": "Expanded this to the long direct-sow window on the NC State Central NC turnip row. V2 now shows sowing from February through mid-June and again from August into early September.",
   "Sage": "I rebuilt this around Johnny's common-sage seed guidance plus UGA's herb table. Johnny's recommends starting seed 6-8 weeks before last frost and transplanting after last frost, and UGA lists sage as a spring/fall perennial herb in the South, so V2 now uses a narrower late-spring set-out plus a small fall transplant window.",
   "Marigolds": "Kept this close to baseline after checking Clemson and Johnny's. Clemson treats marigolds as tender annuals planted after frost, and Johnny's uses a short spring seed-start lead, so the late-spring planting pattern still looks right without pretending we have a tighter Carrboro half-month source.",
   "Echinacea": "I retimed this more clearly around Johnny's. Their guidance recommends sowing 8-10 weeks before planting out and transplanting in late spring or early summer, with direct seeding only once soil is warm, so V2 moves echinacea out of the early-April transplant slot and into a later spring window.",
   "Chamomile": "Left this mostly intact as a spring indoor-start or direct-sow option. Johnny's supports a short seed-start lead and spring direct sowing, but the Carrboro/Piedmont sources are not specific enough for a more assertive half-month rewrite than this.",
   "Moonflower": "I tightened this using the NC State Plant Toolbox plus extension growing guides. NC State says to start moonflower 4-6 weeks before last spring frost after scarifying or soaking seed, and extension guidance places direct sowing after frost once soils warm, so V2 now starts it later indoors and keeps planting to May.",
-  "Parsnips": "I changed parsnips materially. Instead of starting in February, V2 now treats mid-April to mid-May as the default spring sowing period and keeps only the late-August to early-September window for fall overwinter intent, with `*` to flag the crop's slow, moisture-sensitive germination.",
+  "Parsnips": "I changed parsnips materially. Instead of starting in February, V2 now treats mid-April to mid-May as the default spring sowing period and keeps the late-August to early-September window for fall overwinter intent, with `*` to flag the crop's slow, moisture-sensitive germination. I also added only a tiny October `sg` shoulder for protected overwinter sowing under the conservative greenhouse rule.",
   "Dill": "I widened spring dill back to the actual late-winter/early-spring window. V2 now starts in the second half of February, carries through early April, and keeps the late-summer sowing cycle.",
   "Borage": "Converted this to direct sow only. The herb-handbook guidance says borage should be direct-seeded because it does not transplant well, and I removed the unsupported transplant/fall cycle from the baseline.",
   "Beets": "I moved beets earlier in spring and later in fall. V2 now treats February as protected sowing only, carries spring through mid-April, and extends the fall run to early October with `*` for hot-weather establishment and overwinter intent.",
@@ -2092,90 +2095,531 @@ const PLANT_REVIEW_NOTES = {
   "Mint": "Added as a perennial herb row with spring and early-fall planting plus repeated warm-season harvest. I kept the timing broad and left the stronger warning in the guide note: containment matters more than exact planting week."
 };
 
-const PLANT_REVIEW_CONFIDENCE_GROUPS = {
-  high: [
-    "Arugula",
-    "Lettuce, Head",
-    "Radishes",
-    "Lettuce, Leaf",
-    "Spinach",
-    "Kale",
-    "Collard Greens",
-    "Snap Pea (Bush)",
-    "Snap Pea (Pole)",
-    "Peas, Vining",
-    "Peas, Bush",
-    "Mustard",
-    "Chard, Swiss",
-    "Carrots",
-    "Peppers",
-    "Tomatoes",
-    "Potatoes (Irish)",
-    "Eggplant",
-    "Cabbage",
-    "Broccoli",
-    "Cauliflower",
-    "Basil",
-    "Kohlrabi",
-    "Fennel",
-    "Cilantro",
-    "Turnips",
-    "Parsnips",
-    "Dill",
-    "Beets",
-    "Cabbage (Chinese)",
-    "Squash (Summer)",
-    "Cucumbers",
-    "Corn (Sweet)",
-    "Cantaloupe",
-    "Squash (Winter)",
-    "Potatoes (Sweet)",
-    "Lima Bean (Pole)",
-    "Watermelon",
-    "Okra",
-    "Lima Bean (Bush)",
-    "Pumpkin",
-    "Brussels Sprouts",
-    "Rutabaga",
-    "Garlic",
-    "Beans, Snap (Bush)",
-    "Beans, Snap (Pole)"
+const PLANT_REVIEW_CONFIDENCE_RUBRIC = {
+  5: "Direct NC or Piedmont timing support, second regional agreement, and minimal inference.",
+  4: "Strong direct timing support with only minor inferred edges such as harvest tails or protected-culture shoulders.",
+  3: "Good regional support with usable local fit, but one meaningful piece is still inferred or generalized.",
+  2: "Useful planning row with substantial inference, weaker local precision, or crop-class ambiguity.",
+  1: "Low-confidence row driven mainly by vendor, perennial, or nonlocal guidance.",
+  0: "Placeholder-grade confidence; keep conservative until stronger local evidence is added."
+};
+
+const PLANT_REVIEW_CONFIDENCE_SCORES = {
+  "Arugula": 5,
+  "Lettuce, Head": 5,
+  "Radishes": 5,
+  "Lettuce, Leaf": 5,
+  "Onions, Green": 4,
+  "Spinach": 5,
+  "Celery": 4,
+  "Onions, Bulb": 4,
+  "Leek": 4,
+  "Kale": 5,
+  "Collard Greens": 5,
+  "Bok Choy": 4,
+  "Snapdragons": 4,
+  "Lavender": 4,
+  "Stock": 4,
+  "Chives": 4,
+  "Snap Pea (Bush)": 5,
+  "Snap Pea (Pole)": 5,
+  "Peas, Vining": 5,
+  "Peas, Bush": 5,
+  "Mustard": 5,
+  "Parsley": 4,
+  "Chard, Swiss": 4,
+  "Carrots": 5,
+  "Peppers": 5,
+  "Tomatoes": 5,
+  "Strawberries (Bare-root)": 4,
+  "Potatoes (Irish)": 5,
+  "Eggplant": 5,
+  "Calendula": 4,
+  "Cabbage": 5,
+  "Broccoli": 5,
+  "Cauliflower": 5,
+  "Yarrow": 4,
+  "Basil": 5,
+  "Kohlrabi": 5,
+  "Fennel": 4,
+  "Cilantro": 5,
+  "Turnips": 5,
+  "Sage": 4,
+  "Marigolds": 4,
+  "Echinacea": 2,
+  "Chamomile": 2,
+  "Moonflower": 4,
+  "Parsnips": 4,
+  "Dill": 5,
+  "Borage": 2,
+  "Beets": 5,
+  "Ginger": 4,
+  "Cabbage (Chinese)": 5,
+  "Sunflower": 4,
+  "Squash (Summer)": 5,
+  "Cucumbers": 5,
+  "Zinnias": 4,
+  "Nasturtium": 4,
+  "Corn (Sweet)": 5,
+  "Cantaloupe": 5,
+  "Squash (Winter)": 5,
+  "Potatoes (Sweet)": 5,
+  "Peas (Field)": 4,
+  "Lima Bean (Pole)": 4,
+  "Watermelon": 5,
+  "Okra": 5,
+  "Lima Bean (Bush)": 4,
+  "Pumpkin": 5,
+  "Brussels Sprouts": 5,
+  "Rutabaga": 5,
+  "Garlic": 5,
+  "Beans, Snap (Bush)": 5,
+  "Beans, Snap (Pole)": 5,
+  "Asparagus": 4,
+  "Blueberries": 4,
+  "Blackberries": 4,
+  "Rosemary": 4,
+  "Thyme": 4,
+  "Oregano": 4,
+  "Mint": 4
+};
+
+const REVIEW_SOURCE_LIBRARY = {
+  nc_state_calendar: {
+    label: "NC State Calendar",
+    url: "https://content.ces.ncsu.edu/central-north-carolina-planting-calendar-for-annual-vegetables-fruits-and-herbs"
+  },
+  nc_state_veg_handbook: {
+    label: "NC State Veg Handbook",
+    url: "https://content.ces.ncsu.edu/extension-gardener-handbook/16-vegetable-gardening"
+  },
+  nc_state_ornamentals: {
+    label: "NC State Ornamentals",
+    url: "https://content.ces.ncsu.edu/extension-gardener-handbook/10-herbaceous-ornamentals"
+  },
+  piedmont_guide: {
+    label: "Piedmont Guide",
+    url: "https://growingsmallfarms.ces.ncsu.edu/growingsmallfarms-plantingguide/"
+  },
+  uga_herb: {
+    label: "UGA Herb",
+    url: "https://extension.uga.edu/publications/detail.html?number=B1170"
+  },
+  clemson_annual: {
+    label: "Clemson Annual",
+    url: "https://hgic.clemson.edu/factsheet/growing-annuals/"
+  },
+  clemson_southern_peas: {
+    label: "Clemson Southern Peas",
+    url: "https://hgic.clemson.edu/factsheet/southern-peas/"
+  },
+  clemson_echinacea: {
+    label: "Clemson Echinacea",
+    url: "https://hgic.clemson.edu/factsheet/echinacea/"
+  },
+  clemson_moonflower: {
+    label: "Clemson Moonflower",
+    url: "https://hgic.clemson.edu/factsheet/vine-selections-for-landscaping/"
+  },
+  uga_ginger: {
+    label: "UGA Ginger",
+    url: "https://site.extension.uga.edu/fultonag/2021/03/growing-ginger-and-turmeric-at-home/"
+  },
+  nc_state_small_fruits: {
+    label: "NC State Small Fruits",
+    url: "https://content.ces.ncsu.edu/extension-gardener-handbook/14-small-fruits"
+  },
+  nc_state_strawberries: {
+    label: "NC State Strawberries",
+    url: "https://content.ces.ncsu.edu/growing-strawberries-in-childcare-center-gardens"
+  },
+  nc_state_strawberry_toolbox: {
+    label: "NC State Strawberry",
+    url: "https://plants.ces.ncsu.edu/plants/fragaria-x-ananassa/"
+  },
+  nc_state_asparagus: {
+    label: "NC State Asparagus",
+    url: "https://content.ces.ncsu.edu/home-garden-asparagus-production"
+  },
+  nc_state_blueberries: {
+    label: "NC State Blueberries",
+    url: "https://content.ces.ncsu.edu/growing-blueberries-in-the-home-garden"
+  },
+  nc_state_blueberry_toolbox: {
+    label: "NC State Blueberry",
+    url: "https://plants.ces.ncsu.edu/plants/vaccinium/common-name/blueberries/"
+  },
+  nc_state_blackberries: {
+    label: "NC State Blackberries",
+    url: "https://content.ces.ncsu.edu/blackberries-for-the-home-garden"
+  },
+  nc_state_blackberry_toolbox: {
+    label: "NC State Blackberry",
+    url: "https://plants.ces.ncsu.edu/plants/rubus/"
+  },
+  nc_state_lavender: {
+    label: "NC State Lavender",
+    url: "https://plants.ces.ncsu.edu/plants/lavandula-angustifolia/common-name/lavender/"
+  },
+  nc_state_chives: {
+    label: "NC State Chives",
+    url: "https://plants.ces.ncsu.edu/plants/allium-schoenoprasum/"
+  },
+  nc_state_parsley: {
+    label: "NC State Parsley",
+    url: "https://plants.ces.ncsu.edu/plants/petroselinum-crispum/common-name/parsley/"
+  },
+  nc_state_fennel: {
+    label: "NC State Fennel",
+    url: "https://plants.ces.ncsu.edu/plants/foeniculum-vulgare/common-name/fennel/"
+  },
+  nc_state_cilantro: {
+    label: "NC State Cilantro",
+    url: "https://plants.ces.ncsu.edu/plants/coriandrum-sativum/common-name/cilantro/"
+  },
+  nc_state_dill: {
+    label: "NC State Dill",
+    url: "https://plants.ces.ncsu.edu/plants/anethum-graveolens/common-name/dill/"
+  },
+  nc_state_rosemary: {
+    label: "NC State Rosemary",
+    url: "https://plants.ces.ncsu.edu/plants/salvia-rosmarinus/common-name/rosemary/"
+  },
+  nc_state_thyme: {
+    label: "NC State Thyme",
+    url: "https://plants.ces.ncsu.edu/plants/thymus-vulgaris/common-name/common-thyme/"
+  },
+  nc_state_oregano: {
+    label: "NC State Oregano",
+    url: "https://plants.ces.ncsu.edu/plants/origanum-vulgare/common-name/oregano/"
+  },
+  nc_state_mint: {
+    label: "NC State Mint",
+    url: "https://plants.ces.ncsu.edu/plants/mentha-spicata/common-name/mint/"
+  },
+  nc_state_sage: {
+    label: "NC State Sage",
+    url: "https://plants.ces.ncsu.edu/plants/salvia-officinalis/common-name/sage/"
+  },
+  nc_state_snapdragon: {
+    label: "NC State Snapdragon",
+    url: "https://plants.ces.ncsu.edu/plants/antirrhinum-majus/common-name/snapdragon/"
+  },
+  nc_state_stock: {
+    label: "NC State Stock",
+    url: "https://plants.ces.ncsu.edu/plants/matthiola-incana/common-name/stock/"
+  },
+  nc_state_yarrow: {
+    label: "NC State Yarrow",
+    url: "https://plants.ces.ncsu.edu/plants/achillea-millefolium/"
+  },
+  nc_state_moonflower: {
+    label: "NC State Moonflower",
+    url: "https://plants.ces.ncsu.edu/plants/ipomoea-alba/common-name/moonflower/"
+  },
+  nc_state_echinacea: {
+    label: "NC State Echinacea",
+    url: "https://plants.ces.ncsu.edu/plants/echinacea-purpurea/common-name/purple-coneflower/"
+  },
+  nc_state_chamomile: {
+    label: "NC State Chamomile",
+    url: "https://plants.ces.ncsu.edu/plants/matricaria-chamomilla/common-name/chamomile/"
+  },
+  nc_state_borage: {
+    label: "NC State Borage",
+    url: "https://plants.ces.ncsu.edu/plants/borago-officinalis/common-name/starflower/"
+  },
+  nc_state_calendula: {
+    label: "NC State Calendula",
+    url: "https://plants.ces.ncsu.edu/plants/calendula-officinalis/common-name/calendula/"
+  },
+  nc_state_sunflower: {
+    label: "NC State Sunflower",
+    url: "https://plants.ces.ncsu.edu/plants/helianthus-annuus/common-name/sunflower/"
+  },
+  nc_state_zinnia: {
+    label: "NC State Zinnia",
+    url: "https://plants.ces.ncsu.edu/plants/zinnia-elegans/"
+  },
+  nc_state_nasturtium: {
+    label: "NC State Nasturtium",
+    url: "https://plants.ces.ncsu.edu/plants/tropaeolum-majus/common-name/nasturtium/"
+  },
+  nc_state_marigold: {
+    label: "NC State Marigold",
+    url: "https://plants.ces.ncsu.edu/plants/tagetes/common-name/marigold/"
+  }
+};
+
+const CALENDAR_EVIDENCE_PLANTS = new Set([
+  "Arugula",
+  "Lettuce, Head",
+  "Radishes",
+  "Lettuce, Leaf",
+  "Onions, Green",
+  "Spinach",
+  "Celery",
+  "Onions, Bulb",
+  "Leek",
+  "Kale",
+  "Collard Greens",
+  "Bok Choy",
+  "Snap Pea (Bush)",
+  "Snap Pea (Pole)",
+  "Peas, Vining",
+  "Peas, Bush",
+  "Mustard",
+  "Parsley",
+  "Chard, Swiss",
+  "Carrots",
+  "Peppers",
+  "Tomatoes",
+  "Potatoes (Irish)",
+  "Eggplant",
+  "Cabbage",
+  "Broccoli",
+  "Cauliflower",
+  "Basil",
+  "Kohlrabi",
+  "Fennel",
+  "Cilantro",
+  "Turnips",
+  "Parsnips",
+  "Dill",
+  "Beets",
+  "Cabbage (Chinese)",
+  "Squash (Summer)",
+  "Cucumbers",
+  "Corn (Sweet)",
+  "Cantaloupe",
+  "Squash (Winter)",
+  "Potatoes (Sweet)",
+  "Lima Bean (Pole)",
+  "Watermelon",
+  "Okra",
+  "Lima Bean (Bush)",
+  "Pumpkin",
+  "Brussels Sprouts",
+  "Rutabaga",
+  "Garlic",
+  "Beans, Snap (Bush)",
+  "Beans, Snap (Pole)",
+  "Asparagus",
+  "Peas (Field)"
+]);
+
+const UGA_HERB_EVIDENCE_PLANTS = new Set([
+  "Lavender",
+  "Chives",
+  "Parsley",
+  "Fennel",
+  "Cilantro",
+  "Dill",
+  "Sage",
+  "Yarrow",
+  "Ginger",
+  "Rosemary",
+  "Thyme",
+  "Oregano",
+  "Mint"
+]);
+
+const CLEMSON_ANNUAL_EVIDENCE_PLANTS = new Set([
+  "Snapdragons",
+  "Stock",
+  "Calendula",
+  "Marigolds",
+  "Chamomile",
+  "Borage",
+  "Sunflower",
+  "Zinnias",
+  "Nasturtium",
+  "Moonflower"
+]);
+
+const ORNAMENTAL_EVIDENCE_PLANTS = new Set([
+  "Snapdragons",
+  "Lavender",
+  "Stock",
+  "Yarrow",
+  "Calendula",
+  "Marigolds",
+  "Echinacea",
+  "Chamomile",
+  "Moonflower",
+  "Borage",
+  "Sunflower",
+  "Zinnias",
+  "Nasturtium"
+]);
+
+const SPECIAL_REVIEW_EVIDENCE_SOURCES = {
+  "Snapdragons": ["nc_state_snapdragon"],
+  "Lavender": ["nc_state_lavender"],
+  "Stock": ["nc_state_stock"],
+  "Chives": ["nc_state_chives"],
+  "Parsley": ["nc_state_parsley"],
+  "Fennel": ["nc_state_fennel"],
+  "Cilantro": ["nc_state_cilantro"],
+  "Dill": ["nc_state_dill"],
+  "Yarrow": ["nc_state_yarrow"],
+  "Sage": ["nc_state_sage"],
+  "Moonflower": ["nc_state_moonflower", "clemson_moonflower"],
+  "Echinacea": ["nc_state_echinacea", "clemson_echinacea"],
+  "Chamomile": ["nc_state_chamomile"],
+  "Borage": ["nc_state_borage"],
+  "Calendula": ["nc_state_calendula"],
+  "Sunflower": ["nc_state_sunflower"],
+  "Zinnias": ["nc_state_zinnia"],
+  "Nasturtium": ["nc_state_nasturtium"],
+  "Marigolds": ["nc_state_marigold"],
+  "Peas (Field)": ["clemson_southern_peas"],
+  "Ginger": ["uga_ginger"],
+  "Asparagus": ["nc_state_asparagus"],
+  "Strawberries (Bare-root)": ["nc_state_small_fruits", "nc_state_strawberries", "nc_state_strawberry_toolbox"],
+  "Blueberries": ["nc_state_small_fruits", "nc_state_blueberries", "nc_state_blueberry_toolbox"],
+  "Blackberries": ["nc_state_small_fruits", "nc_state_blackberries", "nc_state_blackberry_toolbox"],
+  "Rosemary": ["nc_state_rosemary"],
+  "Thyme": ["nc_state_thyme"],
+  "Oregano": ["nc_state_oregano"],
+  "Mint": ["nc_state_mint"]
+};
+
+const PLANT_GREENHOUSE_CONFIDENCE = {
+  "Spinach": {
+    level: "high",
+    note: "Protected sowing is supported only on the overwinter shoulder, not as a broad winter lane."
+  },
+  "Lettuce, Head": {
+    level: "high",
+    note: "Protected sowing is limited to a late-February spring shoulder and a single October season-extension shoulder."
+  },
+  "Lettuce, Leaf": {
+    level: "high",
+    note: "Protected baby-leaf sowing is limited to a late-February spring shoulder and a narrow October shoulder."
+  },
+  "Onions, Bulb": {
+    level: "high",
+    note: "The early-February greenhouse code reflects a protection-dependent transplant edge already described in the review."
+  },
+  "Kale": {
+    level: "high",
+    note: "Protected culture remains only an early-winter shoulder after the outdoor fall window."
+  },
+  "Collard Greens": {
+    level: "high",
+    note: "Protected culture remains a narrow late-fall to early-winter greens shoulder."
+  },
+  "Bok Choy": {
+    level: "high",
+    note: "The greenhouse lane is limited to the outer fall transplant edge and does not replace the main outdoor window."
+  },
+  "Parsley": {
+    level: "medium",
+    note: "Protected sowing is a modest herb shoulder that now stretches into late November, not a fully sourced winter production row."
+  },
+  "Cabbage": {
+    level: "medium",
+    note: "The greenhouse code is limited to a single October transplant shoulder beyond the outdoor fall window."
+  },
+  "Broccoli": {
+    level: "medium",
+    note: "The greenhouse code is limited to a single October transplant shoulder beyond the outdoor fall window."
+  },
+  "Cauliflower": {
+    level: "medium",
+    note: "The greenhouse code is limited to a single October transplant shoulder beyond the outdoor fall window."
+  },
+  "Cilantro": {
+    level: "high",
+    note: "Protected sowing is limited to a small late-October overwinter shoulder."
+  },
+  "Chard, Swiss": {
+    level: "high",
+    note: "Protected chard is kept as a small fall-to-early-winter shoulder only."
+  },
+  "Carrots": {
+    level: "medium",
+    note: "Late-October greenhouse sowing is treated strictly as an overwinter edge."
+  },
+  "Parsnips": {
+    level: "medium",
+    note: "Protected sowing is limited to a single October overwinter shoulder."
+  },
+  "Beets": {
+    level: "high",
+    note: "Protected sowing is limited to the cold spring and late-fall shoulders already described in the review."
+  },
+  "Cabbage (Chinese)": {
+    level: "high",
+    note: "Protected culture is limited to the outer fall transplant shoulder."
+  }
+};
+
+const GREENHOUSE_RULES = {
+  mode: "conservative",
+  definition: "Use `sg`/`tg` only for unheated greenhouse, cold frame, or similar passive protection.",
+  preseasonShift: {
+    defaultCoolSeasonWeeksEarlier: "2-4",
+    interpretation: "Treat passive cover as a modest preseason shift for cool-season crops, not as a whole separate season.",
+    requireExtraSupportBeyond: "4 weeks"
+  },
+  principles: [
+    "No crop gets greenhouse timing by default.",
+    "Assume unheated greenhouse timing is usually only about 2-4 weeks earlier than the comparable outdoor lane for cool-season crops.",
+    "Use `sg` mainly for cool-season direct-sow shoulders or overwinter starts already supported by V2 notes.",
+    "Use `tg` mainly for cool-season transplant shoulders at the outer fall or late-winter edge.",
+    "Prefer `si` over `sg` for warm-season tender crops that need heat, not just protection.",
+    "If a proposed greenhouse slot extends more than about 4 weeks beyond the outdoor lane, require crop-specific support before adding it.",
+    "If a V2 review note says greenhouse timing was speculative or removed, do not restore it from the rule alone."
   ],
-  medium: [
-    "Onions, Green",
-    "Celery",
-    "Onions, Bulb",
-    "Leek",
-    "Bok Choy",
-    "Snapdragons",
-    "Stock",
-    "Chives",
-    "Parsley",
-    "Calendula",
-    "Yarrow",
-    "Sage",
-    "Marigolds",
-    "Chamomile",
-    "Sunflower",
-    "Zinnias",
-    "Nasturtium",
-    "Borage",
-    "Peas (Field)",
-    "Asparagus",
-    "Rosemary",
-    "Thyme",
-    "Oregano",
-    "Mint"
-  ],
-  low: [
-    "Lavender",
-    "Echinacea",
-    "Moonflower",
-    "Strawberries (Bare-root)",
-    "Ginger",
-    "Blueberries",
-    "Blackberries"
-  ]
+  categories: {
+    allow_sg_shoulder: {
+      label: "Allow SG Shoulder",
+      description: "Crop can carry a small protected-culture sowing shoulder, usually within a 2-4 week shift, when the note supports season extension or overwinter intent."
+    },
+    allow_tg_shoulder: {
+      label: "Allow TG Shoulder",
+      description: "Crop can carry a small protected-culture transplant shoulder, usually within a 2-4 week shift, at the outer edge of the reviewed window."
+    },
+    prefer_si_not_greenhouse: {
+      label: "Prefer SI, Not SG/TG",
+      description: "Tender crop should generally be started indoors for later planting rather than treated as a passive-greenhouse crop."
+    },
+    blocked_after_review: {
+      label: "Blocked After Review",
+      description: "V2 notes explicitly removed or rejected speculative greenhouse timing; do not re-add without stronger evidence."
+    }
+  }
+};
+
+const PLANT_GREENHOUSE_RULE_CATEGORY = {
+  "Spinach": "allow_sg_shoulder",
+  "Lettuce, Head": "allow_sg_shoulder",
+  "Lettuce, Leaf": "allow_sg_shoulder",
+  "Kale": "allow_sg_shoulder",
+  "Collard Greens": "allow_sg_shoulder",
+  "Parsley": "allow_sg_shoulder",
+  "Chard, Swiss": "allow_sg_shoulder",
+  "Carrots": "allow_sg_shoulder",
+  "Parsnips": "allow_sg_shoulder",
+  "Beets": "allow_sg_shoulder",
+  "Cilantro": "allow_sg_shoulder",
+  "Onions, Bulb": "allow_tg_shoulder",
+  "Bok Choy": "allow_tg_shoulder",
+  "Cabbage": "allow_tg_shoulder",
+  "Broccoli": "allow_tg_shoulder",
+  "Cauliflower": "allow_tg_shoulder",
+  "Cabbage (Chinese)": "allow_tg_shoulder",
+  "Tomatoes": "prefer_si_not_greenhouse",
+  "Peppers": "prefer_si_not_greenhouse",
+  "Eggplant": "prefer_si_not_greenhouse",
+  "Arugula": "blocked_after_review",
+  "Mustard": "blocked_after_review",
+  "Snap Pea (Bush)": "blocked_after_review",
+  "Snap Pea (Pole)": "blocked_after_review",
+  "Peas, Vining": "blocked_after_review",
+  "Peas, Bush": "blocked_after_review"
 };
 
 // Helper function to get plant guide data
@@ -2192,12 +2636,78 @@ function getPlantReviewNote(plantName) {
   return PLANT_REVIEW_NOTES[plantName] || null;
 }
 
+function getPlantReviewConfidenceScore(plantName) {
+  return Object.prototype.hasOwnProperty.call(PLANT_REVIEW_CONFIDENCE_SCORES, plantName)
+    ? PLANT_REVIEW_CONFIDENCE_SCORES[plantName]
+    : null;
+}
+
 function getPlantReviewConfidence(plantName) {
-  for (const [confidence, plantNames] of Object.entries(PLANT_REVIEW_CONFIDENCE_GROUPS)) {
-    if (plantNames.includes(plantName)) {
-      return confidence;
-    }
+  const score = getPlantReviewConfidenceScore(plantName);
+  if (score === null) return null;
+  if (score >= 4) return "high";
+  if (score >= 2) return "medium";
+  return "low";
+}
+
+function getPlantReviewEvidenceSources(plantName) {
+  const sourceIds = [];
+
+  if (CALENDAR_EVIDENCE_PLANTS.has(plantName)) {
+    sourceIds.push("nc_state_calendar", "piedmont_guide", "nc_state_veg_handbook");
   }
 
-  return null;
+  if (UGA_HERB_EVIDENCE_PLANTS.has(plantName)) {
+    sourceIds.push("uga_herb", "nc_state_veg_handbook");
+  }
+
+  if (CLEMSON_ANNUAL_EVIDENCE_PLANTS.has(plantName)) {
+    sourceIds.push("clemson_annual");
+  }
+
+  if (ORNAMENTAL_EVIDENCE_PLANTS.has(plantName)) {
+    sourceIds.push("nc_state_ornamentals");
+  }
+
+  if (SPECIAL_REVIEW_EVIDENCE_SOURCES[plantName]) {
+    sourceIds.push(...SPECIAL_REVIEW_EVIDENCE_SOURCES[plantName]);
+  }
+
+  return [...new Set(sourceIds)]
+    .map(sourceId => {
+      const source = REVIEW_SOURCE_LIBRARY[sourceId];
+      if (!source) return null;
+
+      return {
+        id: sourceId,
+        ...source
+      };
+    })
+    .filter(Boolean);
+}
+
+function getPlantGreenhouseConfidence(plantName) {
+  return PLANT_GREENHOUSE_CONFIDENCE[plantName]?.level || null;
+}
+
+function getPlantGreenhouseNote(plantName) {
+  return PLANT_GREENHOUSE_CONFIDENCE[plantName]?.note || null;
+}
+
+function getGreenhouseRules() {
+  return GREENHOUSE_RULES;
+}
+
+function getPlantGreenhouseRuleCategory(plantName) {
+  return PLANT_GREENHOUSE_RULE_CATEGORY[plantName] || null;
+}
+
+function getPlantGreenhouseRule(plantName) {
+  const category = getPlantGreenhouseRuleCategory(plantName);
+  if (!category) return null;
+
+  return {
+    category,
+    ...GREENHOUSE_RULES.categories[category]
+  };
 }
