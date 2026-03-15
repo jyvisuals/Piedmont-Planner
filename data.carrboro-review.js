@@ -1167,7 +1167,7 @@ const PLANTS = [
     months: {
       jan: { half1: [], half2: [] },
       feb: { half1: [], half2: [] },
-      mar: { half1: [], half2: ["s"] },
+      mar: { half1: [], half2: [] },
       apr: { half1: ["s"], half2: ["s"] },
       may: { half1: ["s"], half2: [] },
       jun: { half1: [], half2: [] },
@@ -1729,6 +1729,10 @@ const PLANTS = [
 // Plant Guide Data - integrated from carrboro_plant_guide.csv
 
 const PLANT_GUIDE = {
+    "Sunflower": {
+      varietiesText: `Classic tall (Mammoth), pollenless (ProCut, for cut flowers), dwarf (Teddy Bear, Sunspot), multi-branching (Autumn Beauty, Lemon Queen)`,
+      tipsText: `Direct sow after frost. Prefers full sun and well-drained soil. Space for large heads. Stake tall varieties. Attracts pollinators and birds. Harvest seeds when back of head turns yellow.`
+    },
   "Arugula": {
     varietiesText: `Astro (fast, mild), Rocket (classic), Sylvetta (wild/perennial, peppery)`,
     tipsText: `Rich soil improves leaf size. Consistent moisture prevents bitterness. Light shade extends harvest. Harvest outer leaves first for cut-and-come-again.`
@@ -2066,7 +2070,7 @@ const PLANT_REVIEW_NOTES = {
   "Beets": "I moved beets earlier in spring and later in fall. V2 now treats February as protected sowing only, carries spring through mid-April, and extends the fall run to early October with `*` for hot-weather establishment and overwinter intent.",
   "Ginger": "I corrected both timing and semantics here. UGA herb guidance treats ginger as a late-spring or summer crop propagated by root division, and their home-growing guide starts rhizome preparation in early spring before planting once warmth arrives, so V2 now uses `*` for spring rhizome handling and shifts set-out to late spring into early summer.",
   "Cabbage (Chinese)": "Aligned this to the NC State Central NC Chinese cabbage row. The reviewed version drops the speculative greenhouse slot and uses a small spring S/T window, August sowing, and transplanting again in late September to early October; the remaining `tg` slot is only the protected-culture shoulder at the outer fall edge, with a short `si` lead-in ahead of both transplant cycles.",
-  "Sunflower": "Rebuilt this around the NC State Central NC sunflower row, then checked it against Johnny's. Johnny's supports direct sowing after frost with successions, but V2 stays conservative and uses the stronger spring window from the NC row rather than projecting a longer summer run.",
+  "Sunflower": "Rebuilt this around the NC State Central NC sunflower row, then checked it against Johnny's. Johnny's supports direct sowing after frost with successions, but V2 stays conservative and starts the sowing window in April, after the last frost, for reliable germination in the NC Piedmont.",
   "Squash (Summer)": "Expanded this to the full NC State Central NC summer-squash row: sow or transplant from early April through early August. A small April indoor-start lead-in remains only to support the earliest transplant slot.",
   "Cucumbers": "Aligned this with the NC State Central NC cucumber row. V2 now uses a broad April-to-early-August S/T window and keeps indoor starts limited to the lead-in for transplanting.",
   "Zinnias": "I expanded this using Johnny's plus Clemson annual guidance. Clemson classifies zinnia as a tender annual planted only after frost, while Johnny's recommends sowing transplants 4 weeks ahead and succession-sowing every 2 weeks, so V2 now starts the indoor lead slightly earlier and carries direct sowing further into summer.",

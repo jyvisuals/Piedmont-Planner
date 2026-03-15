@@ -788,7 +788,7 @@ function getPlantIcon(plantName) {
         'Calendula': 'calendula.png',
         'Snapdragons': 'snapdragon.png',
         'Lavender': 'lavender.png',
-        'Zinnias': 'zinnia.svg'
+        'Zinnias': 'zinnia.png'
     };
 
     // Check for SVG/PNG icon
@@ -854,6 +854,19 @@ function createReviewConfidenceBadge(plantName) {
     badge.className = `review-confidence-badge review-confidence-${confidenceMeta.value}`;
     badge.setAttribute('aria-label', confidenceMeta.label);
     return badge;
+}
+
+function hasPlantDetailData(plantName) {
+    if (!plantName) return false;
+
+    if (typeof hasGuideData === 'function' && hasGuideData(plantName)) return true;
+    if (typeof getPlantReviewNote === 'function' && getPlantReviewNote(plantName)) return true;
+    if (typeof getPlantReviewConfidence === 'function' && getPlantReviewConfidence(plantName)) return true;
+    if (typeof getPlantReviewEvidenceSources === 'function' && getPlantReviewEvidenceSources(plantName).length > 0) return true;
+    if (typeof getPlantGreenhouseConfidence === 'function' && getPlantGreenhouseConfidence(plantName)) return true;
+    if (typeof getPlantGreenhouseNote === 'function' && getPlantGreenhouseNote(plantName)) return true;
+
+    return false;
 }
 
 function renderPlantDetailReview(plant) {
@@ -1014,8 +1027,8 @@ function renderGridView() {
 
         plantNameCell.appendChild(plantNameRow);
 
-        // Make both icon cell and name cell clickable if guide data exists
-        if (hasGuideData(plant.name)) {
+        // Make both icon cell and name cell clickable if the panel has anything useful to show
+        if (hasPlantDetailData(plant.name)) {
             bindPlantDetailTrigger(iconCell, plant);
             bindPlantDetailTrigger(plantNameCell, plant);
         }
@@ -1300,8 +1313,8 @@ function renderMonthView() {
             card.appendChild(iconContainer);
             card.appendChild(infoContainer);
 
-            // Make entire card clickable if guide data exists
-            if (hasGuideData(plant.name)) {
+            // Make entire card clickable if the panel has anything useful to show
+            if (hasPlantDetailData(plant.name)) {
                 bindPlantDetailTrigger(card, plant);
             }
 
