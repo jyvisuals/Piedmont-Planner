@@ -72,12 +72,14 @@ function validateCssCustomProperties(cssSource) {
 }
 
 function validateProjectStructure() {
-  ['index.html', 'styles.css', 'script.js', 'data.js', 'data.carrboro-review.js'].forEach(assertFileExists);
+  ['index.html', 'styles.css', 'script.js', 'data.js'].forEach(assertFileExists);
 }
 
 function loadCalendarData(relPath) {
   const source = `${readFile(relPath)}
 globalThis.__calendarData = {
+  MONTHS: typeof MONTHS === 'undefined' ? null : MONTHS,
+  TASKS: typeof TASKS === 'undefined' ? null : TASKS,
   PLANTS: typeof PLANTS === 'undefined' ? null : PLANTS,
   PLANT_GUIDE: typeof PLANT_GUIDE === 'undefined' ? null : PLANT_GUIDE,
   PLANT_REVIEW_NOTES: typeof PLANT_REVIEW_NOTES === 'undefined' ? null : PLANT_REVIEW_NOTES,
@@ -96,8 +98,8 @@ globalThis.__calendarData = {
   return context.globalThis.__calendarData;
 }
 
-function validateCarrboroDataset() {
-  const dataset = loadCalendarData('data.carrboro-review.js');
+function validateDataset(relPath) {
+  const dataset = loadCalendarData(relPath);
   if (!dataset?.PLANTS) {
     return;
   }
@@ -105,7 +107,23 @@ function validateCarrboroDataset() {
   const plantNames = dataset.PLANTS.map((plant) => plant.name);
   const uniquePlantNames = new Set(plantNames);
   if (uniquePlantNames.size !== plantNames.length) {
-    fail('Duplicate plant names found in data.carrboro-review.js');
+    fail(`Duplicate plant names found in ${relPath}`);
+  }
+
+  if (!dataset.MONTHS) {
+    fail(`Missing MONTHS in ${relPath}`);
+  } else {
+    for (const month of dataset.MONTHS) {
+      if (!dataset.TASKS?.[month.id]) {
+        fail(`Missing TASKS entry for month: ${month.id}`);
+      }
+      for (const plant of dataset.PLANTS) {
+        const monthData = plant.months?.[month.id];
+        if (!Array.isArray(monthData?.half1) || !Array.isArray(monthData?.half2)) {
+          fail(`Plant "${plant.name}" is missing half1/half2 arrays for month: ${month.id}`);
+        }
+      }
+    }
   }
 
   if (dataset.PLANT_GUIDE) {
@@ -154,11 +172,10 @@ const cssSource = readFile('styles.css');
 
 validateJavaScript('script.js');
 validateJavaScript('data.js');
-validateJavaScript('data.carrboro-review.js');
 validateHtmlAssets(htmlSource);
 validateHtmlAriaReferences(htmlSource);
 validateCssCustomProperties(cssSource);
-validateCarrboroDataset();
+validateDataset('data.js');
 
 if (failures.length > 0) {
   console.error('Validation failed:\n');

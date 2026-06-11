@@ -6,8 +6,7 @@ let state = {
         search: '',
         showFlowers: true,
         showGreenhouse: true,
-        activity: 'all',
-        month: 'all'
+        activity: 'all'
     },
     filteredPlants: [...PLANTS]
 };
@@ -16,26 +15,21 @@ let state = {
 const elements = {
     // View buttons
     gridViewBtn: document.getElementById('gridViewBtn'),
-    timelineViewBtn: document.getElementById('timelineViewBtn'),
     monthViewBtn: document.getElementById('monthViewBtn'),
 
     // Views
     gridView: document.getElementById('gridView'),
-    timelineView: document.getElementById('timelineView'),
     monthView: document.getElementById('monthView'),
 
     // Filter controls
     searchInput: document.getElementById('searchInput'),
     showFlowersCheckbox: document.getElementById('showFlowers'),
     showGreenhouseCheckbox: document.getElementById('showGreenhouse'),
-    activityFilter: document.getElementById('activityFilter'),
-    monthFilter: document.getElementById('monthFilter'),
     resetFilters: document.getElementById('resetFilters'),
 
     // Content containers
     gridTable: document.getElementById('gridTable'),
     gridTableBody: document.getElementById('gridTableBody'),
-    timelineContainer: document.getElementById('timelineContainer'),
     monthContent: document.getElementById('monthContent'),
     currentMonthTitle: document.getElementById('currentMonthTitle'),
     resultsSummary: document.getElementById('resultsSummary'),
@@ -45,9 +39,7 @@ const elements = {
     nextMonth: document.getElementById('nextMonth')
 };
 
-const CURRENT_DATASET = window.__APP_DATASET__ || 'v1';
-
-const PREFERRED_VIEW_ORDER = ['grid', 'timeline', 'month'];
+const PREFERRED_VIEW_ORDER = ['grid', 'month'];
 const DEER_FRIENDLY_FLOWERS = new Set([
     'Snapdragons',
     'Lavender',
@@ -66,13 +58,6 @@ if (elements.gridView) {
     viewUI.grid = {
         tab: elements.gridViewBtn || null,
         panel: elements.gridView
-    };
-}
-// Timeline view (legacy)
-if (elements.timelineView) {
-    viewUI.timeline = {
-        tab: elements.timelineViewBtn || null,
-        panel: elements.timelineView
     };
 }
 // Month view
@@ -136,31 +121,6 @@ function requestGridStickyHeaderLayoutSync() {
     requestAnimationFrame(() => {
         gridStickyHeader.syncRequested = false;
         syncGridStickyHeaderLayout();
-    });
-}
-
-function initDatasetSwitch() {
-    const datasetButtons = Array.from(document.querySelectorAll('.dataset-switch-btn'));
-    if (datasetButtons.length === 0) return;
-
-    datasetButtons.forEach(btn => {
-        const isActive = btn.dataset.dataset === CURRENT_DATASET;
-        btn.classList.toggle('active', isActive);
-        btn.setAttribute('aria-pressed', String(isActive));
-
-        btn.addEventListener('click', () => {
-            const nextDataset = btn.dataset.dataset;
-            if (!nextDataset || nextDataset === CURRENT_DATASET) return;
-
-            const nextUrl = new URL(window.location.href);
-            if (nextDataset === 'v2') {
-                nextUrl.searchParams.delete('dataset');
-            } else {
-                nextUrl.searchParams.set('dataset', nextDataset);
-            }
-
-            window.location.href = nextUrl.toString();
-        });
     });
 }
 
@@ -418,10 +378,10 @@ function sortMonthGroupPlants(plants, activityCode, halfMonthIndex) {
         const typeComparison = Number(leftPlant.type !== 'vegetable') - Number(rightPlant.type !== 'vegetable');
         if (typeComparison !== 0) return typeComparison;
 
-        const leftConfidence = getPlantReviewConfidenceMeta(leftPlant.name)?.value ?? null;
-        const rightConfidence = getPlantReviewConfidenceMeta(rightPlant.name)?.value ?? null;
-        const leftConfidenceRank = leftConfidence in confidenceRank ? confidenceRank[leftConfidence] : Number.MAX_SAFE_INTEGER;
-        const rightConfidenceRank = rightConfidence in confidenceRank ? confidenceRank[rightConfidence] : Number.MAX_SAFE_INTEGER;
+        const leftConfidence = getPlantReviewConfidenceMeta(leftPlant.name)?.value;
+        const rightConfidence = getPlantReviewConfidenceMeta(rightPlant.name)?.value;
+        const leftConfidenceRank = confidenceRank[leftConfidence] ?? Number.MAX_SAFE_INTEGER;
+        const rightConfidenceRank = confidenceRank[rightConfidence] ?? Number.MAX_SAFE_INTEGER;
         const confidenceComparison = leftConfidenceRank - rightConfidenceRank;
 
         if (confidenceComparison !== 0) return confidenceComparison;
@@ -784,7 +744,6 @@ function getPlantIcon(plantName) {
         'Yarrow': 'yarrow',
         'Marigolds': 'marigold',
         'Moonflower': 'moonflower.svg',
-        'Sunflower': 'sunflower',
         'Calendula': 'calendula.png',
         'Snapdragons': 'snapdragon.png',
         'Lavender': 'lavender.png',
@@ -803,9 +762,6 @@ function getPlantIcon(plantName) {
     return { type: 'emoji', icon: '🌱' };
 }
 
-function getFlowerIcon(plantName) {
-    return getPlantIcon(plantName);
-}
 function filterPlants() {
     let filtered = [...PLANTS];
 
@@ -992,7 +948,7 @@ function renderGridView() {
         const iconContainer = document.createElement('span');
         iconContainer.className = 'plant-icon';
         iconContainer.setAttribute('aria-hidden', 'true');
-        const iconData = plant.type === 'flower' ? getFlowerIcon(plant.name) : getPlantIcon(plant.name);
+        const iconData = getPlantIcon(plant.name);
 
         if (iconData.type === 'svg') {
             const img = document.createElement('img');
@@ -1094,92 +1050,14 @@ function renderGridView() {
     requestGridStickyHeaderLayoutSync();
 }
 
-function renderTimelineView() {
-    const container = elements.timelineContainer;
-    container.innerHTML = '';
-
-    if (state.filteredPlants.length === 0) {
-        container.innerHTML = '<div class="no-results">No plants found matching your filters</div>';
-        return;
-    }
-
-    state.filteredPlants.forEach(plant => {
-        const row = document.createElement('div');
-        row.className = 'timeline-row';
-
-        const plantInfo = document.createElement('div');
-        plantInfo.innerHTML = `
-            <div class="timeline-plant-name">${plant.name}</div>
-            <div class="timeline-plant-info">
-                ${plant.type === 'vegetable' ? 'Vegetable' : 'Flower'}
-                ${plant.spacing ? ` • ${plant.spacing}" apart` : ''}
-            </div>
-        `;
-
-        const barContainer = document.createElement('div');
-        barContainer.className = 'timeline-bar-container';
-
-        MONTHS.forEach((month, index) => {
-            const monthData = plant.months[month.id];
-            const monthDiv = document.createElement('div');
-            monthDiv.className = 'timeline-month';
-
-            // Half 1
-            const half1 = document.createElement('div');
-            half1.className = 'timeline-half';
-            if (monthData.half1.length > 0) {
-                const mainActivity = getPrimaryVisualActivity(monthData.half1);
-                if (mainActivity) {
-                    half1.classList.add(getActivityColor(mainActivity));
-                }
-                if (monthData.half1.length === 1 && monthData.half1[0] === 'h') {
-                    half1.classList.add('harvest-only');
-                }
-                renderActivityTokens(half1, monthData.half1, { compact: true });
-            }
-            monthDiv.appendChild(half1);
-
-            // Half 2
-            const half2 = document.createElement('div');
-            half2.className = 'timeline-half';
-            if (monthData.half2.length > 0) {
-                const mainActivity = getPrimaryVisualActivity(monthData.half2);
-                if (mainActivity) {
-                    half2.classList.add(getActivityColor(mainActivity));
-                }
-                if (monthData.half2.length === 1 && monthData.half2[0] === 'h') {
-                    half2.classList.add('harvest-only');
-                }
-                renderActivityTokens(half2, monthData.half2, { compact: true });
-            }
-            monthDiv.appendChild(half2);
-
-            // Month label (only show first time)
-            if (index === 0 || index === 6) {
-                const label = document.createElement('div');
-                label.className = 'timeline-month-label';
-                label.textContent = month.short;
-                monthDiv.appendChild(label);
-            }
-
-            barContainer.appendChild(monthDiv);
-        });
-
-        row.appendChild(plantInfo);
-        row.appendChild(barContainer);
-        container.appendChild(row);
-    });
-}
-
 function renderMonthView() {
     const monthIndex = Math.floor(state.currentHalfMonth / 2);
     const isFirstHalf = state.currentHalfMonth % 2 === 0;
     const monthId = MONTHS[monthIndex].id;
     const monthName = MONTHS[monthIndex].name;
 
-    // Determine last day of month for display
-    const lastDay = monthId === 'feb' ? '28' :
-                   (monthId === 'apr' || monthId === 'jun' || monthId === 'sep' || monthId === 'nov') ? '30' : '31';
+    // Determine last day of month for display (leap-year aware)
+    const lastDay = new Date(new Date().getFullYear(), monthIndex + 1, 0).getDate();
 
     const period = isFirstHalf ? '1-15' : `16-${lastDay}`;
     elements.currentMonthTitle.textContent = `${monthName} (${period})`;
@@ -1252,7 +1130,7 @@ function renderMonthView() {
                 card.classList.add('month-plant-card--ending');
             }
 
-            const iconData = plant.type === 'flower' ? getFlowerIcon(plant.name) : getPlantIcon(plant.name);
+            const iconData = getPlantIcon(plant.name);
 
             // Icon container (left side)
             const iconContainer = document.createElement('div');
@@ -1384,9 +1262,6 @@ function renderCurrentView() {
         case 'grid':
             renderGridView();
             break;
-        case 'timeline':
-            renderTimelineView();
-            break;
         case 'month':
             renderMonthView();
             break;
@@ -1423,23 +1298,22 @@ function resetFilters() {
 if (elements.gridViewBtn) {
     elements.gridViewBtn.addEventListener('click', () => switchView('grid'));
 }
-if (elements.timelineViewBtn) {
-    elements.timelineViewBtn.addEventListener('click', () => switchView('timeline'));
-}
 if (elements.monthViewBtn) {
     elements.monthViewBtn.addEventListener('click', () => switchView('month'));
 }
 
-[elements.gridViewBtn, elements.timelineViewBtn, elements.monthViewBtn]
+[elements.gridViewBtn, elements.monthViewBtn]
     .filter(Boolean)
     .forEach(btn => {
         btn.addEventListener('keydown', handleTabKeydown);
     });
 
 if (elements.searchInput) {
+    let searchDebounceId = null;
     elements.searchInput.addEventListener('input', (e) => {
         state.filters.search = e.target.value;
-        filterPlants();
+        clearTimeout(searchDebounceId);
+        searchDebounceId = setTimeout(filterPlants, 150);
     });
 }
 
@@ -1630,7 +1504,8 @@ function initColumnHover() {
 
 const plantDetailPanelState = {
     currentPlant: null,
-    returnFocusEl: null
+    returnFocusEl: null,
+    closeTimeoutId: null
 };
 
 function isPlantDetailPanelOpen() {
@@ -1743,7 +1618,7 @@ function renderPlantDetailPanelContent(plant) {
 
     panelPlantName.textContent = plant.name;
 
-    const iconData = plant.type === 'flower' ? getFlowerIcon(plant.name) : getPlantIcon(plant.name);
+    const iconData = getPlantIcon(plant.name);
     panelPlantIcon.innerHTML = '';
     if (iconData.type === 'svg') {
         const img = document.createElement('img');
@@ -1765,6 +1640,11 @@ function openPlantDetailPanel(plant) {
     const panel = document.getElementById('plantDetailPanel');
     const closePanelBtn = document.getElementById('closePanelBtn');
     if (!panel) return;
+
+    if (plantDetailPanelState.closeTimeoutId !== null) {
+        clearTimeout(plantDetailPanelState.closeTimeoutId);
+        plantDetailPanelState.closeTimeoutId = null;
+    }
 
     plantDetailPanelState.returnFocusEl = document.activeElement;
     plantDetailPanelState.currentPlant = plant;
@@ -1788,7 +1668,8 @@ function closePlantDetailPanel() {
     panel.setAttribute('aria-hidden', 'true');
 
     // Wait for animation to finish before restoring focus
-    setTimeout(() => {
+    plantDetailPanelState.closeTimeoutId = setTimeout(() => {
+        plantDetailPanelState.closeTimeoutId = null;
         document.body.classList.remove('panel-open');
 
         if (panel.hasAttribute('hidden')) {
@@ -1868,7 +1749,6 @@ function initApp() {
     initGridStickyHeader();
     initColumnHover();
     initPlantDetailPanel();
-    initDatasetSwitch();
     updateGreenhouseFilterVisibility();
     filterPlants();
     applyNowEmphasisToGrid();

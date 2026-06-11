@@ -24,24 +24,23 @@ A beautiful, interactive planting calendar for Zone 8a gardeners in the Piedmont
   - Print-friendly styles
   - Garden-themed color palette
 
-- **65+ Plants Included**
+- **75+ Plants Included**
   - Vegetables, herbs, and flowers
   - Planting spacing information
   - Days to harvest data
   - Month-by-month planting guide split into half-months
+  - Timings reviewed against the NC State Central NC planting calendar and other Piedmont-oriented sources, with per-plant confidence ratings and evidence links
 
 ## Activity Legend
 
 - **si** - Sow Indoors
 - **t** - Transplant
 - **s** - Sow Outdoors
-- **sg** - Sow Greenhouse
-- **tg** - Transplant Greenhouse
+- **sg** - Sow Greenhouse (unheated)
+- **tg** - Transplant Greenhouse (unheated)
 - **h** - Harvest
-- **o** - Other
-- **B** - Bulb Planting
-
-**Note**: Plants marked with ** should start seeds indoors for later transplant. Do not plant seeds directly in the garden.
+- **\*** - Special handling (e.g. heat-managed germination, overwinter prep)
+- **B** - Bulbs, cloves, or sets
 
 ## Local Usage
 
@@ -69,12 +68,15 @@ The site will automatically rebuild and deploy within 1-2 minutes.
 ## File Structure
 
 ```
-gardenmap/
-├── index.html          # Main HTML structure
-├── styles.css          # Styling and responsive design
-├── script.js           # Interactive functionality
-├── data.js             # Plant calendar data
-└── README.md           # This file
+Piedmont-Planner/
+├── index.html               # Main HTML structure
+├── styles.css               # Styling and responsive design
+├── script.js                # Interactive functionality
+├── data.js                  # Plant calendar data, guide notes, and review metadata
+├── carrboro_plant_guide.csv # Source guide data (varieties + tips)
+├── icons/                   # Plant icons (SVG/PNG)
+├── scripts/                 # CI validation script
+└── README.md                # This file
 ```
 
 ## Customization
