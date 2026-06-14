@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Piedmont Planner leaf">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a7c2f"/>
+      <stop offset="1" stop-color="#2d5016"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="url(#bg)"/>
+  <g transform="rotate(-18 16 16)">
+    <path d="M16 4.5 Q21.6 16 16 27.5 Q10.4 16 16 4.5 Z" fill="#f4f9ec"/>
+    <line x1="16" y1="5.6" x2="16" y2="26.4" stroke="#4a7c2f" stroke-width="0.9" stroke-linecap="round"/>
+  </g>
+</svg>

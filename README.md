@@ -24,6 +24,13 @@ A beautiful, interactive planting calendar for Zone 8a gardeners in the Piedmont
   - Print-friendly styles
   - Garden-themed color palette
 
+- **Remembers Your Preferences**
+  - View mode, search text, flower/greenhouse toggles, and the active activity filter are saved to `localStorage` and restored on your next visit
+
+- **Installable & Offline-Ready (PWA)**
+  - Add to your home screen and use the calendar in the garden without a connection
+  - A service worker caches the app shell and assets after first load
+
 - **75+ Plants Included**
   - Vegetables, herbs, and flowers
   - Planting spacing information
@@ -71,11 +78,15 @@ The site will automatically rebuild and deploy within 1-2 minutes.
 Piedmont-Planner/
 ├── index.html               # Main HTML structure
 ├── styles.css               # Styling and responsive design
-├── script.js                # Interactive functionality
+├── script.js                # Interactive functionality (+ preference persistence)
 ├── data.js                  # Plant calendar data, guide notes, and review metadata
 ├── carrboro_plant_guide.csv # Source guide data (varieties + tips)
-├── icons/                   # Plant icons (SVG/PNG)
-├── scripts/                 # CI validation script
+├── manifest.webmanifest     # PWA manifest (install metadata)
+├── service-worker.js        # Offline caching
+├── favicon.svg              # Vector favicon (leaf mark)
+├── og-image.png             # Social share image (1200×630)
+├── icons/                   # Plant icons + generated app/favicon PNGs
+├── scripts/                 # CI validation + icon generator
 └── README.md                # This file
 ```
 
@@ -122,6 +133,16 @@ Update the activity color variables in `styles.css`:
   --color-t: #e77f67;   /* Transplant */
   /* ... etc */
 }
+```
+
+### Regenerating Icons & Social Image
+
+The favicon PNGs, PWA icons, and `og-image.png` are committed artifacts generated
+from a single leaf mark (no build step at deploy time). After editing the brand
+colors or shape in `scripts/generate-icons.mjs`, regenerate them with:
+
+```bash
+node scripts/generate-icons.mjs
 ```
 
 ## Browser Compatibility
