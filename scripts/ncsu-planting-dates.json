@@ -1,0 +1,565 @@
+{
+  "_meta": {
+    "source": "NC State Extension AG-756, Central North Carolina Planting Calendar for Annual Vegetables, Fruits, and Herbs",
+    "url": "https://content.ces.ncsu.edu/central-north-carolina-planting-calendar-for-annual-vegetables-fruits-and-herbs",
+    "codes": {
+      "S": "seeds (direct sow outdoors)",
+      "T": "transplants",
+      "B": "bulbs/cloves/sets",
+      "Tu": "tubers",
+      "C": "crowns",
+      "S,T": "seed or transplant"
+    },
+    "extraction": "Transcribed from Table 1 by parsing the PDF's positioned cell markers (scripts notes in compare-ncsu.mjs). Keys are half-months: <Mon>_h1 = days 1-15, <Mon>_h2 = days 16-end.",
+    "note": "Reference data for cross-checking outdoor planting windows. The app's dataset intentionally diverges where its review notes document a more conservative or locally-adjusted window; divergences are reported by compare-ncsu.mjs and are not build failures."
+  },
+  "crops": {
+    "Artichoke (Jerusalem)": {
+      "Mar_h2": "Tu",
+      "Apr_h1": "Tu",
+      "Apr_h2": "Tu"
+    },
+    "Artichoke (globe)": {
+      "Mar_h2": "T",
+      "Apr_h1": "T",
+      "Apr_h2": "T"
+    },
+    "Arugula": {
+      "Feb_h1": "S",
+      "Feb_h2": "S",
+      "Mar_h1": "S",
+      "Mar_h2": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S",
+      "Sep_h2": "S"
+    },
+    "Asparagus": {
+      "Feb_h2": "C",
+      "Mar_h1": "C",
+      "Mar_h2": "C"
+    },
+    "Basil": {
+      "May_h1": "S,T",
+      "May_h2": "S,T",
+      "Jun_h1": "S,T",
+      "Jun_h2": "S,T",
+      "Jul_h1": "S,T",
+      "Jul_h2": "S,T"
+    },
+    "Beans lima/bush": {
+      "Apr_h2": "S",
+      "May_h1": "S",
+      "May_h2": "S",
+      "Jun_h1": "S",
+      "Jun_h2": "S",
+      "Jul_h1": "S",
+      "Jul_h2": "S"
+    },
+    "Beans lima/pole": {
+      "Apr_h2": "S",
+      "May_h1": "S",
+      "May_h2": "S",
+      "Jun_h1": "S",
+      "Jul_h2": "S"
+    },
+    "Beans snap/bush": {
+      "Mar_h2": "S",
+      "Apr_h1": "S",
+      "Apr_h2": "S",
+      "May_h1": "S",
+      "May_h2": "S",
+      "Jun_h1": "S",
+      "Jun_h2": "S",
+      "Jul_h1": "S",
+      "Jul_h2": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S",
+      "Sep_h2": "S"
+    },
+    "Beans snap/pole": {
+      "Apr_h1": "S",
+      "Apr_h2": "S",
+      "May_h1": "S",
+      "May_h2": "S",
+      "Jun_h1": "S",
+      "Jun_h2": "S",
+      "Jul_h1": "S",
+      "Jul_h2": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S",
+      "Sep_h2": "S"
+    },
+    "Beets": {
+      "Mar_h1": "S",
+      "Mar_h2": "S",
+      "Apr_h1": "S",
+      "Jul_h2": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S"
+    },
+    "Broccoli": {
+      "Feb_h2": "T",
+      "Mar_h1": "T",
+      "Mar_h2": "T",
+      "Apr_h1": "T",
+      "Aug_h1": "T",
+      "Aug_h2": "T",
+      "Sep_h1": "T"
+    },
+    "Brussels sprouts": {
+      "Jul_h1": "T",
+      "Jul_h2": "T",
+      "Aug_h1": "T",
+      "Aug_h2": "T"
+    },
+    "Cabbage": {
+      "Feb_h1": "T",
+      "Feb_h2": "T",
+      "Mar_h1": "T",
+      "Mar_h2": "T",
+      "Apr_h1": "T",
+      "Jul_h2": "T",
+      "Aug_h1": "T",
+      "Aug_h2": "T",
+      "Sep_h1": "T"
+    },
+    "Cabbage (Chinese)": {
+      "Mar_h2": "S,T",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h2": "T",
+      "Oct_h1": "T"
+    },
+    "Carrots": {
+      "Feb_h1": "S",
+      "Feb_h2": "S",
+      "Mar_h1": "S",
+      "Mar_h2": "S",
+      "Jun_h2": "S",
+      "Jul_h1": "S",
+      "Jul_h2": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S"
+    },
+    "Cauliflower": {
+      "Feb_h2": "S,T",
+      "Mar_h1": "S,T",
+      "Mar_h2": "S,T",
+      "Apr_h1": "S,T",
+      "Aug_h1": "S,T",
+      "Aug_h2": "S,T",
+      "Sep_h1": "S,T",
+      "Sep_h2": "S,T"
+    },
+    "Celery": {
+      "Feb_h2": "T",
+      "Mar_h1": "T",
+      "Mar_h2": "T",
+      "Jun_h2": "T",
+      "Jul_h1": "T",
+      "Jul_h2": "T",
+      "Aug_h1": "T"
+    },
+    "Chard (Swiss)": {
+      "Mar_h1": "S,T",
+      "Mar_h2": "S,T",
+      "Apr_h1": "S,T",
+      "Apr_h2": "S,T",
+      "Aug_h1": "S,T",
+      "Aug_h2": "S,T",
+      "Sep_h1": "S,T"
+    },
+    "Cilantro": {
+      "Feb_h1": "S",
+      "Feb_h2": "S",
+      "Mar_h1": "S",
+      "Mar_h2": "S",
+      "Sep_h2": "S"
+    },
+    "Collard greens": {
+      "Feb_h2": "T",
+      "Mar_h1": "T",
+      "Mar_h2": "T",
+      "Apr_h1": "T",
+      "Apr_h2": "T",
+      "May_h1": "T",
+      "May_h2": "T",
+      "Jun_h1": "T",
+      "Jun_h2": "T",
+      "Jul_h2": "S,T",
+      "Aug_h1": "S,T",
+      "Aug_h2": "S,T",
+      "Sep_h1": "S,T"
+    },
+    "Corn (sweet)": {
+      "Mar_h2": "S",
+      "Apr_h1": "S",
+      "Apr_h2": "S",
+      "May_h1": "S",
+      "May_h2": "S"
+    },
+    "Cucumbers": {
+      "Apr_h2": "S,T",
+      "May_h1": "S,T",
+      "May_h2": "S,T",
+      "Jun_h1": "S,T",
+      "Jun_h2": "S,T",
+      "Jul_h1": "S,T",
+      "Jul_h2": "S,T",
+      "Aug_h1": "S,T"
+    },
+    "Dill": {
+      "Mar_h2": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S"
+    },
+    "Eggplant": {
+      "Apr_h2": "T",
+      "May_h1": "T",
+      "May_h2": "T",
+      "Jun_h1": "T",
+      "Aug_h1": "T",
+      "Aug_h2": "T"
+    },
+    "Fennel (Florence)": {
+      "Mar_h1": "S",
+      "Mar_h2": "S",
+      "Apr_h1": "S",
+      "Apr_h2": "S",
+      "Jul_h1": "S",
+      "Jul_h2": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S"
+    },
+    "Garlic": {
+      "Sep_h2": "B",
+      "Oct_h1": "B",
+      "Oct_h2": "B",
+      "Nov_h1": "B",
+      "Nov_h2": "B"
+    },
+    "Kale": {
+      "Feb_h2": "S,T",
+      "Mar_h1": "S,T",
+      "Mar_h2": "S,T",
+      "Apr_h1": "S,T",
+      "Apr_h2": "S,T",
+      "May_h1": "S,T",
+      "May_h2": "S,T",
+      "Jun_h1": "S,T",
+      "Jun_h2": "S,T",
+      "Aug_h1": "S,T",
+      "Aug_h2": "S,T",
+      "Sep_h1": "S,T",
+      "Sep_h2": "S,T"
+    },
+    "Kohlrabi": {
+      "Feb_h2": "S,T",
+      "Mar_h1": "S,T",
+      "Mar_h2": "S,T",
+      "Apr_h1": "S,T",
+      "Apr_h2": "S,T",
+      "May_h1": "S,T",
+      "May_h2": "S,T",
+      "Jun_h1": "S,T",
+      "Jun_h2": "S,T",
+      "Aug_h1": "S,T",
+      "Aug_h2": "S,T",
+      "Sep_h1": "S,T"
+    },
+    "Leek": {
+      "Feb_h2": "S,T",
+      "Mar_h1": "S,T",
+      "Mar_h2": "S,T",
+      "Apr_h1": "S,T",
+      "Apr_h2": "S,T",
+      "May_h1": "S,T",
+      "May_h2": "S,T",
+      "Jun_h1": "S,T",
+      "Jun_h2": "S,T"
+    },
+    "Lettuce (head)": {
+      "Feb_h1": "S",
+      "Feb_h2": "S",
+      "Mar_h1": "S",
+      "Mar_h2": "T",
+      "Apr_h1": "T",
+      "Apr_h2": "T",
+      "Aug_h2": "S",
+      "Sep_h1": "S",
+      "Sep_h2": "T",
+      "Oct_h1": "T"
+    },
+    "Lettuce (leaf)": {
+      "Feb_h1": "S,T",
+      "Feb_h2": "S,T",
+      "Mar_h1": "S,T",
+      "Mar_h2": "S,T",
+      "Apr_h1": "S,T",
+      "Apr_h2": "S,T",
+      "Aug_h1": "S,T",
+      "Aug_h2": "S,T",
+      "Sep_h1": "S,T",
+      "Sep_h2": "S,T"
+    },
+    "Melon (cantaloupe)": {
+      "Apr_h2": "S,T",
+      "May_h1": "S,T",
+      "May_h2": "S,T",
+      "Jun_h1": "S,T",
+      "Jun_h2": "S,T",
+      "Jul_h1": "S,T"
+    },
+    "Melon (watermelon)": {
+      "Apr_h2": "S,T",
+      "May_h1": "S,T",
+      "May_h2": "S,T",
+      "Jun_h1": "S,T",
+      "Jun_h2": "S,T"
+    },
+    "Mustard": {
+      "Feb_h2": "S",
+      "Mar_h1": "S",
+      "Mar_h2": "S",
+      "Apr_h1": "S",
+      "Apr_h2": "S",
+      "May_h1": "S",
+      "May_h2": "S",
+      "Jun_h1": "S",
+      "Jun_h2": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S",
+      "Sep_h2": "S"
+    },
+    "Okra": {
+      "May_h1": "S,T",
+      "May_h2": "S,T",
+      "Aug_h1": "S",
+      "Aug_h2": "S"
+    },
+    "Onions (bulb)": {
+      "Jan_h1": "S",
+      "Jan_h2": "S",
+      "Feb_h1": "S",
+      "Feb_h2": "S",
+      "Mar_h1": "S,B",
+      "Mar_h2": "S,B",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S",
+      "Sep_h2": "S",
+      "Oct_h1": "S",
+      "Oct_h2": "S",
+      "Nov_h1": "S",
+      "Nov_h2": "S",
+      "Dec_h1": "S",
+      "Dec_h2": "S"
+    },
+    "Onions (green)": {
+      "Feb_h1": "S",
+      "Feb_h2": "S",
+      "Mar_h1": "S,T",
+      "Mar_h2": "S,T",
+      "Aug_h2": "T",
+      "Sep_h1": "S,T"
+    },
+    "Pac choi/bok choy": {
+      "Mar_h2": "T",
+      "Aug_h2": "T",
+      "Sep_h1": "T",
+      "Sep_h2": "T"
+    },
+    "Parsley": {
+      "Feb_h2": "S,T",
+      "Mar_h1": "S,T",
+      "Mar_h2": "S,T",
+      "Apr_h1": "S,T",
+      "Aug_h1": "S,T",
+      "Aug_h2": "S,T",
+      "Sep_h1": "S,T",
+      "Sep_h2": "S,T"
+    },
+    "Parsnips": {
+      "Feb_h2": "S",
+      "Mar_h1": "S",
+      "Mar_h2": "S",
+      "Apr_h1": "S",
+      "Apr_h2": "S",
+      "May_h1": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S",
+      "Sep_h2": "S"
+    },
+    "Peanuts": {
+      "May_h1": "S",
+      "May_h2": "S"
+    },
+    "Peas (bush)": {
+      "Jan_h1": "S",
+      "Jan_h2": "S",
+      "Feb_h1": "S",
+      "Feb_h2": "S",
+      "Mar_h1": "S",
+      "Mar_h2": "S",
+      "Apr_h1": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S",
+      "Sep_h2": "S"
+    },
+    "Peas (field/southern)": {
+      "Mar_h2": "S",
+      "Apr_h1": "S",
+      "Apr_h2": "S",
+      "May_h1": "S",
+      "May_h2": "S",
+      "Jun_h1": "S",
+      "Jun_h2": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S"
+    },
+    "Peas (vining)": {
+      "Jan_h1": "S",
+      "Jan_h2": "S",
+      "Feb_h1": "S",
+      "Feb_h2": "S",
+      "Mar_h1": "S",
+      "Mar_h2": "S",
+      "Apr_h1": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S",
+      "Sep_h2": "S"
+    },
+    "Peppers": {
+      "Apr_h2": "T",
+      "May_h1": "T",
+      "May_h2": "T",
+      "Jun_h1": "T",
+      "Aug_h1": "T"
+    },
+    "Potatoes (Irish)": {
+      "Feb_h2": "Tu",
+      "Mar_h1": "Tu",
+      "Mar_h2": "Tu"
+    },
+    "Potatoes (sweet)": {
+      "May_h1": "T",
+      "May_h2": "T",
+      "Jun_h1": "T",
+      "Jun_h2": "T",
+      "Jul_h1": "T"
+    },
+    "Pumpkin": {
+      "Apr_h2": "S",
+      "May_h1": "S",
+      "May_h2": "S",
+      "Jun_h1": "S",
+      "Jun_h2": "S",
+      "Jul_h1": "S"
+    },
+    "Radishes": {
+      "Feb_h1": "S",
+      "Feb_h2": "S",
+      "Mar_h1": "S",
+      "Mar_h2": "S",
+      "Apr_h1": "S",
+      "Apr_h2": "S",
+      "May_h1": "S",
+      "May_h2": "S",
+      "Jun_h1": "S",
+      "Jun_h2": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S"
+    },
+    "Rutabaga": {
+      "Feb_h1": "S",
+      "Feb_h2": "S",
+      "Mar_h1": "S",
+      "Mar_h2": "S",
+      "Apr_h1": "S",
+      "Jul_h1": "S",
+      "Jul_h2": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S",
+      "Sep_h2": "S"
+    },
+    "Spinach": {
+      "Feb_h2": "S",
+      "Mar_h1": "S",
+      "Mar_h2": "S",
+      "Apr_h1": "S",
+      "Apr_h2": "S",
+      "May_h1": "S",
+      "May_h2": "S",
+      "Jun_h1": "S",
+      "Jun_h2": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S",
+      "Sep_h2": "S",
+      "Oct_h1": "S"
+    },
+    "Squash (summer)": {
+      "Apr_h1": "S,T",
+      "Apr_h2": "S,T",
+      "May_h1": "S,T",
+      "May_h2": "S,T",
+      "Jun_h1": "S,T",
+      "Jun_h2": "S,T",
+      "Jul_h1": "S,T",
+      "Jul_h2": "S,T",
+      "Aug_h1": "S,T"
+    },
+    "Squash (winter)": {
+      "Apr_h2": "S,T",
+      "May_h1": "S,T",
+      "May_h2": "S,T",
+      "Jun_h1": "S,T",
+      "Jun_h2": "S,T",
+      "Jul_h1": "S,T",
+      "Jul_h2": "S,T",
+      "Aug_h1": "S,T"
+    },
+    "Sunflower": {
+      "Mar_h2": "S",
+      "Apr_h1": "S",
+      "Apr_h2": "S",
+      "May_h1": "S"
+    },
+    "Tomatoes": {
+      "Apr_h2": "T",
+      "May_h1": "T",
+      "May_h2": "T",
+      "Jun_h1": "T",
+      "Jun_h2": "T",
+      "Jul_h1": "T",
+      "Aug_h1": "T"
+    },
+    "Turnips": {
+      "Feb_h1": "S",
+      "Feb_h2": "S",
+      "Mar_h1": "S",
+      "Mar_h2": "S",
+      "Apr_h1": "S",
+      "Apr_h2": "S",
+      "May_h1": "S",
+      "May_h2": "S",
+      "Jun_h1": "S",
+      "Jun_h2": "S",
+      "Aug_h1": "S",
+      "Aug_h2": "S",
+      "Sep_h1": "S"
+    }
+  }
+}

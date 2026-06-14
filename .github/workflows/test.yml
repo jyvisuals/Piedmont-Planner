@@ -21,3 +21,6 @@ jobs:
 
       - name: Validate site
         run: node scripts/validate-site.mjs
+
+      - name: Cross-check planting windows against NC State (informational)
+        run: node scripts/compare-ncsu.mjs
