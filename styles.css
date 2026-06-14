@@ -223,53 +223,6 @@ header {
     color: var(--white);
 }
 
-.view-switch-hint {
-    margin: 0;
-    font-size: 0.7rem;
-    color: var(--gray-30);
-    max-width: 240px;
-    text-align: right;
-}
-
-.header-switch-meta {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
-}
-
-.dataset-switch {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    padding: 2px;
-    border: 1px solid var(--gray-80);
-    border-radius: 999px;
-    background: var(--gray-95);
-}
-
-.dataset-switch-btn {
-    border: 0;
-    background: transparent;
-    color: var(--gray-30);
-    padding: 3px 7px;
-    border-radius: 999px;
-    cursor: pointer;
-    font-size: 0.58rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.dataset-switch-btn:hover {
-    color: var(--black);
-}
-
-.dataset-switch-btn.active {
-    background: var(--black);
-    color: var(--white);
-}
-
 main {
     position: relative;
 }
@@ -1043,21 +996,15 @@ body.has-grid-sticky-header #gridTable thead {
     color: var(--color-h);
 }
 
-.timeline-half {
-    white-space: nowrap;
-}
-
 .activity-cell.greenhouse {
     box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25);
 }
 
-.activity-cell.harvest-only,
-.timeline-half.harvest-only {
+.activity-cell.harvest-only {
     background-color: var(--color-h);
 }
 
-.activity-cell.harvest-only .activity-token-h,
-.timeline-half.harvest-only .activity-token-h {
+.activity-cell.harvest-only .activity-token-h {
     color: rgba(0, 0, 0, 0.3);
 }
 
@@ -1395,18 +1342,6 @@ footer a:hover {
         flex: 1 1 0;
         padding: 8px 10px;
         font-size: 0.64rem;
-    }
-
-    .view-switch-hint {
-        font-size: 0.62rem;
-        max-width: none;
-        text-align: left;
-    }
-
-    .header-switch-meta {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
     }
 
     .controls {
