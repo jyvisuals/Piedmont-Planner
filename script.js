@@ -1273,6 +1273,7 @@ function switchView(view) {
     state.currentView = view;
     syncViewUI(view);
     renderCurrentView();
+    savePreferences();
 }
 
 function resetFilters() {
@@ -1292,6 +1293,7 @@ function resetFilters() {
 
     updateGreenhouseFilterVisibility();
     filterPlants();
+    savePreferences();
 }
 
 // Event Listeners
@@ -1314,6 +1316,7 @@ if (elements.searchInput) {
         state.filters.search = e.target.value;
         clearTimeout(searchDebounceId);
         searchDebounceId = setTimeout(filterPlants, 150);
+        savePreferences();
     });
 }
 
@@ -1321,6 +1324,7 @@ if (elements.showFlowersCheckbox) {
     elements.showFlowersCheckbox.addEventListener('change', (e) => {
         state.filters.showFlowers = e.target.checked;
         filterPlants();
+        savePreferences();
     });
 }
 
@@ -1336,6 +1340,7 @@ if (elements.showGreenhouseCheckbox) {
 
         updateGreenhouseFilterVisibility();
         filterPlants();
+        savePreferences();
     });
 }
 
@@ -1357,6 +1362,7 @@ document.querySelectorAll('.legend-item').forEach(item => {
         }
 
         filterPlants();
+        savePreferences();
     });
 });
 
@@ -1736,12 +1742,91 @@ function initPlantDetailPanel() {
     });
 }
 
+// Persist view + filter preferences so returning visitors land where they left off.
+const PREFERENCES_STORAGE_KEY = 'piedmont-planner:prefs:v1';
+
+function loadStoredPreferences() {
+    let raw;
+    try {
+        raw = localStorage.getItem(PREFERENCES_STORAGE_KEY);
+    } catch (error) {
+        // Storage can be unavailable (private mode / disabled cookies).
+        return;
+    }
+    if (!raw) return;
+
+    let saved;
+    try {
+        saved = JSON.parse(raw);
+    } catch (error) {
+        return; // Ignore corrupted preferences.
+    }
+    if (!saved || typeof saved !== 'object') return;
+
+    if (typeof saved.currentView === 'string' && viewUI[saved.currentView]) {
+        state.currentView = saved.currentView;
+    }
+
+    const f = saved.filters;
+    if (f && typeof f === 'object') {
+        if (typeof f.search === 'string') state.filters.search = f.search;
+        if (typeof f.showFlowers === 'boolean') state.filters.showFlowers = f.showFlowers;
+        if (typeof f.showGreenhouse === 'boolean') state.filters.showGreenhouse = f.showGreenhouse;
+        if (typeof f.activity === 'string') state.filters.activity = f.activity;
+    }
+
+    // Keep restored state internally consistent: a greenhouse-only activity filter
+    // makes no sense when greenhouse rows are hidden.
+    if (!state.filters.showGreenhouse && (state.filters.activity === 'sg' || state.filters.activity === 'tg')) {
+        state.filters.activity = 'all';
+    }
+}
+
+function savePreferences() {
+    try {
+        localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify({
+            currentView: state.currentView,
+            filters: state.filters
+        }));
+    } catch (error) {
+        // Best-effort: ignore quota/availability failures.
+    }
+}
+
+function applyPreferencesToControls() {
+    if (elements.searchInput) elements.searchInput.value = state.filters.search;
+    if (elements.showFlowersCheckbox) elements.showFlowersCheckbox.checked = state.filters.showFlowers;
+    if (elements.showGreenhouseCheckbox) elements.showGreenhouseCheckbox.checked = state.filters.showGreenhouse;
+
+    document.querySelectorAll('.legend-item').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.activity === state.filters.activity);
+    });
+}
+
+function registerServiceWorker() {
+    if (!('serviceWorker' in navigator)) return;
+    // Avoid SW registration on the file:// protocol used for local preview.
+    if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js').catch(() => {
+            // Offline support is progressive enhancement; ignore failures.
+        });
+    });
+}
+
 function initApp() {
     // Set current half-month based on today's date
     const today = new Date();
     const monthIndex = today.getMonth();
     const isFirstHalf = today.getDate() <= 15;
     state.currentHalfMonth = monthIndex * 2 + (isFirstHalf ? 0 : 1);
+
+    loadStoredPreferences();
+    applyPreferencesToControls();
+    if (typeof setSearchExpanded === 'function' && state.filters.search.trim()) {
+        setSearchExpanded(true);
+    }
 
     syncViewUI(state.currentView);
 
@@ -1752,6 +1837,7 @@ function initApp() {
     updateGreenhouseFilterVisibility();
     filterPlants();
     applyNowEmphasisToGrid();
+    registerServiceWorker();
 }
 
 if (document.readyState === 'loading') {
