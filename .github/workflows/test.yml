@@ -38,3 +38,6 @@ jobs:
 
       - name: Verify national ZIP/zone shards (offline)
         run: node scripts/etl/verify-zip-zones.mjs
+
+      - name: Verify national frost tiles (offline)
+        run: node scripts/etl/verify-frost-tiles.mjs
