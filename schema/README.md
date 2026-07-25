@@ -81,6 +81,9 @@ importing the `.ts` engine directly — Node 22's native type stripping, no buil
    `PLANTS`/`TASKS` globals; show curated-vs-computed and
    "curated at Carrboro, N km away" honesty markers; `data.js` retires into
    the pack at that point.
-2. **ETL scaling** — grow the 17-station seed toward full NCEI coverage and
-   ship the complete PRISM zip table (build-time Python pipeline per D9).
+2. ~~**ETL scaling**~~ — DONE: full NCEI coverage (6,948 stations, 69
+   five-degree tiles) + the complete PRISM 2023 zip table (32,380 ZIPs, 98
+   prefix shards + 50 zone tiles), lazy-loaded per site with seed fallback;
+   `scripts/etl/` holds the rerunnable fetchers and the offline verifiers CI
+   runs on every push.
 3. **A second curated pack** — the contribution model's first real exercise.
