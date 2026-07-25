@@ -12,5 +12,5 @@
 .claude/worktrees/
 
 # UI test harness deps (isolated from the dependency-free site)
-tests/ui/node_modules/
+tests/ui/node_modules
 tests/ui/package-lock.json
