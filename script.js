@@ -1,3 +1,9 @@
+// Active dataset indirection: the legacy Carrboro data from data.js by
+// default; app/main.js swaps in resolver output for other locations via
+// window.__applyPlantData below. Everything downstream reads ACTIVE_*.
+let ACTIVE_PLANTS = PLANTS;
+let ACTIVE_TASKS = typeof TASKS !== 'undefined' ? TASKS : null;
+
 // State Management
 let state = {
     currentView: 'grid',
@@ -8,7 +14,7 @@ let state = {
         showGreenhouse: true,
         activity: 'all'
     },
-    filteredPlants: [...PLANTS]
+    filteredPlants: [...ACTIVE_PLANTS]
 };
 
 // DOM Elements
@@ -81,7 +87,7 @@ const gridStickyHeader = {
 function updateResultsSummary() {
     if (!elements.resultsSummary) return;
 
-    const total = PLANTS.length;
+    const total = ACTIVE_PLANTS.length;
     const shown = state.filteredPlants.length;
 
     const filters = [];
@@ -763,7 +769,7 @@ function getPlantIcon(plantName) {
 }
 
 function filterPlants() {
-    let filtered = [...PLANTS];
+    let filtered = [...ACTIVE_PLANTS];
 
     // Filter by flower visibility
     if (!state.filters.showFlowers) {
@@ -971,6 +977,10 @@ function renderGridView() {
         const plantName = document.createElement('span');
         plantName.className = 'plant-name';
         plantName.textContent = plant.name;
+        if (plant.computedEstimate) {
+            plantNameCell.classList.add('computed-estimate');
+            plantNameCell.title = 'Computed estimate for your location — not hand-reviewed';
+        }
 
         const plantNameRow = document.createElement('span');
         plantNameRow.className = 'plant-name-row';
@@ -1203,8 +1213,9 @@ function renderMonthView() {
         container.appendChild(section);
     });
 
-    // Add Tasks section
-    const tasksText = isFirstHalf ? TASKS[monthId].half1 : TASKS[monthId].half2;
+    // Add Tasks section (localized chores only exist for curated regions)
+    const monthTasks = ACTIVE_TASKS && ACTIVE_TASKS[monthId] ? ACTIVE_TASKS[monthId] : null;
+    const tasksText = monthTasks ? (isFirstHalf ? monthTasks.half1 : monthTasks.half2) : '';
     if (tasksText) {
         const tasksSection = document.createElement('div');
         tasksSection.className = 'month-activity-section';
@@ -1839,6 +1850,21 @@ function initApp() {
     applyNowEmphasisToGrid();
     registerServiceWorker();
 }
+
+// Multi-region hook: app/main.js calls this with resolver output (adapted to
+// the legacy plant shape) to re-point the UI at another location, or with null
+// to restore the original Carrboro dataset. Tasks: undefined = keep legacy,
+// null = no localized chores for this site.
+window.__applyPlantData = function (plants, tasks) {
+    ACTIVE_PLANTS = plants || PLANTS;
+    if (plants) {
+        ACTIVE_TASKS = tasks || null;
+    } else {
+        ACTIVE_TASKS = typeof TASKS !== 'undefined' ? TASKS : null;
+    }
+    filterPlants();
+    if (typeof applyNowEmphasisToGrid === 'function') applyNowEmphasisToGrid();
+};
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initApp, { once: true });

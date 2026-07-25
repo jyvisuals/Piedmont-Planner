@@ -30,3 +30,8 @@ jobs:
 
       - name: Engine + golden regression tests (Carrboro must not move)
         run: node --test schema/tests/*.test.mjs
+
+      - name: App bundle freshness (committed app/ artifacts match source)
+        run: |
+          node scripts/build-app-lib.mjs
+          git diff --exit-code app/

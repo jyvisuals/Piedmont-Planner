@@ -51,6 +51,33 @@
                 <div class="no-results">This page needs JavaScript enabled to render the calendar.</div>
             </noscript>
 
+            <details id="sitePanel" class="site-panel">
+                <summary>
+                    <span class="site-panel-label">📍 Your site:</span>
+                    <span id="siteSummary">Carrboro, NC (default) — zone 8a</span>
+                </summary>
+                <div class="site-panel-body">
+                    <div class="site-controls" role="group" aria-label="Choose a location">
+                        <button id="siteGeoBtn" type="button">Use my location</button>
+                        <label class="site-quickpick-label">or pick a city:
+                            <select id="siteQuickPick">
+                                <option value="">— choose —</option>
+                            </select>
+                        </label>
+                        <span class="site-manual">
+                            or coordinates:
+                            <input id="siteLat" type="number" step="0.01" placeholder="lat" inputmode="decimal" aria-label="Latitude">
+                            <input id="siteLng" type="number" step="0.01" placeholder="lng" inputmode="decimal" aria-label="Longitude">
+                            <button id="siteApplyBtn" type="button">Go</button>
+                        </span>
+                        <button id="siteResetBtn" type="button" class="site-reset">Reset to Carrboro</button>
+                    </div>
+                    <p id="siteError" class="site-error" hidden></p>
+                    <ul id="siteStats" class="site-stats" hidden></ul>
+                    <p id="siteNote" class="site-note">Showing the original hand-reviewed Carrboro/Piedmont calendar. Pick a location to preview your own site.</p>
+                </div>
+            </details>
+
             <div class="controls" aria-label="Calendar controls">
                 <div class="control-group legend-group" aria-label="Activity filter">
                     <div class="legend-items">
@@ -248,5 +275,6 @@
     <!-- <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="jyounpenn" data-description="Support me on Buy me a coffee!" data-color="#BD5FFF" data-position="Right" data-x_margin="18" data-y_margin="18"></script> -->
     <script src="data.js"></script>
     <script src="script.js"></script>
+    <script type="module" src="app/main.js"></script>
 </body>
 </html>
