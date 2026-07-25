@@ -24,3 +24,9 @@ jobs:
 
       - name: Cross-check planting windows against NC State (informational)
         run: node scripts/compare-ncsu.mjs
+
+      - name: Typecheck schema contracts
+        run: npx --yes -p typescript@6 tsc --noEmit -p schema/tsconfig.json
+
+      - name: Engine + golden regression tests (Carrboro must not move)
+        run: node --test schema/tests/*.test.mjs

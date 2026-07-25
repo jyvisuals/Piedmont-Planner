@@ -12,7 +12,7 @@
 // (both crops score 5; both cite the NC State calendar, Piedmont guide, and NC
 // State veg handbook).
 
-import type { RegionPack } from "../types";
+import type { RegionPack } from "../types.ts";
 
 const SOURCES = {
   nc_state_calendar: {
@@ -34,7 +34,7 @@ export const PIEDMONT_NC: RegionPack = {
   id: "piedmont-nc",
   name: "North Carolina Piedmont",
   description:
-    "Hand-reviewed override for the NC Piedmont (Carrboro reference point, on the 7b/8a line). The app's original dataset, re-expressed as anchor-relative events.",
+    "Hand-reviewed override for the NC Piedmont (Carrboro reference point, on the 7b/8a line). Sample rows demonstrating verbatim and anchored timing; the full pack is derived from data.js by the legacy loader.",
   // Placeholder footprint ≈ the Piedmont ecoregion band across the Carolinas/GA.
   // Production would ship a simplified EPA Level-III ecoregion polygon (D5).
   footprint: { kind: "bbox", minLat: 33.6, minLng: -81.6, maxLat: 36.6, maxLng: -78.6 },
@@ -47,7 +47,7 @@ export const PIEDMONT_NC: RegionPack = {
     // The curated row IS the deliverable; no offsets are inferred from it.
     // -------------------------------------------------------------------
     {
-      crop: "tomato",
+      crop: "tomatoes",
       provenance: {
         confidence: 5,
         sources: ["nc_state_calendar", "piedmont_guide", "nc_state_veg_handbook"],
@@ -150,6 +150,13 @@ export const PIEDMONT_NC: RegionPack = {
           fromEventId: "s-sow-fall-main",
           method: "direct",
           note: "Sweetest after hard frost; picking runs into winter under cover.",
+        },
+        {
+          id: "s-h-overwinter",
+          activity: "harvest",
+          fromEventId: "s-sow-overwinter",
+          method: "direct",
+          note: "Overwinter harvest crosses the year boundary (SeasonDay > 365).",
         },
         ],
       },

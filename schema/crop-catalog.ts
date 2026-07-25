@@ -4,11 +4,11 @@
 // This sample carries the two crops written out fully in the Piedmont pack, plus
 // a couple of extras to show the range of hardiness classes.
 
-import type { CropCatalog } from "./types";
+import type { CropCatalog } from "./types.ts";
 
 export const CROP_CATALOG: CropCatalog = {
-  tomato: {
-    slug: "tomato",
+  tomatoes: {
+    slug: "tomatoes",
     displayName: "Tomatoes",
     category: "vegetable",
     botanicalName: "Solanum lycopersicum",

@@ -12,7 +12,10 @@ the contracts are exercised by real data instead of prose.
 |---|---|---|
 | `types.ts` | D1–D8 | The contract layer — anchors, the timing union (verbatim grid \| anchored events), crop catalog, pack schema + footprint/precedence, provenance, and the provider/resolver seams. |
 | `crop-catalog.ts` | D3, D4 | Global crop catalog: stable slugs + **structured** days-to-maturity (parsed from the old free text). |
-| `packs/piedmont-nc.ts` | D2, D3, D5 | Pack #1, demonstrating **both timing kinds**: **tomato** carries its reviewed grid *verbatim* (the migration default — zero-loss), **spinach** is *anchored* (spring forward from `lastFrost`, fall/overwinter backward from `firstFrost`). |
+| `packs/piedmont-nc.ts` | D2, D3, D5 | Sample pack demonstrating **both timing kinds**: **tomatoes** carries its reviewed grid *verbatim* (the migration default — zero-loss), **spinach** is *anchored* (spring forward from `lastFrost`, fall/overwinter backward from `firstFrost`, harvest crossing the year boundary). |
+| `engine/resolve.ts` | D0–D2, D5 | **The offset engine + resolver** — pure, synchronous, browser-safe. Anchor resolution (frost table, calendar, photoperiod from latitude), derived harvests, season-day bucketing with year wrap, footprint containment, derived pack precedence, field-level fall-through. `soilTemp`/`gddAccum` are gates only in v1 (throw as primary anchors); `counties` containment throws pending a FIPS lookup. |
+| `loader/load-legacy.mjs` | D2, D5 | Mechanical `data.js` → **full verbatim Piedmont pack** (77 crops, provenance + sources from the existing review metadata). `data.js` remains the single source of truth; run it as a CLI to emit the pack as JSON. |
+| `tests/*.test.mjs` | D9 | `node:test` suite (no dependencies): **the golden gate** — resolver output at Carrboro equals every `data.js` grid exactly — plus engine units (cross-year bucketing, photoperiod, precedence, exclusion). Wired into CI. |
 | `tsconfig.json` | D9 | Strict typecheck (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`). |
 
 ## How the pieces map to the decisions
@@ -44,21 +47,28 @@ the contracts are exercised by real data instead of prose.
 ## Verify
 
 ```bash
-cd schema && tsc --noEmit -p tsconfig.json    # strict; currently passes
+tsc --noEmit -p schema/tsconfig.json     # strict typecheck (from repo root)
+node --test schema/tests/*.test.mjs      # 20 tests incl. the golden gate
+node schema/loader/load-legacy.mjs       # emit the verbatim Piedmont pack JSON
 ```
+
+Both checks run in CI (`.github/workflows/test.yml`). Tests are plain `.mjs`
+importing the `.ts` engine directly — Node 22's native type stripping, no build.
+
+## Done here
+
+- ✅ Loader → full verbatim Piedmont pack, golden-gated (grids equal `data.js`
+  exactly, resolved through the real resolver at a Carrboro fixture site).
+- ✅ Offset engine: anchors (frost table / calendar / photoperiod), derived
+  harvests, season-day bucketing with year wrap, precedence, exclusion.
 
 ## Next steps (not in this spec)
 
-1. **Loader + regression gate** — mechanically translate `data.js` into the
-   full verbatim Piedmont pack, and assert (golden test) that its grids equal
-   `data.js` exactly. By-construction, but still asserted.
-2. **Offset engine** — implement `Resolver`: given a plain-data `SiteContext`,
-   turn `TimingEvent`s into `ResolvedWindow`s on the season-day axis, then
-   bucket to half-month grids. Pure, synchronous, unit-tested with `node:test`
-   (built into Node — no new dependencies), including cross-year cases.
-3. **Providers** — static-JSON `FrostProvider` + `ZoneProvider` first (D6/D7),
+1. **Providers** — static-JSON `FrostProvider` + `ZoneProvider` first (D6/D7),
    assembling the serializable `SiteContext`.
-4. **Second region** — add one computed-only region to force N=2 on every seam
-   before scaling (the sequencing insight in the decisions doc).
-5. **Runtime pack validator** — TS types protect only TS-authored packs;
+2. **Second region** — add one computed-only region (a generic anchored crop
+   rule set) to force N=2 on every seam before scaling.
+3. **Runtime pack validator** — TS types protect only TS-authored packs;
    contributor packs arriving as JSON need load-time schema validation.
+4. **App integration** — the UI consumes `ResolvedCropCalendar[]` instead of
+   the `PLANTS` global; `data.js` retires into the pack at that point.
