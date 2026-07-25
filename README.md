@@ -6,11 +6,15 @@ A beautiful, interactive planting calendar for Zone 8a gardeners in the Piedmont
 
 ## Features
 
-- **Your Site (multi-region preview)**
-  - Pick a location (geolocation, a seed city, or coordinates) and the calendar
-    re-resolves for it: real NOAA/NCEI frost dates, USDA hardiness zone, and
-    per-crop timing — hand-reviewed Piedmont data where it applies, clearly
-    labeled computed estimates elsewhere
+- **Your Site (works nationwide)**
+  - Pick a location (ZIP code, geolocation, a city, or coordinates) and the
+    calendar re-resolves for it: real NOAA/NCEI frost dates from **6,948
+    stations**, USDA 2023 hardiness zone for **32,380 ZIP codes**, and per-crop
+    timing — hand-reviewed Piedmont data where it applies, clearly labeled
+    computed estimates elsewhere
+  - Data is sharded into small geographic tiles, so your browser only fetches
+    the few tiles around your location (contiguous US + most of AK; zone data
+    is CONUS-only for now)
   - Honest by design: computed rows are marked "est.", and curated data shows
     how far you are from the Carrboro reference garden
   - The default view (no location chosen) is the original Carrboro calendar,
