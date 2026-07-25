@@ -1,0 +1,55 @@
+# `schema/` — the multi-pack data contracts (spec)
+
+This is the concrete form of decisions **D1–D5** in
+[`../docs/architecture-decisions.md`](../docs/architecture-decisions.md). It is a
+**spec**, not yet wired into the live app: it defines the types every pack, the
+crop catalog, and the offset engine must satisfy, and ships one worked pack so
+the contracts are exercised by real data instead of prose.
+
+## Files
+
+| File | Decision(s) | What it is |
+|---|---|---|
+| `types.ts` | D1–D8 | The contract layer — anchors, anchored-event timing, crop catalog, pack schema + footprint/precedence, provenance, and the provider/resolver seams. |
+| `crop-catalog.ts` | D3, D4 | Global crop catalog: stable slugs + **structured** days-to-maturity (parsed from the old free text). |
+| `packs/piedmont-nc.ts` | D3, D5 | Pack #1 — today's data re-expressed as anchor-relative events, with **tomato** (spring) and **spinach** (spring + fall/overwinter) written out fully. |
+| `tsconfig.json` | D9 | Strict typecheck (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`). |
+
+## How the pieces map to the decisions
+
+- **D1 — anchors are the currency.** `AnchorRef` is the fixed vocabulary
+  (`lastFrost`, `firstFrost`, `soilTemp`, `photoperiod`, `gddAccum`,
+  `calendarDate`). Frost is a *reference* (`FrostAnchorRef`: threshold +
+  probability, default 32°F/50%), never a bare date — so the 10–90% spread stays
+  expressible.
+- **D2 — day-resolution anchored events.** A crop's timing is a `TimingEvent[]`.
+  Spinach shows why: its spring events count forward from `lastFrost` and its
+  fall events count backward from `firstFrost`, in the same list. Half-months are
+  a rendering of these day windows, not the storage.
+- **D3 — stable crop identity.** Everything keys off `CropSlug`. Varieties/tips
+  live in the *pack* (regional); identity + DTH live in the *catalog* (global).
+- **D4 — structured DTH.** `DaysToMaturity` is numeric per method; a derived
+  harvest (`DerivedHarvest`) references a planting event id + a method, so the
+  engine can place harvest and run the frost-free-days filter.
+- **D5 — pack schema + precedence.** `RegionPack` carries `schemaVersion`,
+  `footprint` geometry, `specificity` (most-specific wins), and mandatory
+  `Provenance` per overriding row. Omitting `events` inherits computed timing;
+  `excluded: true` hides a crop for the region.
+
+## Verify
+
+```bash
+cd schema && tsc --noEmit -p tsconfig.json    # strict; currently passes
+```
+
+## Next steps (not in this spec)
+
+1. **Offset engine** — implement `Resolver` / `resolveEvent`: given a
+   `SiteContext`, turn `TimingEvent`s into `ResolvedWindow`s (day-of-year), then
+   bucket to half-months. Pure and unit-tested.
+2. **The regression gate** — assert that rendering `piedmont-nc` at Carrboro's
+   frost dates reproduces today's `data.js` calendar (generalize
+   `scripts/compare-ncsu.mjs`).
+3. **Providers** — static-JSON `FrostProvider` + `ZoneProvider` first (D6/D7).
+4. **Second region** — add one computed-only region to force N=2 on every seam
+   before scaling (the sequencing insight in the decisions doc).
