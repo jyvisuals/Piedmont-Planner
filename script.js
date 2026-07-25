@@ -1,3 +1,13 @@
+// Active dataset indirection: the legacy Carrboro data from data.js by
+// default; app/main.js swaps in resolver output for other locations via
+// window.__applyPlantData below. Everything downstream reads ACTIVE_*.
+let ACTIVE_PLANTS = PLANTS;
+let ACTIVE_TASKS = typeof TASKS !== 'undefined' ? TASKS : null;
+// Names of rows whose timing is a computed estimate for the selected site.
+// Carrboro's name-keyed review/guide metadata must NOT be shown for these —
+// it would imply the computed timing was hand-reviewed.
+let COMPUTED_PLANT_NAMES = new Set();
+
 // State Management
 let state = {
     currentView: 'grid',
@@ -8,7 +18,7 @@ let state = {
         showGreenhouse: true,
         activity: 'all'
     },
-    filteredPlants: [...PLANTS]
+    filteredPlants: [...ACTIVE_PLANTS]
 };
 
 // DOM Elements
@@ -81,7 +91,7 @@ const gridStickyHeader = {
 function updateResultsSummary() {
     if (!elements.resultsSummary) return;
 
-    const total = PLANTS.length;
+    const total = ACTIVE_PLANTS.length;
     const shown = state.filteredPlants.length;
 
     const filters = [];
@@ -763,7 +773,7 @@ function getPlantIcon(plantName) {
 }
 
 function filterPlants() {
-    let filtered = [...PLANTS];
+    let filtered = [...ACTIVE_PLANTS];
 
     // Filter by flower visibility
     if (!state.filters.showFlowers) {
@@ -787,6 +797,7 @@ function filterPlants() {
 }
 
 function getPlantReviewConfidenceMeta(plantName) {
+    if (COMPUTED_PLANT_NAMES.has(plantName)) return null;
     if (typeof getPlantReviewConfidence !== 'function') return null;
 
     const confidence = getPlantReviewConfidence(plantName);
@@ -815,6 +826,10 @@ function createReviewConfidenceBadge(plantName) {
 function hasPlantDetailData(plantName) {
     if (!plantName) return false;
 
+    // Computed rows stay clickable — the panel explains the estimate instead
+    // of showing Carrboro's review data.
+    if (COMPUTED_PLANT_NAMES.has(plantName)) return true;
+
     if (typeof hasGuideData === 'function' && hasGuideData(plantName)) return true;
     if (typeof getPlantReviewNote === 'function' && getPlantReviewNote(plantName)) return true;
     if (typeof getPlantReviewConfidence === 'function' && getPlantReviewConfidence(plantName)) return true;
@@ -827,6 +842,11 @@ function hasPlantDetailData(plantName) {
 
 function renderPlantDetailReview(plant) {
     const panelReview = document.getElementById('panelReview');
+
+    if (panelReview && COMPUTED_PLANT_NAMES.has(plant.name)) {
+        panelReview.innerHTML = '<div class="panel-empty-note">Computed estimate for your selected location — this timing was generated from frost data and generic crop rules, not hand-reviewed. The Carrboro review notes do not apply to it.</div>';
+        return;
+    }
 
     const confidenceMeta = getPlantReviewConfidenceMeta(plant.name);
     const evidenceSources = typeof getPlantReviewEvidenceSources === 'function'
@@ -971,6 +991,10 @@ function renderGridView() {
         const plantName = document.createElement('span');
         plantName.className = 'plant-name';
         plantName.textContent = plant.name;
+        if (plant.computedEstimate) {
+            plantNameCell.classList.add('computed-estimate');
+            plantNameCell.title = 'Computed estimate for your location — not hand-reviewed';
+        }
 
         const plantNameRow = document.createElement('span');
         plantNameRow.className = 'plant-name-row';
@@ -1203,8 +1227,9 @@ function renderMonthView() {
         container.appendChild(section);
     });
 
-    // Add Tasks section
-    const tasksText = isFirstHalf ? TASKS[monthId].half1 : TASKS[monthId].half2;
+    // Add Tasks section (localized chores only exist for curated regions)
+    const monthTasks = ACTIVE_TASKS && ACTIVE_TASKS[monthId] ? ACTIVE_TASKS[monthId] : null;
+    const tasksText = monthTasks ? (isFirstHalf ? monthTasks.half1 : monthTasks.half2) : '';
     if (tasksText) {
         const tasksSection = document.createElement('div');
         tasksSection.className = 'month-activity-section';
@@ -1581,7 +1606,9 @@ function renderPlantDetailGuide(plant) {
     const panelVarieties = document.getElementById('panelVarieties');
     const panelTips = document.getElementById('panelTips');
 
-    const guideData = getPlantGuide(plant.name);
+    // Varieties/tips are Carrboro-regional guidance — not applicable to
+    // computed-estimate rows.
+    const guideData = COMPUTED_PLANT_NAMES.has(plant.name) ? null : getPlantGuide(plant.name);
 
     panelVarieties.innerHTML = '';
     if (guideData && guideData.varietiesText) {
@@ -1839,6 +1866,24 @@ function initApp() {
     applyNowEmphasisToGrid();
     registerServiceWorker();
 }
+
+// Multi-region hook: app/main.js calls this with resolver output (adapted to
+// the legacy plant shape) to re-point the UI at another location, or with null
+// to restore the original Carrboro dataset. Tasks: undefined = keep legacy,
+// null = no localized chores for this site.
+window.__applyPlantData = function (plants, tasks) {
+    ACTIVE_PLANTS = plants || PLANTS;
+    COMPUTED_PLANT_NAMES = new Set(
+        (plants || []).filter(p => p.computedEstimate).map(p => p.name)
+    );
+    if (plants) {
+        ACTIVE_TASKS = tasks || null;
+    } else {
+        ACTIVE_TASKS = typeof TASKS !== 'undefined' ? TASKS : null;
+    }
+    filterPlants();
+    if (typeof applyNowEmphasisToGrid === 'function') applyNowEmphasisToGrid();
+};
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initApp, { once: true });

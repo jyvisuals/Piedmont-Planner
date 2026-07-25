@@ -1,0 +1,133 @@
+{
+  "README": [
+    "SEED / APPROXIMATE zone reference points - 2023 USDA Plant Hardiness Zone Map, one point per frost-station city, pending the full PRISM raster/ZIP table.",
+    "zone: taken verbatim from the official PRISM/USDA-ARS 2023 ZIP-code dataset phzm_us_zipcode_2023.csv (schema zipcode,zone,trange,zonetitle; canonical source https://prism.oregonstate.edu/projects/phm_data/phzm_us_zipcode_2023.csv). Direct prism.oregonstate.edu and phzmapi.org egress was blocked in the build environment, so the file was fetched from two independent GitHub mirrors which were byte-identical (md5 5722dd8d764648ce3dacca4828508703): raw.githubusercontent.com/tamu-capstone-gardener/rails-react@32893b3d/app/assets/csv/phzm_us_zipcode_2023.csv and raw.githubusercontent.com/BalancedProtector/GardenBoxPrototype@082d7d76/data/phzm_us_zipcode_2023.csv.",
+    "lat/lng: the US Census Bureau 2020 ZCTA5 Gazetteer internal point for the same ZIP (columns GEOID, INTPTLAT, INTPTLONG; canonical source https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2020_Gazetteer/2020_Gaz_zcta_national.zip, fetched from the bundled verbatim copy at raw.githubusercontent.com/Anervea-AI/ct-access@a2ab11c9/backend/app/data/geo_ref/2020_Gaz_zcta_national.txt).",
+    "Each point records which ZIP it represents (zip) and the city (place). Lookup is nearest-point by great-circle distance and is only as good as this sparse seed - a site far from every point gets the zone of the closest city, which may be wrong. Replace with the full PRISM table before relying on it beyond these cities.",
+    "ZIP 60666 (Chicago O'Hare) was attempted but is absent from both the PRISM ZIP dataset and the Census gazetteer (non-residential ZIP); 60601 (Chicago Loop) is used instead - exclusion, not substitution of invented data."
+  ],
+  "datasetVersions": {
+    "phz": "2023"
+  },
+  "points": [
+    {
+      "zip": "27510",
+      "place": "Carrboro, NC",
+      "lat": 35.915783,
+      "lng": -79.082604,
+      "zone": "8a"
+    },
+    {
+      "zip": "27601",
+      "place": "Raleigh, NC (downtown)",
+      "lat": 35.77363,
+      "lng": -78.634458,
+      "zone": "8a"
+    },
+    {
+      "zip": "27401",
+      "place": "Greensboro, NC (downtown)",
+      "lat": 36.069144,
+      "lng": -79.765156,
+      "zone": "8a"
+    },
+    {
+      "zip": "28202",
+      "place": "Charlotte, NC (uptown)",
+      "lat": 35.227271,
+      "lng": -80.844194,
+      "zone": "8a"
+    },
+    {
+      "zip": "28801",
+      "place": "Asheville, NC (downtown)",
+      "lat": 35.594539,
+      "lng": -82.557972,
+      "zone": "7b"
+    },
+    {
+      "zip": "55401",
+      "place": "Minneapolis, MN (downtown)",
+      "lat": 44.984577,
+      "lng": -93.269097,
+      "zone": "5a"
+    },
+    {
+      "zip": "85004",
+      "place": "Phoenix, AZ (downtown)",
+      "lat": 33.451567,
+      "lng": -112.069887,
+      "zone": "10a"
+    },
+    {
+      "zip": "05401",
+      "place": "Burlington, VT",
+      "lat": 44.476621,
+      "lng": -73.209998,
+      "zone": "5b"
+    },
+    {
+      "zip": "97218",
+      "place": "Portland, OR (airport district)",
+      "lat": 45.576236,
+      "lng": -122.600873,
+      "zone": "9a"
+    },
+    {
+      "zip": "30303",
+      "place": "Atlanta, GA (downtown)",
+      "lat": 33.753271,
+      "lng": -84.389938,
+      "zone": "8a"
+    },
+    {
+      "zip": "80249",
+      "place": "Denver, CO (near DEN airport)",
+      "lat": 39.854746,
+      "lng": -104.695804,
+      "zone": "6a"
+    },
+    {
+      "zip": "98158",
+      "place": "Seattle, WA (SeaTac)",
+      "lat": 47.450165,
+      "lng": -122.307881,
+      "zone": "9a"
+    },
+    {
+      "zip": "60601",
+      "place": "Chicago, IL (Loop)",
+      "lat": 41.885155,
+      "lng": -87.621512,
+      "zone": "6b"
+    },
+    {
+      "zip": "02128",
+      "place": "Boston, MA (East Boston/Logan)",
+      "lat": 42.361519,
+      "lng": -71.007393,
+      "zone": "7a"
+    },
+    {
+      "zip": "84116",
+      "place": "Salt Lake City, UT (near airport)",
+      "lat": 40.793847,
+      "lng": -111.977772,
+      "zone": "7b"
+    },
+    {
+      "zip": "55811",
+      "place": "Duluth, MN",
+      "lat": 46.84247,
+      "lng": -92.22198,
+      "zone": "4b"
+    },
+    {
+      "zip": "85706",
+      "place": "Tucson, AZ (near airport)",
+      "lat": 32.147616,
+      "lng": -110.933343,
+      "zone": "9b"
+    }
+  ]
+}

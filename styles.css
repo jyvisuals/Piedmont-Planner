@@ -2101,3 +2101,69 @@ body.panel-open {
         transition: none !important;
     }
 }
+
+/* ===== Your-site panel (multi-region preview) ===== */
+.site-panel {
+    margin: 0 0 12px;
+    padding: 8px 14px;
+    background: var(--white, #fff);
+    border: 1px solid rgba(45, 80, 22, 0.18);
+    border-radius: 10px;
+    font-size: 0.92rem;
+}
+.site-panel > summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--primary-green, #2d5016);
+}
+.site-panel-label { margin-right: 4px; }
+.site-panel-body { padding-top: 10px; }
+.site-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+}
+.site-controls button,
+.site-controls select,
+.site-controls input {
+    font: inherit;
+    padding: 4px 8px;
+    border: 1px solid rgba(45, 80, 22, 0.35);
+    border-radius: 6px;
+    background: #fff;
+}
+.site-controls button { cursor: pointer; }
+.site-controls button:hover { background: rgba(74, 124, 47, 0.08); }
+.site-manual input { width: 6.5em; }
+.site-reset { margin-left: auto; }
+.site-stats {
+    list-style: none;
+    padding: 8px 0 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+}
+.site-note {
+    margin: 8px 0 0;
+    color: #5a5a44;
+    font-style: italic;
+}
+.site-error {
+    margin: 8px 0 0;
+    color: #a03030;
+    font-weight: 600;
+}
+
+/* Computed-estimate rows: visibly not hand-reviewed */
+.plant-col.computed-estimate .plant-name {
+    text-decoration: underline dotted rgba(160, 100, 30, 0.9);
+    text-underline-offset: 3px;
+}
+.plant-col.computed-estimate::after {
+    content: " est.";
+    font-size: 0.72em;
+    color: #a06420;
+    font-weight: 600;
+}

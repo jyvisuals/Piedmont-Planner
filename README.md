@@ -6,6 +6,16 @@ A beautiful, interactive planting calendar for Zone 8a gardeners in the Piedmont
 
 ## Features
 
+- **Your Site (multi-region preview)**
+  - Pick a location (geolocation, a seed city, or coordinates) and the calendar
+    re-resolves for it: real NOAA/NCEI frost dates, USDA hardiness zone, and
+    per-crop timing — hand-reviewed Piedmont data where it applies, clearly
+    labeled computed estimates elsewhere
+  - Honest by design: computed rows are marked "est.", and curated data shows
+    how far you are from the Carrboro reference garden
+  - The default view (no location chosen) is the original Carrboro calendar,
+    unchanged
+
 - **Multiple View Modes**
   - **Grid View**: Traditional spreadsheet-style table with all plants and months
   - **Month View**: Month-by-month breakdown of planting activities
@@ -81,6 +91,12 @@ Piedmont-Planner/
 ├── script.js                # Interactive functionality (+ preference persistence)
 ├── data.js                  # Plant calendar data, guide notes, and review metadata
 ├── carrboro_plant_guide.csv # Source guide data (varieties + tips)
+├── app/                     # Multi-region layer (committed build artifacts)
+│   ├── main.js              # "Your site" panel + resolver bootstrap
+│   ├── lib/                 # schema/ compiled to browser ES modules
+│   └── data/                # Piedmont pack + NCEI/PRISM seed data (generated)
+├── schema/                  # TypeScript contracts, engine, packs, providers
+├── docs/                    # Architecture decisions & research
 ├── manifest.webmanifest     # PWA manifest (install metadata)
 ├── service-worker.js        # Offline caching
 ├── favicon.svg              # Vector favicon (leaf mark)
@@ -143,6 +159,16 @@ colors or shape in `scripts/generate-icons.mjs`, regenerate them with:
 
 ```bash
 node scripts/generate-icons.mjs
+```
+
+### Regenerating the app/ bundle
+
+`app/lib` (compiled engine) and `app/data` (the Piedmont pack + provider seed
+tables) are committed artifacts generated from `schema/` and `data.js` — CI
+fails if they drift from source. After changing either, regenerate with:
+
+```bash
+node scripts/build-app-lib.mjs
 ```
 
 ## Browser Compatibility
