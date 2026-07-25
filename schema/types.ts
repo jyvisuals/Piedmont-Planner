@@ -192,6 +192,38 @@ export interface Provenance {
 // D5 — Pack schema, footprint geometry, and precedence
 // ---------------------------------------------------------------------------
 
+/**
+ * Where the pack's data was actually validated — usually a single town/garden
+ * (D8 honesty-by-distance: the UI shows "curated at <label>, N km from you").
+ * Distinct from `footprint`, which is where the pack is *applied*.
+ */
+export interface ReferencePoint {
+  lat: number;
+  lng: number;
+  label?: string; // e.g. "Carrboro, NC"
+}
+
+/**
+ * Region-scoped content beyond crop rows — the chore calendar and the
+ * greenhouse-confidence subsystem from the legacy dataset (see the
+ * transition-cost ledger in docs/architecture-decisions.md). Carried verbatim
+ * and rendered as-is; nothing here feeds the timing engine.
+ */
+export interface RegionalContent {
+  /** Month-by-month chore list, split into half-months. */
+  tasks?: Record<MonthId, { half1: string; half2: string }>;
+  greenhouse?: {
+    /** The pack's protected-culture policy prose/structure, verbatim. */
+    rules?: Record<string, unknown>;
+    /** Per-crop protected-culture confidence, keyed by CropSlug. */
+    cropConfidence?: Record<CropSlug, { level: string; note?: string }>;
+    /** Per-crop rule category, keyed by CropSlug. */
+    cropRuleCategory?: Record<CropSlug, string>;
+  };
+  /** What each confidence score means, keyed by score ("0".."5"). */
+  confidenceRubric?: Record<string, string>;
+}
+
 /** Where a pack applies. The resolver does point-in-polygon / membership. */
 export type Footprint =
   | { kind: "bbox"; minLat: number; minLng: number; maxLat: number; maxLng: number }
@@ -231,9 +263,13 @@ export interface RegionPack {
   specificityTieBreaker?: number;
   /** Informational only — NOT the resolution key. Zone alone is too coarse (D5/D7). */
   zones?: string[];
+  /** Where the data was validated (honesty-by-distance in the UI, D8). */
+  referencePoint?: ReferencePoint;
   /** Pack-local source library, referenced by Provenance.sources. */
   sources: Record<string, SourceRef>;
   crops: PackCropOverride[];
+  /** Region-scoped extras: chore calendar, greenhouse policy (render-only). */
+  regional?: RegionalContent;
 }
 
 // ---------------------------------------------------------------------------

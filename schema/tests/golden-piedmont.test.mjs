@@ -66,6 +66,35 @@ test("golden: resolver output at Carrboro equals data.js grid for every crop", (
   }
 });
 
+test("regional content is carried, not orphaned (transition-cost ledger item 1)", () => {
+  const pack = loadLegacyPiedmontPack(rootDir);
+
+  // Honesty-by-distance: the validation point rides along with the pack.
+  assert.equal(pack.referencePoint.label, "Carrboro, NC");
+
+  // The chore calendar: all 12 months, both halves, non-empty prose.
+  const months = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
+  assert.deepEqual(Object.keys(pack.regional.tasks).sort(), [...months].sort());
+  for (const m of months) {
+    assert.ok(pack.regional.tasks[m].half1.length > 0, `${m}.half1 empty`);
+    assert.ok(pack.regional.tasks[m].half2.length > 0, `${m}.half2 empty`);
+  }
+
+  // Greenhouse subsystem: policy prose + per-crop maps re-keyed to slugs.
+  assert.ok(pack.regional.greenhouse.rules.mode, "greenhouse rules carried");
+  assert.equal(pack.regional.greenhouse.cropConfidence.spinach.level, "high");
+  assert.equal(pack.regional.greenhouse.cropRuleCategory.spinach, "allow_sg_shoulder");
+  for (const slug of Object.keys(pack.regional.greenhouse.cropConfidence)) {
+    assert.ok(
+      pack.crops.some((c) => c.crop === slug),
+      `greenhouse confidence keyed to unknown crop slug "${slug}"`
+    );
+  }
+
+  // Rubric text travels with the scores it explains.
+  assert.equal(Object.keys(pack.regional.confidenceRubric).length, 6);
+});
+
 test("golden: resolver returns copies — mutating output cannot corrupt the pack", () => {
   const pack = loadLegacyPiedmontPack(rootDir);
   const [first] = resolveAll(CARRBORO_SITE, { catalog: {}, packs: [pack] });

@@ -39,6 +39,7 @@ export const PIEDMONT_NC: RegionPack = {
   // Production would ship a simplified EPA Level-III ecoregion polygon (D5).
   footprint: { kind: "bbox", minLat: 33.6, minLng: -81.6, maxLat: 36.6, maxLng: -78.6 },
   zones: ["7b", "8a"],
+  referencePoint: { lat: 35.91, lng: -79.075, label: "Carrboro, NC" },
   sources: SOURCES,
 
   crops: [

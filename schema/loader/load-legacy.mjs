@@ -21,6 +21,11 @@ const EXPOSED = [
   "PLANT_REVIEW_NOTES",
   "PLANT_REVIEW_CONFIDENCE_SCORES",
   "REVIEW_SOURCE_LIBRARY",
+  "TASKS",
+  "GREENHOUSE_RULES",
+  "PLANT_GREENHOUSE_CONFIDENCE",
+  "PLANT_GREENHOUSE_RULE_CATEGORY",
+  "PLANT_REVIEW_CONFIDENCE_RUBRIC",
 ];
 
 /** Load data.js in a sandbox and pull out the globals + evidence function. */
@@ -45,6 +50,11 @@ export function loadLegacyGlobals(rootDir) {
     reviewNotes: structuredClone(g.__PLANT_REVIEW_NOTES),
     confidenceScores: structuredClone(g.__PLANT_REVIEW_CONFIDENCE_SCORES),
     sourceLibrary: structuredClone(g.__REVIEW_SOURCE_LIBRARY),
+    tasks: structuredClone(g.__TASKS),
+    greenhouseRules: structuredClone(g.__GREENHOUSE_RULES),
+    greenhouseConfidence: structuredClone(g.__PLANT_GREENHOUSE_CONFIDENCE),
+    greenhouseRuleCategory: structuredClone(g.__PLANT_GREENHOUSE_RULE_CATEGORY),
+    confidenceRubric: structuredClone(g.__PLANT_REVIEW_CONFIDENCE_RUBRIC),
     evidenceFor: g.__evidence,
   };
 }
@@ -59,8 +69,19 @@ export function slugify(name) {
 
 /** Build the full verbatim Piedmont pack (a RegionPack per schema/types.ts). */
 export function loadLegacyPiedmontPack(rootDir) {
-  const { plants, guide, reviewNotes, confidenceScores, sourceLibrary, evidenceFor } =
-    loadLegacyGlobals(rootDir);
+  const {
+    plants,
+    guide,
+    reviewNotes,
+    confidenceScores,
+    sourceLibrary,
+    tasks,
+    greenhouseRules,
+    greenhouseConfidence,
+    greenhouseRuleCategory,
+    confidenceRubric,
+    evidenceFor,
+  } = loadLegacyGlobals(rootDir);
 
   const seen = new Map();
   const crops = plants.map((plant) => {
@@ -98,10 +119,35 @@ export function loadLegacyPiedmontPack(rootDir) {
       "Hand-reviewed override for the NC Piedmont (Carrboro reference point, on the 7b/8a line). Mechanically derived from data.js with verbatim timing.",
     footprint: { kind: "bbox", minLat: 33.6, minLng: -81.6, maxLat: 36.6, maxLng: -78.6 },
     zones: ["7b", "8a"],
+    // Honesty-by-distance (D8): the data was validated at one point, not
+    // uniformly across the footprint.
+    referencePoint: { lat: 35.91, lng: -79.075, label: "Carrboro, NC" },
     sources: Object.fromEntries(
       Object.entries(sourceLibrary).map(([id, s]) => [id, { label: s.label, url: s.url }])
     ),
     crops,
+    // Region-scoped extras that would otherwise be orphaned by the transition
+    // (see the transition-cost ledger): the chore calendar and the
+    // greenhouse-confidence subsystem, carried verbatim; per-crop maps re-keyed
+    // to catalog slugs.
+    regional: {
+      tasks,
+      greenhouse: {
+        rules: greenhouseRules,
+        cropConfidence: Object.fromEntries(
+          Object.entries(greenhouseConfidence).map(([name, v]) => [
+            slugify(name),
+            { level: v.level, ...(v.note ? { note: v.note } : {}) },
+          ])
+        ),
+        cropRuleCategory: Object.fromEntries(
+          Object.entries(greenhouseRuleCategory).map(([name, cat]) => [slugify(name), cat])
+        ),
+      },
+      confidenceRubric: Object.fromEntries(
+        Object.entries(confidenceRubric).map(([score, text]) => [String(score), text])
+      ),
+    },
   };
 }
 

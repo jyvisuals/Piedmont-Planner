@@ -614,6 +614,25 @@ export function validateRegionPack(
     }
   }
 
+  const refPoint = value["referencePoint"];
+  if (refPoint !== undefined) {
+    if (!isRecord(refPoint)) {
+      errors.at("referencePoint", `expected an object if present, got ${describe(refPoint)}`);
+    } else {
+      checkLat(errors, "referencePoint.lat", refPoint["lat"]);
+      checkLng(errors, "referencePoint.lng", refPoint["lng"]);
+      checkOptionalString(errors, "referencePoint.label", refPoint["label"]);
+    }
+  }
+
+  // `regional` is render-only content (chore calendar, greenhouse policy) —
+  // structurally it just needs to be an object; its interior is displayed, not
+  // interpreted, so deep validation is deliberately deferred.
+  const regional = value["regional"];
+  if (regional !== undefined && !isRecord(regional)) {
+    errors.at("regional", `expected an object if present, got ${describe(regional)}`);
+  }
+
   validateFootprint(errors, "footprint", value["footprint"]);
   const sourceIds = validateSources(errors, "sources", value["sources"]);
 
