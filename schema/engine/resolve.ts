@@ -35,6 +35,7 @@ import type {
   TimingEvent,
 } from "../types.ts";
 import { DEFAULT_FROST_REF } from "../types.ts";
+import { computedEvents } from "./computed-rules.ts";
 
 // ---------------------------------------------------------------------------
 // Calendar geometry (non-leap 365-day year; leap day is noise at this scale)
@@ -372,10 +373,21 @@ export function byPrecedence(a: RegionPack, b: RegionPack): number {
 // ---------------------------------------------------------------------------
 
 /**
- * v1 resolves the curated layer only: crops whose merged fields include no
- * timing are omitted (the computed base layer fills that gap in a later
- * milestone). Field-level fall-through: the most specific pack that supplies a
- * field wins that field; an `excluded` row stops the chain for its crop.
+ * Curated layer first, computed base layer beneath it (D5/D8).
+ *
+ * Curated: field-level fall-through — the most specific pack that supplies a
+ * field wins that field; an `excluded` row stops the chain for its crop. This
+ * path is byte-identical to the curated-only resolver (with `catalog: {}` the
+ * function behaves exactly as before — the golden gate depends on this).
+ *
+ * Computed fallback: a crop present in `input.catalog` that ends up with NO
+ * curated timing (no pack row at all, or only prose-level rows) falls through
+ * to `computedEvents`, resolved through the same anchored-event path, with
+ * `origin: "computed"` and NO provenance — the absence of provenance is the
+ * honesty marker (D8: computed is never dressed as curated). Two guards:
+ *   - an `excluded` pack row hides the crop entirely (never falls through);
+ *   - the crop-applicability filter skips entries whose `minFrostFreeDays`
+ *     exceeds the site's frost-free season.
  */
 export function resolveAll(site: SiteContext, input: ResolveInput): ResolvedCropCalendar[] {
   const applicable = input.packs
@@ -392,6 +404,10 @@ export function resolveAll(site: SiteContext, input: ResolveInput): ResolvedCrop
     }
   }
 
+  // Crops the curated layer settled — either by emitting a calendar or by an
+  // `excluded` row. Neither may fall through to the computed layer.
+  const settledByCurated = new Set<string>();
+
   const out: ResolvedCropCalendar[] = [];
   for (const [crop, rows] of rowsByCrop) {
     let timing: PackTiming | undefined;
@@ -401,8 +417,10 @@ export function resolveAll(site: SiteContext, input: ResolveInput): ResolvedCrop
     for (const row of rows) {
       if (row.excluded) {
         // Most specific row excluding the crop hides it; a lower excluded row
-        // just ends the fall-through chain.
+        // just ends the fall-through chain. Either way the exclusion settles
+        // the crop — it must not reappear as a computed estimate.
         if (row === rows[0]) excluded = true;
+        settledByCurated.add(crop);
         break;
       }
       if (!timing && row.timing) {
@@ -414,12 +432,34 @@ export function resolveAll(site: SiteContext, input: ResolveInput): ResolvedCrop
     if (excluded || !timing || !timingRow) continue;
 
     const { grid, windows } = resolveCropTiming(timing, site, input.catalog[crop]);
+    settledByCurated.add(crop);
     out.push({
       crop,
       grid,
       ...(windows ? { windows } : {}),
       origin: "curated",
       provenance: timingRow.provenance,
+    });
+  }
+
+  // Computed base layer: catalog crops the curated layer left unsettled.
+  for (const crop of Object.keys(input.catalog)) {
+    if (settledByCurated.has(crop)) continue;
+    const entry = input.catalog[crop];
+    if (!entry) continue;
+    // Crop-applicability filter: the season must be long enough to finish.
+    if (entry.minFrostFreeDays !== undefined && entry.minFrostFreeDays > site.frostFreeDays) {
+      continue;
+    }
+    const events = computedEvents(entry);
+    if (!events) continue; // perennial / no usable DTH — no honest estimate
+    const windows = resolveAnchoredEvents(events, site, entry);
+    out.push({
+      crop,
+      grid: bucketWindows(windows),
+      windows,
+      origin: "computed",
+      // No provenance on purpose (D8) — computed is never dressed as curated.
     });
   }
   return out;
