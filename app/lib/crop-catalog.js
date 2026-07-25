@@ -672,6 +672,9 @@ export const CROP_CATALOG = {
         botanicalName: "Allium sativum",
         hardiness: "very-hardy",
         spacingIn: "4-6",
+        // Planted from cloves in fall, overwintered, harvested the next summer —
+        // the flag keeps the computed rules from spring-planting it (Path A1).
+        overwinter: true,
         // "B = 180-210" — days from planting cloves ("B" in the legacy grid).
         daysToMaturity: {
             direct: [180, 210],

@@ -164,6 +164,12 @@ export interface CropCatalogEntry {
   daysToMaturity: DaysToMaturity;
   /** Minimum frost-free days to finish; powers the crop-applicability filter. */
   minFrostFreeDays?: number;
+  /**
+   * True for crops planted in fall and overwintered for harvest the following
+   * season (garlic, hardneck alliums). Without this, the generic rules would
+   * spring-plant them — the computed layer's clearest class of error (Path A1).
+   */
+  overwinter?: boolean;
 }
 
 export type CropCatalog = Record<CropSlug, CropCatalogEntry>;

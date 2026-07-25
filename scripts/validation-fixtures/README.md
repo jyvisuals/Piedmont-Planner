@@ -56,11 +56,17 @@ calendar into a fixture and the harness can validate there too.
 
 ## Current findings (Piedmont, computed vs curated)
 
-- Primary timing: **95%** (55/58) — the computed layer gets the season right.
-- Misplaced (**3 real bugs**): `garlic`, `parsnips`, `chamomile` — overwintered
-  / cool-season crops the generic rule spring-plants. Fixing needs catalog
-  metadata (an "overwinter / fall-sown" signal) so the rules stop treating them
-  as ordinary spring crops.
+- Primary timing: **97%** (56/58) — the computed layer gets the season right.
+- **Fixed:** `garlic` — was spring-planted by the generic very-hardy rule; now
+  carries an `overwinter` catalog flag so the computed rules fall-plant it
+  around first frost (moved from misplaced to correct).
+- **Accepted generic-layer limitations (2):** `parsnips` and `chamomile`. Both
+  are the *right season* (spring) but the generic window runs earlier/wider than
+  their true late-spring window. They are NOT season flips, and the rule that
+  would need changing is the same one that correctly handles the other 55 crops
+  — forcing these two would regress many. Left as "est."-labeled estimates;
+  a future per-crop computed-override mechanism could address them without
+  touching the shared rule.
 - Dominant coverage gap: succession-sown summer crops (beans, squash, cucumbers)
   where curated sows continuously but computed gives one window — a rule
   enhancement (succession windows), not a timing error.

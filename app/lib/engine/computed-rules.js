@@ -126,6 +126,21 @@ export function computedEvents(entry) {
     if (!direct && !transplant)
         return null;
     const events = [];
+    // Overwintered crops (garlic): planted in fall around first frost, harvested
+    // the following season. Handled first because the hardiness-based spring
+    // rules below would otherwise plant them in spring — the misplacement Path A1
+    // surfaced. The cross-year harvest is fine on the season-day axis.
+    if (entry.overwinter) {
+        events.push({
+            id: "computed-overwinter-set",
+            activity: "plantSet",
+            anchor: { kind: "firstFrost" },
+            offsetDays: [-45, 14], // ~6 weeks before to ~2 weeks after first frost
+        });
+        const method = direct ? "direct" : "transplant";
+        events.push({ id: "computed-h-overwinter", activity: "harvest", fromEventId: "computed-overwinter-set", method });
+        return events;
+    }
     switch (entry.hardiness) {
         case "tender":
             if (transplant)

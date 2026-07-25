@@ -88,6 +88,15 @@ const NO_DTH = {
   daysToMaturity: { note: "overwinters; no usable range" },
 };
 
+const OVERWINTER = {
+  slug: "overwinter-x", // garlic-like: fall-planted, overwintered
+  displayName: "Overwinter Fixture",
+  category: "vegetable",
+  hardiness: "very-hardy",
+  overwinter: true,
+  daysToMaturity: { direct: [180, 210] },
+};
+
 const SHARED_CATALOG = {
   "tender-x": TENDER_BOTH,
   "half-hardy-x": HALF_HARDY_BOTH,
@@ -299,4 +308,15 @@ test("fall sow windows sit earlier where firstFrost is earlier (Vermont < Carrbo
   assert.deepEqual([fallOf(vt).start, fallOf(vt).end], [200, 224]);
   assert.ok(fallOf(vt).start < fallOf(nc).start, "earlier firstFrost → earlier fall window");
   assert.ok(fallOf(vt).end < fallOf(nc).end);
+});
+
+test("overwinter crops are fall-planted around firstFrost, not spring (Path A1 garlic fix)", () => {
+  const events = computedEvents(OVERWINTER);
+  // A single fall planting anchored to firstFrost — no spring sow window.
+  const set = findEvent(events, "computed-overwinter-set");
+  assert.equal(set.activity, "plantSet");
+  assert.equal(set.anchor.kind, "firstFrost");
+  assert.deepEqual(set.offsetDays, [-45, 14]);
+  assert.ok(!events.some((e) => e.id.includes("spring")), "no spring window for an overwinter crop");
+  assert.equal(findEvent(events, "computed-h-overwinter").method, "direct");
 });

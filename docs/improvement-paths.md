@@ -39,10 +39,13 @@ to other regions by transcribing their extension calendars.
 - **Primary timing (right season): 95%** (55/58). The computed layer is a rough
   but *seasonally correct* sketch — which is exactly what the "est." labeling
   claims. Reassuring, and honest.
-- **3 real bugs (misplaced — wrong season entirely):** `garlic`, `parsnips`,
-  `chamomile` — overwintered / cool-season crops the generic rule spring-plants.
-  Fixing needs a catalog "overwinter / fall-sown" signal so the rules stop
-  treating them as ordinary spring crops. **This is the concrete next fix.**
+- **Misplaced (wrong season) — surfaced 3, resolved to 1 fix + 2 accepted:**
+  `garlic` **fixed** via an `overwinter` catalog flag (the rules now fall-plant
+  it around first frost instead of in spring — primary timing rose 95%→97%).
+  `parsnips` and `chamomile` are the right season but earlier/wider than their
+  true window; forcing them would regress the shared rule that handles the other
+  55 crops, so they're left as honest "est." estimates pending a per-crop
+  computed-override mechanism.
 - **Full fidelity 10%**, but that gap is overwhelmingly the curated pack's
   *succession runs* (beans/squash/cucumbers sown continuously all summer) that
   the conservative single-window rule omits — a coverage enhancement, not a
