@@ -240,21 +240,47 @@ walk back after users have relied on the numbers.
 
 ---
 
-## D9. Trajectory (soft one-way door): data-as-data, modules + tests, no framework
+## D9. Language & stack trajectory (soft one-way door): TypeScript, one runtime, Python only at build time
 
-Not a hard contract, but a direction worth committing to before Phase 1 grows
-tendrils:
+Judge every language/stack question by one test: **does it make the contracts
+(D1–D5) safer, or does it just move the plumbing around?** The hard part of this
+project is the data model, not the view.
 
+- **Adopt TypeScript — the highest-leverage change.** It is not "a different
+  language," it is the *enforcement layer* for D1–D5: a pack that violates the
+  schema, an offset with the wrong anchor, or a crop row missing structured DTH
+  becomes a **compile error** instead of a runtime surprise a contributor finds
+  in production. Migrate incrementally; it still ships JS and keeps the PWA/offline
+  story intact.
 - **Turn data into data.** Today `data.js` is executable globals loaded via
   `<script>` and eval'd with `vm` in `compare-ncsu.mjs`. A multi-pack corpus
-  wants **JSON (or typed modules) loaded deliberately**, better for PWA caching,
-  offline, and testing. Plan the migration target now.
+  wants **JSON (validated by the TS types) loaded deliberately** — better for PWA
+  caching, offline, and testing. Plan the migration target now.
 - **Add modules + a real test harness; keep vanilla rendering.** The offset
   engine and resolver are pure logic that *must* be unit-tested — the top
   regression is **"Carrboro's calendar must not move"** when the Piedmont pack is
   re-expressed. Generalize the `compare-ncsu.mjs` pattern into that gate.
-- **Resist a framework.** The UI is not the hard part and the app's simplicity
-  is a feature. Add structure around *data and logic*, not the view layer.
+- **Resist a frontend framework (for now).** The UI is a grid + a panel; it is
+  not the hard part, and the app's simplicity is a feature. The *only* thing that
+  later justifies a small reactive layer is if a map-based location picker plus
+  multiple data overlays make manual DOM sync bug-prone — and then reach for
+  **Svelte / Solid / Preact signals**, not React. Two-way door; decide it when
+  the interactivity arrives, not now. **No WASM/Rust/Go on the front end** — the
+  compute is microseconds in JS; there is no performance problem to solve.
+- **Stay backendless; keep one runtime language.** The provider interfaces (D6)
+  mean Phase 1–2 needs no server. When a runtime proxy *is* needed (SSURGO isn't
+  CORS-enabled), make it a **TypeScript edge function** so it shares the schema
+  types with the packs and engine. Introducing a second *runtime* language
+  fragments the contracts — don't.
+- **The one legitimate polyglot boundary: the offline data-ETL pipeline.**
+  Crunching NCEI normals (netCDF), USDA zone rasters, and simplifying pack
+  polygons into shipped JSON is genuinely better in **Python** (`xarray`,
+  `geopandas`, `shapely`, `rasterio`). That is *build-time, not runtime* — it
+  emits JSON the TS types then validate, so it never touches the live contracts.
+  A clean boundary, not fragmentation.
+- **Don't rewrite for its own sake.** The vanilla-JS app is small and works. The
+  migration that pays off is **data-as-data + TypeScript, incrementally** — a
+  framework or new runtime would be motion, not progress.
 
 ---
 
@@ -308,7 +334,7 @@ prose, the live-weather layer, personalization.
 | D6 | External data access | Provider interfaces; static-client first, proxy optional | Seam one-way, impl two-way |
 | D7 | Location identity | lat/lng canonical; ZIP an input; US-only now | One-way |
 | D8 | Provenance & uncertainty | Computed≠curated labeled; probabilities not dates; pin dataset versions | Hard to reverse |
-| D9 | Stack trajectory | Data-as-data; modules + tests; no framework; keep vanilla view | Soft |
+| D9 | Language & stack | TypeScript as the contract layer; one runtime (TS, incl. any proxy); Python only for build-time ETL; data-as-data + tests; no framework/WASM now | Soft |
 
 **The through-line:** pin D1–D5 (the five seams) before writing a second pack;
 treat D6–D9 as directions with escape hatches; and prove the whole thing with
