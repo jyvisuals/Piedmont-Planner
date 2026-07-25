@@ -44,22 +44,25 @@ function dayComfort(cc, minF, maxF) {
  *   tempFit        — mean growth comfort across the whole span.
  */
 function scorePlanting(cc, climate, plantDay, lo, hi, isDirect) {
-    // germFit over the establishment window — DIRECT sowing only. Germination is
-    // gated on the daily-MEAN temperature (a soil-temperature proxy; daily-min is
-    // air and runs colder than the seedbed). Transplants are already-established
-    // seedlings, so they are not germination-gated — their limit is frost survival
-    // and growth comfort, which is why set-out can precede warm soil.
-    let germFit = 1;
-    if (isDirect) {
-        const estabEnd = plantDay + Math.min(14, lo);
-        let meanSum = 0;
-        let meanN = 0;
-        for (let d = plantDay; d <= estabEnd; d++) {
-            meanSum += meanTempF(climate, d);
-            meanN += 1;
-        }
-        germFit = smoothstep(cc.germMinF - 6, cc.germMinF + 6, meanSum / meanN);
+    // Establishment gate over the first ~2–3 weeks, on the daily-MEAN temperature
+    // (a soil-temperature proxy; daily-min is air and runs colder than the
+    // seedbed). Two thresholds:
+    //   direct sow  — needs germMinF to germinate from seed.
+    //   transplant  — an already-grown seedling doesn't germinate, but it still
+    //                 must ROOT and grow, so it needs warmth meaningfully above the
+    //                 growth base (baseF + 8). Without this, the comfort average
+    //                 over a long-season frost-tolerant crop's whole occupancy
+    //                 masks that a mid-winter set-out barely establishes.
+    const estabEnd = plantDay + Math.min(isDirect ? 14 : 21, lo);
+    let meanSum = 0;
+    let meanN = 0;
+    for (let d = plantDay; d <= estabEnd; d++) {
+        meanSum += meanTempF(climate, d);
+        meanN += 1;
     }
+    const estabMean = meanSum / meanN;
+    const gateF = isDirect ? cc.germMinF : cc.baseF + 8;
+    const germFit = smoothstep(gateF - 6, gateF + 6, estabMean);
     // frostSurvival: how far into the span the crop gets before a killing freeze.
     let frostSurvival = 1;
     if (cc.frostKilled) {
@@ -150,8 +153,19 @@ export function suitabilityFor(entry, climate) {
     // offset engine uses (known biology, not a fabricated window): plant in a band
     // around first frost. Mirrors computed-rules.ts's overwinter branch.
     if (entry.overwinter) {
-        const start = climate.firstFrostDay - 45;
-        const end = climate.firstFrostDay + 14;
+        // Anchor to first frost; in a frost-free climate (no crossing) fall back to
+        // the coldest half-month's midpoint, which is what overwintering is timed to.
+        let anchor = climate.firstFrostDay;
+        if (!Number.isFinite(anchor)) {
+            let coldest = 0;
+            for (let i = 1; i < 24; i++) {
+                if (climate.tminF[i] < climate.tminF[coldest])
+                    coldest = i;
+            }
+            anchor = Math.round(((coldest + 0.5) * 365) / 24);
+        }
+        const start = anchor - 45;
+        const end = anchor + 14;
         const curve = new Array(365).fill(0);
         for (let d = start; d <= end; d++)
             curve[((d - 1) % 365 + 365) % 365] = 1;

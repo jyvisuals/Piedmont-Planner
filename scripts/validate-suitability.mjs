@@ -28,7 +28,7 @@ import { fileURLToPath } from "node:url";
 
 import { computedEvents } from "../app/lib/engine/computed-rules.js";
 import { resolveAnchoredEvents, bucketWindows, SLOTS } from "../app/lib/engine/resolve.js";
-import { modelSiteClimate } from "../app/lib/engine/climate-model.js";
+import { realSiteClimate } from "../app/lib/engine/climate-model.js";
 import { suitabilityFor } from "../app/lib/engine/suitability.js";
 import { CROP_CATALOG } from "../app/lib/crop-catalog.js";
 import { loadLegacyPiedmontPack } from "../schema/loader/load-legacy.mjs";
@@ -77,19 +77,22 @@ function haversine(aLat, aLng, bLat, bLng) {
   const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(s));
 }
-function nearestStation(lat, lng) {
+// Real NCEI daily temperature normals, compacted to 24 half-month slots.
+const tempNormals = JSON.parse(
+  fs.readFileSync(path.join(rootDir, "app/data/temp-normals.json"), "utf8")
+).stations;
+function nearestTempStation(lat, lng) {
   let best = null;
-  for (const s of stations) {
+  for (const s of tempNormals) {
     const km = haversine(lat, lng, s.lat, s.lng);
     if (!best || km < best.km) best = { station: s, km };
   }
   return best;
 }
-/** Build a SiteClimate for a reference from its nearest real station. */
+/** Build a real (heat-modeled) SiteClimate for a reference from its nearest station. */
 function climateForRef(lat, lng) {
-  const { station, km } = nearestStation(lat, lng);
-  const site = siteFrom(station.lat, station.lng, station.lastFrost, station.firstFrost, station.id);
-  return { climate: modelSiteClimate(site), station, km };
+  const { station, km } = nearestTempStation(lat, lng);
+  return { climate: realSiteClimate(station), station, km };
 }
 
 // --- assemble references (same set as validate-computed.mjs) -----------------
@@ -160,7 +163,7 @@ for (const ref of references) {
   console.log(`Reference: ${ref.name}`);
   if (ref.source) console.log(`  source: ${ref.source.title}`);
   console.log(`  climate model: station ${station.id} (${station.name.trim()}), ${km.toFixed(0)} km away`);
-  console.log(`    fit: coldest day ${climate.coldestDay}, mean-min ${climate.meanMinF.toFixed(1)}°F, ampl ${climate.amplF.toFixed(1)}°F, RMSE ${climate.rmseF.toFixed(2)}°F over ${climate.points} pts, heatModeled=${climate.heatModeled}`);
+  console.log(`    source: ${climate.source}, heatModeled=${climate.heatModeled}, peak max ${Math.max(...climate.tmaxF).toFixed(0)}°F, frost-free crossings last=${climate.lastFrostDay}/first=${climate.firstFrostDay}`);
   console.log(`  crops compared: offset ${off.compared}, suitability ${suit.compared}`);
   console.log(`  PRIMARY TIMING (right season):`);
   console.log(`    offset engine     : ${off.primaryOk}/${off.compared} = ${rate(off).toFixed(0)}%`);
@@ -174,11 +177,29 @@ for (const ref of references) {
   }
 }
 
+// --- desert demonstration: the offset engine REFUSED this; suitability doesn't -
+const desert = tempNormals.find((s) => s.id === "USW00023183"); // Phoenix
+if (desert) {
+  const climate = realSiteClimate(desert);
+  console.log(`\n${"=".repeat(70)}`);
+  console.log(`DESERT (heat wall): ${desert.name.trim()} — peak max ${Math.max(...climate.tmaxF).toFixed(0)}°F, frost-free (last=${climate.lastFrostDay}, first=${climate.firstFrostDay})`);
+  console.log("  The frost-offset engine REFUSES this site (no frost anchors). The");
+  console.log("  suitability engine, with the real heat wall, produces a calendar:");
+  for (const slug of ["lettuce-leaf", "tomatoes", "beans-snap-bush", "spinach"]) {
+    const res = suitabilityFor(CROP_CATALOG[slug], climate);
+    const slots = res && res.windows.length ? [...outdoorSlots(bucketWindows(res.windows))].map(slotName) : ["(none)"];
+    console.log(`    ${slug.padEnd(16)} ${slots.join(", ")}`);
+  }
+  console.log("  Expect: cool crops (lettuce, spinach) in the cool season around winter;");
+  console.log("  warm crops (tomatoes, beans) in spring + fall shoulders, avoiding peak");
+  console.log("  summer heat — the low-desert two-season pattern (U of A az1005).");
+}
+
 console.log(`\n${"=".repeat(70)}`);
 console.log("The suitability engine and the offset engine are graded on the SAME");
-console.log("references. Temperature-only, frost-derived climate: the cold wall is");
-console.log("near-exact (frost survival), absolute summer heat is underestimated, so");
-console.log("the heat wall (desert warm-crop timing) needs real max-temp tiles.");
+console.log("references. Now backed by REAL NCEI daily temperature normals (heat wall");
+console.log("modeled), so frost-free deserts get a calendar instead of a refusal.");
+console.log("A committed desert FIXTURE (U of A az1005) is the remaining validation gap.");
 
 if (strict && worstPrimary < minRate) {
   console.error(`\nvalidate-suitability: worst primary-timing rate ${worstPrimary.toFixed(0)}% < ${minRate}% (--strict)`);

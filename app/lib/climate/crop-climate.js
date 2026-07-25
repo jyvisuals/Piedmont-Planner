@@ -26,10 +26,13 @@
 // Class defaults keyed off the catalog's existing hardiness — the bootstrap the
 // design doc calls for (classify from hardiness, then refine per crop below).
 const CLASS_DEFAULTS = {
+    // germMinF is a daily-MEAN-temperature gate for reliable outdoor germination
+    // (~11°F above the daily min), so cool-season values sit near 45–50°F, not the
+    // soil-temperature floor — this keeps direct sowing out of mild-winter months.
     tender: { germMinF: 60, baseF: 50, optMinF: 65, optMaxF: 85, ceilingF: 95, frostKilled: true, season: "warm" },
-    "half-hardy": { germMinF: 45, baseF: 40, optMinF: 55, optMaxF: 78, ceilingF: 88, frostKilled: true, season: "cool" },
-    hardy: { germMinF: 40, baseF: 38, optMinF: 50, optMaxF: 75, ceilingF: 82, frostKilled: false, season: "cool" },
-    "very-hardy": { germMinF: 35, baseF: 35, optMinF: 45, optMaxF: 72, ceilingF: 80, frostKilled: false, season: "cool" },
+    "half-hardy": { germMinF: 50, baseF: 40, optMinF: 55, optMaxF: 78, ceilingF: 88, frostKilled: true, season: "cool" },
+    hardy: { germMinF: 45, baseF: 38, optMinF: 50, optMaxF: 75, ceilingF: 82, frostKilled: false, season: "cool" },
+    "very-hardy": { germMinF: 42, baseF: 35, optMinF: 45, optMaxF: 72, ceilingF: 80, frostKilled: false, season: "cool" },
     // Perennials get no annual planting-suitability estimate (same rule the offset
     // engine uses — establishment schedules are not a generic guess).
     perennial: null,

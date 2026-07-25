@@ -16,7 +16,9 @@ import { climateFor } from "../climate/crop-climate.ts";
 import {
   ClimateModelError,
   modelSiteClimate,
+  realSiteClimate,
   minTempF,
+  maxTempF,
 } from "../engine/climate-model.ts";
 import { suitabilityFor } from "../engine/suitability.ts";
 import { bucketWindows, SLOTS } from "../engine/resolve.ts";
@@ -26,6 +28,10 @@ const ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const STATIONS = JSON.parse(
   fs.readFileSync(path.join(ROOT, "app/data/frost-stations.json"), "utf8")
 ).stations;
+const TEMP_NORMALS = JSON.parse(
+  fs.readFileSync(path.join(ROOT, "app/data/temp-normals.json"), "utf8")
+).stations;
+const tempFor = (id) => TEMP_NORMALS.find((s) => s.id === id);
 
 function siteFor(id) {
   const s = STATIONS.find((x) => x.id === id);
@@ -90,6 +96,33 @@ test("modelSiteClimate fits Chapel Hill tightly and crosses 32°F at the real fr
 
 test("modelSiteClimate refuses a frost-free desert (Phoenix) honestly", () => {
   assert.throws(() => modelSiteClimate(siteFor(PHOENIX)), ClimateModelError);
+});
+
+test("realSiteClimate carries the real heat wall (max temp), heatModeled=true", () => {
+  const cha = realSiteClimate(tempFor(CHAPEL_HILL));
+  assert.equal(cha.heatModeled, true);
+  assert.equal(cha.source, "ncei-daily-normals");
+  // Real Chapel Hill summer max ~90°F (the frost-derived model underestimated this).
+  assert.ok(Math.max(...cha.tmaxF) > 85, "summer max should exceed 85°F");
+  assert.ok(maxTempF(cha, 196) > 85, "mid-July max should exceed 85°F"); // ~day 196
+});
+
+test("realSiteClimate handles the frost-free desert instead of refusing it", () => {
+  const phx = realSiteClimate(tempFor(PHOENIX));
+  assert.equal(phx.heatModeled, true);
+  assert.ok(Math.max(...phx.tmaxF) > 100, "Phoenix summer max should exceed 100°F");
+  assert.ok(Number.isNaN(phx.lastFrostDay), "Phoenix is frost-free (no 32°F crossing)");
+});
+
+test("in the desert, warm crops avoid peak summer and cool crops take winter", () => {
+  const phx = realSiteClimate(tempFor(PHOENIX));
+  const tomatoes = outdoorSlots("tomatoes", phx);
+  assert.ok(tomatoes && tomatoes.size);
+  // No tomato planting in peak summer (jun..jul, slots 10..13) — 107°F kills set.
+  for (const i of tomatoes) assert.ok(!(i >= 10 && i <= 13), `tomatoes should skip peak-summer slot ${i}`);
+  // Lettuce should be plantable in the cool season around winter.
+  const lettuce = outdoorSlots("lettuce-leaf", phx);
+  assert.ok(lettuce && [...lettuce].some((i) => isWinter(i)), "lettuce should take the desert winter");
 });
 
 // --- suitability scorer ------------------------------------------------------

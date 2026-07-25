@@ -124,11 +124,16 @@ engine across all references *and* produces sane windows for Phoenix.
    killed + warm/cool season, keyed off hardiness with crop-specific overrides;
    the golden crop-catalog is untouched).
 2. **Ship biweekly climate-distribution tiles** (min/max temp + precip percentiles)
-   via the existing tile ETL. ⏳ **stubbed** — `schema/engine/climate-model.ts`
-   reconstructs the annual daily-min curve from the **real** multi-threshold NCEI
-   frost crossings we already ship (a sinusoid fit through up to 12 real
-   (day, °F) points). See *Measured* below for what this does and doesn't
-   capture; real tiles replace this module at the clean seam it defines.
+   via the existing tile ETL. ✅ **DONE (temperature)** —
+   `scripts/etl/fetch-ncei-temp-normals.mjs` pulls NCEI 1991–2020 **daily
+   temperature normals** (DLY-TMAX/TMIN-NORMAL + STDDEV) and compacts them to the
+   24 half-month slots per station, emitting
+   `schema/providers/data/temp-normals.json` (~14 KB for the 17 seed stations;
+   offline CI verifier `verify-temp-normals.mjs`). `realSiteClimate()` builds the
+   `SiteClimate` from real min AND max, so **`heatModeled = true`** and the heat
+   wall is real, not estimated. The frost-derived `modelSiteClimate()` remains the
+   fallback for sites with no temperature tile (`heatModeled = false`; refuses
+   frost-free sites). Precipitation percentiles are the remaining tile variable.
 3. **Build the suitability scorer** as a new engine module, temperature-only
    first, producing the 365-day curve + 24-slot grid. ✅ **DONE** —
    `schema/engine/suitability.ts`: `Suitability(day) = germFit · frostSurvival ·
@@ -140,41 +145,48 @@ engine across all references *and* produces sane windows for Phoenix.
    against the same references as the offset engine, side by side.
 5. **Swap** the resolver's computed fallback from offset rules → suitability
    engine once it wins on the harness. Curated packs, resolver, honesty markers,
-   grid rendering: all unchanged. ⏳ **next** — gated on step 2 (real heat tiles)
-   so the desert case is handled rather than refused.
+   grid rendering: all unchanged. ⏳ **next** — the engine now matches the offset
+   engine on the temperate references AND handles the desert (below), so this is
+   the next step: wire `realSiteClimate` + a temp-normals provider into
+   `resolveAll`, national temp tiles behind it, then retire the frost-free guard.
 6. **Surface the probability curve** in the UI (risk-tiered windows) — richer than
    the grid, and the model produces it for free.
 7. Retire `computed-rules.ts`.
 
-## Measured (temperature-only first cut)
+## Measured (temperature model, real NCEI heat wall)
 
-Graded blind against the same references as the offset engine
-(`node scripts/validate-suitability.mjs`):
+Graded blind against the same references as the offset engine, now with real
+daily temperature normals (`node scripts/validate-suitability.mjs`):
 
-| Reference | offset primary | **suitability primary** | offset fidelity | suitability fidelity |
-|---|---|---|---|---|
-| Curated Piedmont pack (Carrboro) | 97% | **100%** (0 misplaced) | 29% | 12% |
-| NC State AG-756 (independent) | 100% | **100%** (0 misplaced) | 23% | 8% |
+| Reference | offset primary | **suitability primary** | notes |
+|---|---|---|---|
+| Curated Piedmont pack (Carrboro) | 97% | **97%** | 2 misplaced: `leek`, `chamomile` — cool crops the curated pack windows tightly; **not** misplaced vs AG-756 |
+| NC State AG-756 (independent) | 100% | **100%** (0 misplaced) | apples-to-apples with an independent calendar |
+| **Phoenix low desert** | **refused** | **calendar produced** | cool crops in winter, warm crops in spring + fall shoulders |
 
-**Primary timing (right season) matches or beats the offset engine with zero
-misplaced crops** — the headline the "est." labeling actually claims. The
-`overwinter` flag is honored (garlic fall-plants, not spring), and the
-frost-free desert is **refused honestly** (`ClimateModelError`) rather than
-producing nonsense — the same honest boundary the offset engine has, now
-enforced at the climate model.
+**Primary timing is at parity with the offset engine on the temperate
+references** — and the two crops it misses against the *curated* pack (`leek`,
+`chamomile`) are cool-season crops placed in the cool season, only "misplaced"
+against the author's deliberately-narrow windows; against the independent AG-756
+calendar they land correctly (the same pattern the offset engine's `parsnips`
+showed). Forcing them would regress the shared rules for the other crops.
 
-**What the frost-derived climate captures — and doesn't** (measured, not
-asserted): the fit nails the **cold wall** — RMSE < 1°F through the real frost
-crossings, so frost-survival timing is essentially exact. But every fit point
-sits in the 16–36°F cold tail, so the model **underestimates absolute summer
-warmth** by several °F and cannot yet represent the **heat wall**. Hence
-`heatModeled = false`, the desert refusal, and the lower *fidelity* (windows run
-broader than tight extension calendars). Both close the same way: **step 2's real
-max-temperature tiles**, then the heat-ceiling factor earns its weight on the
-harness. This is exactly the "start temperature-dominated, validate, learn
-cheaply" path — and the cheap lesson is precise: temperature-from-frost is enough
-to match expert calendars in frost-bounded climates and honestly insufficient in
-frost-free ones.
+**The desert is the real unlock.** The frost-offset engine *refuses* Phoenix
+(no frost anchors). With the real heat wall (July max **107°F**), the suitability
+engine produces the textbook **low-desert two-season calendar** — lettuce/spinach
+through the cool season around winter, tomatoes/beans in spring and fall
+shoulders that dodge peak summer — exactly the U of A az1005 pattern, from one
+general engine with no desert-specific logic. Warm crops are held out of peak
+summer by the heat ceiling; cool crops are held out by it too, in reverse.
+
+**Honest state.** *Fidelity* (every window ±1) is still low (5–13%): the
+continuous-suitability model paints broader windows than tight extension
+calendars — the expected breadth gap, and the next lever (moisture/day-length
+factors + narrower thresholds). The frost-derived `modelSiteClimate` fallback is
+retained for sites without a temperature tile and stays honestly bounded
+(`heatModeled = false`, refuses frost-free). The remaining validation gap is a
+**committed desert fixture** (U of A az1005) to grade the Phoenix calendar the
+way AG-756 grades the temperate one.
 
 ## The through-line
 
