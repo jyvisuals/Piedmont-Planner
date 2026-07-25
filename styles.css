@@ -2167,3 +2167,68 @@ body.panel-open {
     color: #a06420;
     font-weight: 600;
 }
+
+/* ===== "Now" view — what to do this week ===== */
+.now-header { margin-bottom: 14px; }
+.now-subtitle {
+    margin: 2px 0 0;
+    color: #5a5a44;
+    font-size: 0.95rem;
+}
+.now-empty {
+    color: #5a5a44;
+    font-style: italic;
+    padding: 12px 0;
+}
+#nowContent {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+    align-items: start;
+}
+.now-group {
+    border: 1px solid rgba(45, 80, 22, 0.15);
+    border-radius: 10px;
+    background: var(--white, #fff);
+    padding: 12px 14px;
+}
+.now-group-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px;
+    font-size: 1rem;
+    color: var(--primary-green, #2d5016);
+}
+.now-group-count {
+    margin-left: auto;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--secondary-green, #4a7c2f);
+    border-radius: 999px;
+    padding: 1px 8px;
+}
+.now-list { list-style: none; margin: 0; padding: 0; }
+.now-item {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 5px 0;
+    border-top: 1px solid rgba(45, 80, 22, 0.08);
+}
+.now-item:first-child { border-top: none; }
+.now-item-name { font-weight: 500; }
+.now-tag {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    border-radius: 4px;
+    padding: 1px 6px;
+}
+.now-tag-closing { background: #f6d9d0; color: #a03518; }
+.now-tag-new { background: #d9ead0; color: #3f6a26; }
+.now-tag-est { background: #f2e6cf; color: #a06420; }
+.now-item-closing .now-item-name { color: #a03518; }

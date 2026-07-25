@@ -11,6 +11,7 @@
 // scripts/build-app-lib.mjs (CI enforces freshness) — no deploy-time build.
 
 import { resolveAll } from "./lib/engine/resolve.js";
+import { computeNow } from "./lib/engine/now.js";
 import { CROP_CATALOG } from "./lib/crop-catalog.js";
 import {
   buildSiteContext,
@@ -235,6 +236,7 @@ async function applySite(site, gen) {
   const computed = calendars.length - curated;
   const inPackFootprint = curated > 0;
 
+  nowSiteLabel = site.label ?? `${site.lat.toFixed(2)}, ${site.lng.toFixed(2)}`;
   const plants = adaptCalendars(calendars, pack);
   window.__applyPlantData?.(plants, inPackFootprint ? pack.regional?.tasks ?? null : null);
 
@@ -307,6 +309,7 @@ function setSite(site) {
 function resetToDefault() {
   newGeneration(); // invalidate any in-flight site load
   setSite(null);
+  nowSiteLabel = "Carrboro, NC (default)";
   window.__applyPlantData?.(null);
   if (els.summary) els.summary.textContent = "Carrboro, NC (default) — zone 8a";
   if (els.stats) els.stats.hidden = true;
@@ -423,5 +426,96 @@ async function initPanel() {
     resetToDefault();
   }
 }
+
+// ---------------------------------------------------------------------------
+// "Now" view — what to do at this site over the next ~2 weeks. Pure selection
+// lives in the compiled engine (computeNow); this just renders it. Reads the
+// active dataset from script.js and re-renders whenever that changes.
+// ---------------------------------------------------------------------------
+
+let nowSiteLabel = "Carrboro, NC (default)";
+
+function dayOfYearToday() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  return Math.floor((now - start) / 86400000); // 1..365/366
+}
+
+const NOW_CODE_ICON = {
+  si: "🌱", s: "🌰", sg: "🏡", t: "🪴", tg: "🏡", B: "🧅", h: "🧺", "*": "⚠️",
+};
+
+function renderNowView() {
+  const content = document.getElementById("nowContent");
+  const subtitle = document.getElementById("nowSubtitle");
+  if (!content) return;
+  const rows = typeof window.__getNowRows === "function" ? window.__getNowRows() : [];
+  const result = computeNow(rows, dayOfYearToday(), 1);
+
+  if (subtitle) {
+    subtitle.textContent = `${result.slotLabel} · ${nowSiteLabel} · next ~2 weeks`;
+  }
+
+  content.innerHTML = "";
+  if (!result.count) {
+    const empty = document.createElement("p");
+    empty.className = "now-empty";
+    empty.textContent =
+      "Nothing time-sensitive to sow, transplant, or harvest in the next couple of weeks here — a good stretch for soil prep, planning, and tidying.";
+    content.appendChild(empty);
+    return;
+  }
+
+  for (const group of result.groups) {
+    const section = document.createElement("section");
+    section.className = "now-group";
+
+    const h = document.createElement("h3");
+    h.className = "now-group-title";
+    h.textContent = `${NOW_CODE_ICON[group.code] ?? ""} ${group.label}`;
+    const n = document.createElement("span");
+    n.className = "now-group-count";
+    n.textContent = String(group.items.length);
+    h.appendChild(n);
+    section.appendChild(h);
+
+    const ul = document.createElement("ul");
+    ul.className = "now-list";
+    for (const item of group.items) {
+      const li = document.createElement("li");
+      li.className = "now-item";
+      if (item.endingSoon) li.classList.add("now-item-closing");
+
+      const name = document.createElement("span");
+      name.className = "now-item-name";
+      name.textContent = item.name;
+      li.appendChild(name);
+
+      if (item.endingSoon) {
+        const tag = document.createElement("span");
+        tag.className = "now-tag now-tag-closing";
+        tag.textContent = "closing soon";
+        li.appendChild(tag);
+      } else if (item.justOpened) {
+        const tag = document.createElement("span");
+        tag.className = "now-tag now-tag-new";
+        tag.textContent = "just opened";
+        li.appendChild(tag);
+      }
+      if (item.computedEstimate) {
+        const tag = document.createElement("span");
+        tag.className = "now-tag now-tag-est";
+        tag.textContent = "est.";
+        tag.title = "Computed estimate for your location — not hand-reviewed";
+        li.appendChild(tag);
+      }
+      ul.appendChild(li);
+    }
+    section.appendChild(ul);
+    content.appendChild(ul.children.length ? section : document.createComment("empty"));
+  }
+}
+
+window.__renderNowView = renderNowView;
 
 initPanel();

@@ -30,6 +30,8 @@ const elements = {
     // Views
     gridView: document.getElementById('gridView'),
     monthView: document.getElementById('monthView'),
+    nowView: document.getElementById('nowView'),
+    nowViewBtn: document.getElementById('nowViewBtn'),
 
     // Filter controls
     searchInput: document.getElementById('searchInput'),
@@ -49,7 +51,7 @@ const elements = {
     nextMonth: document.getElementById('nextMonth')
 };
 
-const PREFERRED_VIEW_ORDER = ['grid', 'month'];
+const PREFERRED_VIEW_ORDER = ['grid', 'month', 'now'];
 const DEER_FRIENDLY_FLOWERS = new Set([
     'Snapdragons',
     'Lavender',
@@ -75,6 +77,13 @@ if (elements.monthView) {
     viewUI.month = {
         tab: elements.monthViewBtn || null,
         panel: elements.monthView
+    };
+}
+// Now view (rendered by app/main.js via window.__renderNowView)
+if (elements.nowView) {
+    viewUI.now = {
+        tab: elements.nowViewBtn || null,
+        panel: elements.nowView
     };
 }
 
@@ -1290,8 +1299,31 @@ function renderCurrentView() {
         case 'month':
             renderMonthView();
             break;
+        case 'now':
+            renderNowView();
+            break;
     }
 }
+
+// The Now view's selection logic + DOM is owned by app/main.js (it can import
+// the compiled engine). script.js just exposes today's active dataset and asks
+// main.js to render into #nowView.
+function renderNowView() {
+    if (typeof window.__renderNowView === 'function') {
+        window.__renderNowView();
+    }
+}
+
+// Active dataset in the shape the Now selector wants (name + half-month grid).
+window.__getNowRows = function () {
+    return state.filteredPlants.map(plant => ({
+        key: String(plant.id ?? plant.name),
+        name: plant.name,
+        type: plant.type,
+        grid: plant.months,
+        computedEstimate: Boolean(plant.computedEstimate)
+    }));
+};
 
 function switchView(view) {
     if (!viewUI[view]) return;
@@ -1328,8 +1360,11 @@ if (elements.gridViewBtn) {
 if (elements.monthViewBtn) {
     elements.monthViewBtn.addEventListener('click', () => switchView('month'));
 }
+if (elements.nowViewBtn) {
+    elements.nowViewBtn.addEventListener('click', () => switchView('now'));
+}
 
-[elements.gridViewBtn, elements.monthViewBtn]
+[elements.gridViewBtn, elements.monthViewBtn, elements.nowViewBtn]
     .filter(Boolean)
     .forEach(btn => {
         btn.addEventListener('keydown', handleTabKeydown);
