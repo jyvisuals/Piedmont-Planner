@@ -102,6 +102,15 @@ output at those locations against them, the same way we already gate Carrboro.
 That converts "estimate-grade, we hope" into "estimate-grade, measured — off by
 a median of N half-months in these regions."
 
+### A1c. Days-to-maturity validated against an independent source ✅
+The catalog's `daysToMaturity` was *provisional* (parsed from the Carrboro
+legacy free-text). `scripts/validate-dth.mjs` cross-checks it against NMSU
+Circular 457-B (Table 2, New Mexico) — **37/38 crops agree within 15 days**,
+strong independent support. Two items to review (flagged, not auto-changed):
+`eggplant`'s transplant DTH looks ~22 days high, and `potatoes-irish` has no
+numeric DTH (NMSU gives 102 d, which could be adopted). Runs as an
+informational CI step.
+
 ### A2. Regional crop sets
 Every location currently gets **Carrboro's 77 crops**, filtered only by
 frost-free days. That's wrong in both directions: a Florida gardener is missing
