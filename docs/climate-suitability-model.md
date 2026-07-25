@@ -119,19 +119,62 @@ engine across all references *and* produces sane windows for Phoenix.
 ## Migration path (non-destructive)
 
 1. **Enrich the catalog** with stage thresholds (bootstrap from hardiness/offset,
-   then horticultural sources). Additive; nothing breaks.
+   then horticultural sources). Additive; nothing breaks. ✅ **DONE** —
+   `schema/climate/crop-climate.ts` (per-crop germ/base/opt/ceiling °F + frost-
+   killed + warm/cool season, keyed off hardiness with crop-specific overrides;
+   the golden crop-catalog is untouched).
 2. **Ship biweekly climate-distribution tiles** (min/max temp + precip percentiles)
-   via the existing tile ETL.
+   via the existing tile ETL. ⏳ **stubbed** — `schema/engine/climate-model.ts`
+   reconstructs the annual daily-min curve from the **real** multi-threshold NCEI
+   frost crossings we already ship (a sinusoid fit through up to 12 real
+   (day, °F) points). See *Measured* below for what this does and doesn't
+   capture; real tiles replace this module at the clean seam it defines.
 3. **Build the suitability scorer** as a new engine module, temperature-only
-   first, producing the 365-day curve + 24-slot grid.
+   first, producing the 365-day curve + 24-slot grid. ✅ **DONE** —
+   `schema/engine/suitability.ts`: `Suitability(day) = germFit · frostSurvival ·
+   tempFit`, windows = the upper band of the peak, output byte-compatible with
+   the offset engine's `ResolvedWindow`s.
 4. **Validate** against every extension-calendar fixture with the existing
    harness; iterate the thresholds/curves until it matches — *including Phoenix*.
+   ✅ **DONE** — `scripts/validate-suitability.mjs` (CI, informational) grades it
+   against the same references as the offset engine, side by side.
 5. **Swap** the resolver's computed fallback from offset rules → suitability
    engine once it wins on the harness. Curated packs, resolver, honesty markers,
-   grid rendering: all unchanged.
+   grid rendering: all unchanged. ⏳ **next** — gated on step 2 (real heat tiles)
+   so the desert case is handled rather than refused.
 6. **Surface the probability curve** in the UI (risk-tiered windows) — richer than
    the grid, and the model produces it for free.
 7. Retire `computed-rules.ts`.
+
+## Measured (temperature-only first cut)
+
+Graded blind against the same references as the offset engine
+(`node scripts/validate-suitability.mjs`):
+
+| Reference | offset primary | **suitability primary** | offset fidelity | suitability fidelity |
+|---|---|---|---|---|
+| Curated Piedmont pack (Carrboro) | 97% | **100%** (0 misplaced) | 29% | 12% |
+| NC State AG-756 (independent) | 100% | **100%** (0 misplaced) | 23% | 8% |
+
+**Primary timing (right season) matches or beats the offset engine with zero
+misplaced crops** — the headline the "est." labeling actually claims. The
+`overwinter` flag is honored (garlic fall-plants, not spring), and the
+frost-free desert is **refused honestly** (`ClimateModelError`) rather than
+producing nonsense — the same honest boundary the offset engine has, now
+enforced at the climate model.
+
+**What the frost-derived climate captures — and doesn't** (measured, not
+asserted): the fit nails the **cold wall** — RMSE < 1°F through the real frost
+crossings, so frost-survival timing is essentially exact. But every fit point
+sits in the 16–36°F cold tail, so the model **underestimates absolute summer
+warmth** by several °F and cannot yet represent the **heat wall**. Hence
+`heatModeled = false`, the desert refusal, and the lower *fidelity* (windows run
+broader than tight extension calendars). Both close the same way: **step 2's real
+max-temperature tiles**, then the heat-ceiling factor earns its weight on the
+harness. This is exactly the "start temperature-dominated, validate, learn
+cheaply" path — and the cheap lesson is precise: temperature-from-frost is enough
+to match expert calendars in frost-bounded climates and honestly insufficient in
+frost-free ones.
 
 ## The through-line
 
