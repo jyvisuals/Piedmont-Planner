@@ -7,3 +7,6 @@
 # Editor directories
 .vscode/
 .idea/
+
+# Transient agent worktrees (harness-managed)
+.claude/worktrees/
