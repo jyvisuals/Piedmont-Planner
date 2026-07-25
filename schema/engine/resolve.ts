@@ -279,6 +279,18 @@ export const ACTIVITY_CODE: Record<Activity, HalfMonthCode> = {
 
 const CODE_ORDER: readonly HalfMonthCode[] = ["si", "s", "sg", "t", "tg", "B", "h", "*"];
 
+/**
+ * A frost-free season at/above this many days means the frost anchors are
+ * degenerate and the computed frost-relative model no longer applies (low
+ * desert / tropical). Below it, there is a meaningful winter to anchor to.
+ */
+export const FROST_FREE_MAX_DAYS = 350;
+
+/** True when the computed frost-anchored model is meaningful at this site. */
+export function frostRegimeApplies(frostFreeDays: number): boolean {
+  return frostFreeDays < FROST_FREE_MAX_DAYS;
+}
+
 /** A window covers a slot if it overlaps it by at least one day. */
 export function bucketWindows(windows: ResolvedWindow[]): HalfMonthGrid {
   const covered: Array<Set<HalfMonthCode>> = SLOTS.map(() => new Set());
@@ -453,8 +465,19 @@ export function resolveAll(site: SiteContext, input: ResolveInput): ResolvedCrop
     });
   }
 
+  // The computed base layer is a FROST-ANCHORED model. Where there is
+  // effectively no frost season (low desert / tropical — e.g. Phoenix, whose
+  // 32°F/50% freeze dates sit within a few days of each other), the anchors
+  // collapse and the model produces confident nonsense ("plant tomatoes in
+  // January"). Emit NO computed calendars there rather than mislead — a Phoenix
+  // gardener plants by avoiding summer heat, which this model does not capture.
+  // Curated packs, if any, still apply. (Surfaced by the U of A Maricopa
+  // calendar; see docs/improvement-paths.md.)
+  const frostRegimeValid = frostRegimeApplies(site.frostFreeDays);
+
   // Computed base layer: catalog crops the curated layer left unsettled.
   for (const crop of Object.keys(input.catalog)) {
+    if (!frostRegimeValid) break;
     if (settledByCurated.has(crop)) continue;
     const entry = input.catalog[crop];
     if (!entry) continue;

@@ -70,11 +70,23 @@ fix (matches the guide's "plant Oct–Nov"). Not committed as a fixture: it's a
 generic guide (not region-specific) and a commercial-book source, so it was used
 for one-off analysis only, not redistributed.
 
-**Still open:** a genuine, committable, region-specific out-of-region fixture.
-Extension-service calendars were **not fetchable in this build environment
-(403)**; a free public extension vegetable calendar (uploaded as a file, since
-URLs are blocked) would drop straight into `scripts/validation-fixtures/`.
-Fabricating dates is never an option — it would corrupt the validation.
+**Fourth reference surfaced a real bug, now fixed — the desert guard.** The
+U of A Cooperative Extension **Maricopa County (Phoenix)** calendar (az1005)
+exposed that the computed frost-anchored model *breaks* in near-frost-free
+climates: Phoenix's 32°F/50% freeze dates sit ~2 days apart (~363 frost-free
+days), collapsing the anchors so the engine emitted "plant tomatoes/corn/beans
+in January" — confident nonsense the app would have shown (marked "est."). Desert
+gardening is timed around *summer heat*, a regime this model doesn't represent.
+Fix: `frostRegimeApplies()` — the computed layer emits nothing when the
+frost-free season ≥ 350 days, and the app shows an honest "effectively
+frost-free; check your local extension office" message instead of an empty or
+nonsensical grid. This defines the computed layer's domain of validity.
+
+**Still open:** a committable fixture for a **frost-bounded** out-of-region site
+(northern/mountain), which would give a *fair* computed-validation number (the
+desert is out of the frost model's scope by construction). A free public
+extension calendar uploaded as a file drops straight into
+`scripts/validation-fixtures/`. Fabricating dates is never an option.
 
 ### A1b. (original note) Validate against other regions' calendars
 The computed layer is generic offsets (`[-42,-28]` for tender indoor sow, etc.)

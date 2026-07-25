@@ -331,6 +331,20 @@ test("tender direct crops get a summer-long succession sow window (two anchors)"
   assert.ok(cal.grid.aug.half1.includes("s"));
 });
 
+test("no computed calendars in an effectively frost-free climate (desert guard)", () => {
+  // Phoenix-like: 32/50 frost dates a few days apart → ~363 frost-free days.
+  const PHOENIX = {
+    lat: 33.4, lng: -112, zone: "9b", frostFreeDays: 363,
+    frost: { lastFrost: { "32/50": 5 }, firstFrost: { "32/50": 3 }, station: { id: "phx", distanceKm: 0 } },
+    datasetVersions: { ncei: "1991-2020" },
+  };
+  const cals = resolveAll(PHOENIX, { catalog: { "hardy-x": HARDY_DIRECT, "tender-x": TENDER_BOTH }, packs: [] });
+  assert.equal(cals.length, 0, "frost-anchored model must not emit calendars where there is no frost season");
+  // Sanity: a normal season still produces computed calendars.
+  const ok = resolveAll(CARRBORO, { catalog: { "hardy-x": HARDY_DIRECT }, packs: [] });
+  assert.ok(ok.length > 0, "normal frost season still resolves");
+});
+
 test("overwinter crops are fall-planted around firstFrost, not spring (Path A1 garlic fix)", () => {
   const events = computedEvents(OVERWINTER);
   // A single fall planting anchored to firstFrost — no spring sow window.
