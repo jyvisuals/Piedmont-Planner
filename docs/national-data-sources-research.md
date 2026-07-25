@@ -65,7 +65,93 @@ Two things fall out of this:
 
 ---
 
-## 3. US data-source catalog
+## 3. Curated regional overrides — keep hand-tuned data authoritative
+
+The computed calendar from §2 is what gives *breadth* (works anywhere). But it
+can only ever produce **dates** from generic offsets + interpolated frost data.
+It cannot produce **local agronomic judgment** — and that judgment is most of
+what makes the current dataset good:
+
+- "Fall peas unreliable in the Piedmont" — a *reliability* caveat, not a date.
+- "Cherokee Purple prone to cat-facing in humid late-summer Piedmont."
+- Heat-bolting, Southeast disease pressure, which specific varieties hold up,
+  the conservative `*` special-handling flags, the deliberately narrow
+  greenhouse lanes.
+
+No frost/soil/zone API on Earth outputs those. So a **curated-override capacity
+is required regardless of how good the computation gets** — it's the only place
+that knowledge can live. This is the "capacity for specific regions" instinct,
+and it's correct.
+
+### The precedence stack
+
+Resolve each crop's calendar for a location through a priority order:
+
+1. **Curated regional override (highest priority).** Hand-reviewed datasets —
+   like the current Piedmont one — keyed to a region. When a user's location
+   falls inside a curated region, that region's crop rows **win outright** over
+   anything computed.
+2. **Computed base layer.** The §2 frost-relative offset engine + national data
+   (NCEI / USDA / SSURGO). The fallback for every location nobody has curated.
+
+Resolution is per-field, roughly:
+`row = override[region]?.[crop] ?? computed(crop, location)`.
+
+### The key realization: `data.js` **already is** the Piedmont override
+
+The existing dataset is not "the app's data" — under this model it becomes
+**one curated regional pack**: a fully hand-reviewed override for the Piedmont,
+complete with `PLANT_REVIEW_CONFIDENCE_SCORES`, `PLANT_REVIEW_NOTES`, and
+`REVIEW_SOURCE_LIBRARY`. Nothing about it is thrown away. The migration is:
+
+1. Keep today's `data.js` verbatim as the **Piedmont pack**.
+2. Build the computed base engine *alongside* it.
+3. Add a **resolver** that picks override-vs-computed by location.
+
+Carrboro users see byte-for-byte what they see today; everyone else gets the
+computed calendar until someone contributes a pack for their region.
+
+The **confidence score is the natural override signal.** A curated row scores
+high *because a human validated it against local sources*; a computed row is
+inherently lower-confidence (generic offset + interpolated frost date). "Trust
+the reviewed local data over the generic computation" is something the existing
+scoring system already expresses — the override just formalizes it.
+
+### Partial overrides (don't force all-or-nothing)
+
+A region shouldn't have to redefine everything to fix one crop. Support
+**field-level merge**: a pack can override just tomatoes and peas and let the
+rest compute, or override only the prose notes while accepting computed dates.
+That keeps the barrier to contributing a new region low — you fix what you know.
+
+### How to define a region (what a pack is keyed to)
+
+Rough order of precision:
+
+- **Hardiness zone alone — insufficient.** "8a" spans the NC Piedmont *and*
+  coastal Oregon. The app's own `compare-ncsu.mjs` header notes Carrboro sits on
+  the **7b/8a line**, so zone is too coarse to key agronomy.
+- **State / county** — administrative, easy, and it matches how Extension
+  services already draw lines (NC State's calendar is literally "Central NC").
+- **NCEI station cluster / bounding box** — matches the frost-data granularity.
+- **EPA Level III/IV Ecoregion** — the technically correct unit. "The Piedmont"
+  *is* an ecoregion spanning NC/VA/SC/GA, which is exactly why the current data
+  already generalizes somewhat beyond Carrboro. Recommended long-term key.
+
+Practical recommendation: define a pack by an explicit polygon/bbox (or county
+list) tagged with the zone(s) it covers, and treat the Piedmont ecoregion as the
+reference pack's footprint.
+
+### Bonus: this is also the contribution model
+
+The repo already invites PRs to fix planting data. Under this model a
+contribution is a **regional override pack** (data + sources + confidence), and
+the `compare-ncsu.mjs` cross-check pattern generalizes into the **review gate**
+for each pack. The Piedmont pack is the worked reference example.
+
+---
+
+## 4. US data-source catalog
 
 Ordered by how much accuracy they buy. Every source below is free and public
 (government/open) unless noted.
@@ -166,7 +252,7 @@ Ordered by how much accuracy they buy. Every source below is free and public
 
 ---
 
-## 4. How each source maps to a concrete accuracy win
+## 5. How each source maps to a concrete accuracy win
 
 | Existing hardcoded assumption | Source that generalizes it |
 |---|---|
@@ -181,17 +267,19 @@ Ordered by how much accuracy they buy. Every source below is free and public
 
 ---
 
-## 5. Suggested phasing & effort
+## 6. Suggested phasing & effort
 
 **Phase 0 — "Your site" panel (low effort, high perceived value, de-risks plumbing).**
 Add ZIP/geolocation input. Fetch & display frost dates (NCEI), hardiness zone
 (PRISM/phzmapi), and soil summary (SSURGO). *Don't change the calendar yet.*
 Ships value immediately and proves the data pipes before touching the crop model.
 
-**Phase 1 — Re-anchor the calendar (the big one).**
-Add anchor-relative offset rules to every crop in `data.js`; compute absolute
-half-months per location. Validate that Carrboro output is unchanged (regression
-gate — reuse the `compare-ncsu.mjs` pattern). Add the crop-applicability filter.
+**Phase 1 — Re-anchor the calendar + stand up the override resolver (the big one).**
+Add anchor-relative offset rules to build the computed base layer, and add the
+**resolver** (§3) that prefers a curated regional pack over the computed calendar.
+Re-cast today's `data.js` as the **Piedmont pack** — unchanged — so Carrboro
+output is byte-for-byte identical (regression gate — reuse the `compare-ncsu.mjs`
+pattern). Add the crop-applicability filter for computed regions.
 
 **Phase 2 — Live overlays.**
 NWS frost/freeze alerts and Open-Meteo soil-temp readiness surfaced on the chore
@@ -214,7 +302,7 @@ The app is a pure static PWA today, and most of this can **stay** static:
 
 ---
 
-## 6. Key risks & caveats
+## 7. Key risks & caveats
 
 - **Nearest-station error.** Frost normals are point/station data; interpolating
   to an arbitrary lat/long (especially in mountains or near coasts) introduces
@@ -234,7 +322,7 @@ The app is a pure static PWA today, and most of this can **stay** static:
 
 ---
 
-## 7. Bottom line
+## 8. Bottom line
 
 The heavy lift is **§2 — remodeling crop timing as frost-relative offsets** and
 adding a **crop-applicability filter**. Once that's in place, four public, free,
