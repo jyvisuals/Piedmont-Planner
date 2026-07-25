@@ -25,6 +25,9 @@ jobs:
       - name: Cross-check planting windows against NC State (informational)
         run: node scripts/compare-ncsu.mjs
 
+      - name: Validate computed engine vs curated truth (informational)
+        run: node scripts/validate-computed.mjs
+
       - name: Typecheck schema contracts
         run: npx --yes -p typescript@6 tsc --noEmit -p schema/tsconfig.json
 

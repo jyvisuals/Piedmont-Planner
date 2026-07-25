@@ -27,7 +27,31 @@ highest-value improvements are the ones that close that gap — not new features
 
 ## Path A — Correctness & trust (most important, least glamorous)
 
-### A1. Validate the computed engine against other regions' calendars
+### A1. Validate the computed engine against ground truth ✅ HARNESS DONE
+
+**Built:** `scripts/validate-computed.mjs` runs the computed engine *blind* (frost
+dates + generic rules only, never the curated data) at Carrboro's real NCEI frost
+dates and measures divergence from the curated Piedmont pack. Runs as an
+informational CI step; `scripts/validation-fixtures/` documents how to extend it
+to other regions by transcribing their extension calendars.
+
+**Measured (Piedmont, 58 crops):**
+- **Primary timing (right season): 95%** (55/58). The computed layer is a rough
+  but *seasonally correct* sketch — which is exactly what the "est." labeling
+  claims. Reassuring, and honest.
+- **3 real bugs (misplaced — wrong season entirely):** `garlic`, `parsnips`,
+  `chamomile` — overwintered / cool-season crops the generic rule spring-plants.
+  Fixing needs a catalog "overwinter / fall-sown" signal so the rules stop
+  treating them as ordinary spring crops. **This is the concrete next fix.**
+- **Full fidelity 10%**, but that gap is overwhelmingly the curated pack's
+  *succession runs* (beans/squash/cucumbers sown continuously all summer) that
+  the conservative single-window rule omits — a coverage enhancement, not a
+  timing error.
+
+**Still open:** extend to non-Piedmont regions (the computed layer's real risk is
+elsewhere); the harness is ready, it needs transcribed reference fixtures.
+
+### A1b. (original note) Validate against other regions' calendars
 The computed layer is generic offsets (`[-42,-28]` for tender indoor sow, etc.)
 built from **one region's crop assumptions**, and the crop catalog's `hardiness`
 and `daysToMaturity` are explicitly *"provisional textbook classification,
