@@ -3,7 +3,7 @@
 // etc.) as they are requested, so the calendar works without a connection.
 //
 // Bump CACHE_VERSION whenever the shell changes to retire stale caches.
-const CACHE_VERSION = 'piedmont-planner-v3';
+const CACHE_VERSION = 'piedmont-planner-v5';
 
 const CORE_ASSETS = [
   './',
@@ -17,11 +17,16 @@ const CORE_ASSETS = [
   'app/lib/validate-pack.js',
   'app/lib/engine/resolve.js',
   'app/lib/engine/computed-rules.js',
+  'app/lib/engine/climate-model.js',
+  'app/lib/engine/suitability.js',
+  'app/lib/engine/now.js',
+  'app/lib/climate/crop-climate.js',
   'app/lib/providers/static.js',
   'app/lib/packs/piedmont-nc.js',
   'app/data/piedmont-pack.json',
   'app/data/frost-stations.json',
   'app/data/zone-points.json',
+  'app/data/temp-normals.json',
   'manifest.webmanifest',
   'favicon.svg',
   'icons/favicon-32.png',

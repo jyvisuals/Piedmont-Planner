@@ -45,7 +45,7 @@ fs.writeFileSync(
 );
 
 // 3. Copy the provider seed tables next to it.
-for (const name of ["frost-stations.json", "zone-points.json"]) {
+for (const name of ["frost-stations.json", "zone-points.json", "temp-normals.json"]) {
   fs.copyFileSync(
     path.join(rootDir, "schema", "providers", "data", name),
     path.join(dataDir, name)
@@ -60,4 +60,4 @@ const emitted = [];
     else emitted.push(path.relative(rootDir, p));
   }
 })(libDir);
-console.log(`build-app-lib: ${emitted.length} modules in app/lib, 3 files in app/data`);
+console.log(`build-app-lib: ${emitted.length} modules in app/lib, 4 files in app/data`);

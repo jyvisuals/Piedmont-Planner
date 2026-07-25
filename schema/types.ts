@@ -72,6 +72,13 @@ export interface AnchoredEvent {
   activity: Exclude<Activity, "harvest">;
   anchor: AnchorRef;
   offsetDays: OffsetDays;
+  /**
+   * Optional second anchor for the window's END. When present, the window spans
+   * from `anchor + offsetDays[0]` to `endAnchor + offsetDays[1]` — e.g. a
+   * succession sow that runs from after last frost until the last date a crop
+   * can still mature before first frost. When absent, both edges use `anchor`.
+   */
+  endAnchor?: AnchorRef;
   /** Optional readiness gate that must ALSO hold, e.g. soil ≥ 60°F @ 4″. */
   gate?: AnchorRef;
   /** The app's `*`: heat-managed germination, overwinter intent, etc. */
@@ -164,6 +171,12 @@ export interface CropCatalogEntry {
   daysToMaturity: DaysToMaturity;
   /** Minimum frost-free days to finish; powers the crop-applicability filter. */
   minFrostFreeDays?: number;
+  /**
+   * True for crops planted in fall and overwintered for harvest the following
+   * season (garlic, hardneck alliums). Without this, the generic rules would
+   * spring-plant them — the computed layer's clearest class of error (Path A1).
+   */
+  overwinter?: boolean;
 }
 
 export type CropCatalog = Record<CropSlug, CropCatalogEntry>;
@@ -372,6 +385,14 @@ export interface ResolvedCropCalendar {
   /** "curated" when a pack supplied timing; "computed" otherwise (D8 — never blurred). */
   origin: "curated" | "computed";
   provenance?: Provenance;
+  /**
+   * Suitability-engine outputs (computed rows from the climate-suitability
+   * engine only): the dominant window's success probability and the factor that
+   * most limits it ("soil-temp" | "frost" | "heat" | "cold-growth" |
+   * "night-heat"). Absent for curated rows and for the frost-offset fallback.
+   */
+  confidence?: number;
+  limiting?: string;
 }
 
 export interface ResolveInput {

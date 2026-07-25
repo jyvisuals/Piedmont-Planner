@@ -1,0 +1,433 @@
+{
+  "region": "North Carolina Piedmont / Central NC",
+  "source": {
+    "title": "NC State Extension — Central North Carolina Planting Calendar (AG-756)",
+    "url": "https://content.ces.ncsu.edu/central-north-carolina-planting-calendar-for-annual-vegetables-fruits-and-herbs",
+    "transcribedBy": "in-repo scripts/ncsu-planting-dates.json (pre-existing)",
+    "note": "Same region as the curated pack but an INDEPENDENT reference — the curated pack deliberately diverges from AG-756. Outdoor planting windows (S/T/B/Tu/C) only. Not a second geographic region."
+  },
+  "site": {
+    "lat": 35.9086,
+    "lng": -79.0794,
+    "lastFrost": {
+      "32/50": 90
+    },
+    "firstFrost": {
+      "32/50": 307
+    }
+  },
+  "crops": {
+    "arugula": [
+      "feb h1",
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "aug h1",
+      "aug h2",
+      "sep h1",
+      "sep h2"
+    ],
+    "asparagus": [
+      "feb h2",
+      "mar h1",
+      "mar h2"
+    ],
+    "beets": [
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "jul h2",
+      "aug h1",
+      "aug h2",
+      "sep h1"
+    ],
+    "beans-snap-bush": [
+      "mar h2",
+      "apr h1",
+      "apr h2",
+      "may h1",
+      "may h2",
+      "jun h1",
+      "jun h2",
+      "jul h1",
+      "jul h2",
+      "aug h1",
+      "aug h2",
+      "sep h1",
+      "sep h2"
+    ],
+    "beans-snap-pole": [
+      "apr h1",
+      "apr h2",
+      "may h1",
+      "may h2",
+      "jun h1",
+      "jun h2",
+      "jul h1",
+      "jul h2",
+      "aug h1",
+      "aug h2",
+      "sep h1",
+      "sep h2"
+    ],
+    "lima-bean-bush": [
+      "apr h2",
+      "may h1",
+      "may h2",
+      "jun h1",
+      "jun h2",
+      "jul h1",
+      "jul h2"
+    ],
+    "lima-bean-pole": [
+      "apr h2",
+      "may h1",
+      "may h2",
+      "jun h1",
+      "jul h2"
+    ],
+    "bok-choy": [
+      "mar h2",
+      "aug h2",
+      "sep h1",
+      "sep h2"
+    ],
+    "broccoli": [
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "aug h1",
+      "aug h2",
+      "sep h1"
+    ],
+    "brussels-sprouts": [
+      "jul h1",
+      "jul h2",
+      "aug h1",
+      "aug h2"
+    ],
+    "cabbage": [
+      "feb h1",
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "jul h2",
+      "aug h1",
+      "aug h2",
+      "sep h1"
+    ],
+    "cabbage-chinese": [
+      "aug h1",
+      "aug h2",
+      "sep h2",
+      "oct h1"
+    ],
+    "carrots": [
+      "feb h1",
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "jun h2",
+      "jul h1",
+      "jul h2",
+      "aug h1",
+      "aug h2",
+      "sep h1"
+    ],
+    "celery": [
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "jun h2",
+      "jul h1",
+      "jul h2",
+      "aug h1"
+    ],
+    "cilantro": [
+      "feb h1",
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "sep h2"
+    ],
+    "collard-greens": [
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "apr h2",
+      "may h1",
+      "may h2",
+      "jun h1",
+      "jun h2"
+    ],
+    "corn-sweet": [
+      "mar h2",
+      "apr h1",
+      "apr h2",
+      "may h1",
+      "may h2"
+    ],
+    "dill": [
+      "mar h2",
+      "aug h1",
+      "aug h2",
+      "sep h1"
+    ],
+    "eggplant": [
+      "apr h2",
+      "may h1",
+      "may h2",
+      "jun h1",
+      "aug h1",
+      "aug h2"
+    ],
+    "fennel": [
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "apr h2",
+      "jul h1",
+      "jul h2",
+      "aug h1",
+      "aug h2"
+    ],
+    "garlic": [
+      "sep h2",
+      "oct h1",
+      "oct h2",
+      "nov h1",
+      "nov h2"
+    ],
+    "lettuce-head": [
+      "feb h1",
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "apr h2",
+      "aug h2",
+      "sep h1",
+      "sep h2",
+      "oct h1"
+    ],
+    "mustard": [
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "apr h2",
+      "may h1",
+      "may h2",
+      "jun h1",
+      "jun h2",
+      "aug h1",
+      "aug h2",
+      "sep h1",
+      "sep h2"
+    ],
+    "okra": [
+      "aug h1",
+      "aug h2"
+    ],
+    "onions-bulb": [
+      "jan h1",
+      "jan h2",
+      "feb h1",
+      "feb h2",
+      "aug h1",
+      "aug h2",
+      "sep h1",
+      "sep h2",
+      "oct h1",
+      "oct h2",
+      "nov h1",
+      "nov h2",
+      "dec h1",
+      "dec h2"
+    ],
+    "onions-green": [
+      "feb h1",
+      "feb h2",
+      "aug h2"
+    ],
+    "parsnips": [
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "apr h2",
+      "may h1",
+      "aug h1",
+      "aug h2",
+      "sep h1",
+      "sep h2"
+    ],
+    "peas-field": [
+      "mar h2",
+      "apr h1",
+      "apr h2",
+      "may h1",
+      "may h2",
+      "jun h1",
+      "jun h2",
+      "aug h1",
+      "aug h2"
+    ],
+    "peas-bush": [
+      "jan h1",
+      "jan h2",
+      "feb h1",
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "aug h1",
+      "aug h2",
+      "sep h1",
+      "sep h2"
+    ],
+    "peas-vining": [
+      "jan h1",
+      "jan h2",
+      "feb h1",
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "aug h1",
+      "aug h2",
+      "sep h1",
+      "sep h2"
+    ],
+    "snap-pea-bush": [
+      "jan h1",
+      "jan h2",
+      "feb h1",
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "aug h1",
+      "aug h2",
+      "sep h1",
+      "sep h2"
+    ],
+    "snap-pea-pole": [
+      "jan h1",
+      "jan h2",
+      "feb h1",
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "aug h1",
+      "aug h2",
+      "sep h1",
+      "sep h2"
+    ],
+    "peppers": [
+      "apr h2",
+      "may h1",
+      "may h2",
+      "jun h1",
+      "aug h1"
+    ],
+    "potatoes-irish": [
+      "feb h2",
+      "mar h1",
+      "mar h2"
+    ],
+    "potatoes-sweet": [
+      "may h1",
+      "may h2",
+      "jun h1",
+      "jun h2",
+      "jul h1"
+    ],
+    "pumpkin": [
+      "apr h2",
+      "may h1",
+      "may h2",
+      "jun h1",
+      "jun h2",
+      "jul h1"
+    ],
+    "radishes": [
+      "feb h1",
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "apr h2",
+      "may h1",
+      "may h2",
+      "jun h1",
+      "jun h2",
+      "aug h1",
+      "aug h2",
+      "sep h1"
+    ],
+    "rutabaga": [
+      "feb h1",
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "jul h1",
+      "jul h2",
+      "aug h1",
+      "aug h2",
+      "sep h1",
+      "sep h2"
+    ],
+    "spinach": [
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "apr h2",
+      "may h1",
+      "may h2",
+      "jun h1",
+      "jun h2",
+      "aug h1",
+      "aug h2",
+      "sep h1",
+      "sep h2",
+      "oct h1"
+    ],
+    "sunflower": [
+      "mar h2",
+      "apr h1",
+      "apr h2",
+      "may h1"
+    ],
+    "tomatoes": [
+      "apr h2",
+      "may h1",
+      "may h2",
+      "jun h1",
+      "jun h2",
+      "jul h1",
+      "aug h1"
+    ],
+    "turnips": [
+      "feb h1",
+      "feb h2",
+      "mar h1",
+      "mar h2",
+      "apr h1",
+      "apr h2",
+      "may h1",
+      "may h2",
+      "jun h1",
+      "jun h2",
+      "aug h1",
+      "aug h2",
+      "sep h1"
+    ]
+  }
+}

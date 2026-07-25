@@ -12,6 +12,7 @@
 //   testing containment against one throws rather than silently never matching.
 import { DEFAULT_FROST_REF } from "../types.js";
 import { computedEvents } from "./computed-rules.js";
+import { suitabilityFor } from "./suitability.js";
 // ---------------------------------------------------------------------------
 // Calendar geometry (non-leap 365-day year; leap day is noise at this scale)
 // ---------------------------------------------------------------------------
@@ -152,10 +153,22 @@ export function resolveAnchoredEvents(events, site, catalogEntry) {
             continue;
         const e = ev;
         const [lo, hi] = e.offsetDays;
-        if (lo > hi)
-            throw new Error(`event ${e.id}: offsetDays [${lo}, ${hi}] inverted`);
-        const base = anchorDay(site, e.anchor);
-        const span = { start: base + lo, end: base + hi };
+        const startBase = anchorDay(site, e.anchor);
+        let span;
+        if (e.endAnchor) {
+            // Two-anchor window (e.g. succession run): each edge on its own anchor.
+            // lo>hi is fine here since the offsets are relative to different anchors;
+            // a resolved end before start just means the crop barely fits one
+            // planting at this site — clamp to a point window rather than error.
+            const endBase = anchorDay(site, e.endAnchor);
+            const start = startBase + lo;
+            span = { start, end: Math.max(start, endBase + hi) };
+        }
+        else {
+            if (lo > hi)
+                throw new Error(`event ${e.id}: offsetDays [${lo}, ${hi}] inverted`);
+            span = { start: startBase + lo, end: startBase + hi };
+        }
         planted.set(e.id, span);
         windows.push({
             activity: e.activity,
@@ -201,6 +214,16 @@ export const ACTIVITY_CODE = {
     harvest: "h",
 };
 const CODE_ORDER = ["si", "s", "sg", "t", "tg", "B", "h", "*"];
+/**
+ * A frost-free season at/above this many days means the frost anchors are
+ * degenerate and the computed frost-relative model no longer applies (low
+ * desert / tropical). Below it, there is a meaningful winter to anchor to.
+ */
+export const FROST_FREE_MAX_DAYS = 350;
+/** True when the computed frost-anchored model is meaningful at this site. */
+export function frostRegimeApplies(frostFreeDays) {
+    return frostFreeDays < FROST_FREE_MAX_DAYS;
+}
 /** A window covers a slot if it overlaps it by at least one day. */
 export function bucketWindows(windows) {
     const covered = SLOTS.map(() => new Set());
@@ -311,7 +334,7 @@ export function byPrecedence(a, b) {
  *   - the crop-applicability filter skips entries whose `minFrostFreeDays`
  *     exceeds the site's frost-free season.
  */
-export function resolveAll(site, input) {
+export function resolveAll(site, input, climate) {
     const applicable = input.packs
         .filter((p) => footprintContains(p.footprint, site.lat, site.lng))
         .sort(byPrecedence);
@@ -359,13 +382,49 @@ export function resolveAll(site, input) {
             provenance: timingRow.provenance,
         });
     }
-    // Computed base layer: catalog crops the curated layer left unsettled.
+    // The computed base layer. Two engines, chosen by whether a real climate
+    // distribution is available for this site:
+    //
+    //  - WITH `climate` (real NCEI temperature normals): the climate-SUITABILITY
+    //    engine (suitability.ts). It models the heat wall, so it works in frost-
+    //    free deserts/tropics — no refusal — and every window carries a confidence
+    //    and a limiting reason code.
+    //  - WITHOUT `climate`: the FROST-ANCHORED offset engine (computed-rules.ts).
+    //    It collapses in near-frost-free climates (Phoenix's freeze dates sit days
+    //    apart → "plant tomatoes in January"), so it emits nothing there rather
+    //    than mislead. This is the honest fallback until temperature tiles cover a
+    //    site (docs/climate-suitability-model.md).
+    //
+    // Either way, curated packs above still win; computed carries no provenance
+    // (D8 — computed is never dressed as curated).
+    const frostRegimeValid = frostRegimeApplies(site.frostFreeDays);
     for (const crop of Object.keys(input.catalog)) {
         if (settledByCurated.has(crop))
             continue;
         const entry = input.catalog[crop];
         if (!entry)
             continue;
+        if (climate) {
+            const res = suitabilityFor(entry, climate);
+            if (!res || !res.windows.length)
+                continue;
+            // Dominant window = highest confidence; its reason code labels the crop.
+            let best = res.windows[0];
+            for (const w of res.windows)
+                if (w.confidence > best.confidence)
+                    best = w;
+            out.push({
+                crop,
+                grid: bucketWindows(res.windows),
+                windows: res.windows,
+                origin: "computed",
+                confidence: best.confidence,
+                limiting: best.limiting,
+            });
+            continue;
+        }
+        if (!frostRegimeValid)
+            continue; // offset engine can't do frost-free
         // Crop-applicability filter: the season must be long enough to finish.
         if (entry.minFrostFreeDays !== undefined && entry.minFrostFreeDays > site.frostFreeDays) {
             continue;
@@ -374,13 +433,7 @@ export function resolveAll(site, input) {
         if (!events)
             continue; // perennial / no usable DTH — no honest estimate
         const windows = resolveAnchoredEvents(events, site, entry);
-        out.push({
-            crop,
-            grid: bucketWindows(windows),
-            windows,
-            origin: "computed",
-            // No provenance on purpose (D8) — computed is never dressed as curated.
-        });
+        out.push({ crop, grid: bucketWindows(windows), windows, origin: "computed" });
     }
     return out;
 }

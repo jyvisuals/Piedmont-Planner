@@ -88,6 +88,15 @@ const NO_DTH = {
   daysToMaturity: { note: "overwinters; no usable range" },
 };
 
+const OVERWINTER = {
+  slug: "overwinter-x", // garlic-like: fall-planted, overwintered
+  displayName: "Overwinter Fixture",
+  category: "vegetable",
+  hardiness: "very-hardy",
+  overwinter: true,
+  daysToMaturity: { direct: [180, 210] },
+};
+
 const SHARED_CATALOG = {
   "tender-x": TENDER_BOTH,
   "half-hardy-x": HALF_HARDY_BOTH,
@@ -108,7 +117,11 @@ test("tender with both DTH: indoor+transplant run AND warm direct run", () => {
   const events = computedEvents(TENDER_BOTH);
   assert.deepEqual(findEvent(events, "computed-si-spring").offsetDays, [-42, -28]);
   assert.deepEqual(findEvent(events, "computed-t-spring").offsetDays, [7, 21]);
-  assert.deepEqual(findEvent(events, "computed-s-spring").offsetDays, [7, 28]);
+  // Direct run is now a two-anchor succession window: lastFrost+7 → firstFrost−maxDTH.
+  const sDirect = findEvent(events, "computed-s-spring");
+  assert.deepEqual(sDirect.offsetDays, [7, -130]); // -maxDTH (direct [120,130])
+  assert.equal(sDirect.anchor.kind, "lastFrost");
+  assert.equal(sDirect.endAnchor.kind, "firstFrost");
   const ht = findEvent(events, "computed-h-spring-transplant");
   assert.equal(ht.method, "transplant");
   assert.equal(ht.fromEventId, "computed-t-spring");
@@ -299,4 +312,46 @@ test("fall sow windows sit earlier where firstFrost is earlier (Vermont < Carrbo
   assert.deepEqual([fallOf(vt).start, fallOf(vt).end], [200, 224]);
   assert.ok(fallOf(vt).start < fallOf(nc).start, "earlier firstFrost → earlier fall window");
   assert.ok(fallOf(vt).end < fallOf(nc).end);
+});
+
+test("tender direct crops get a summer-long succession sow window (two anchors)", () => {
+  // Bean-like: tender, short direct DTH → sow from lastFrost+7 to firstFrost−maxDTH.
+  const BEAN = {
+    slug: "bean-x", displayName: "Bean", category: "vegetable",
+    hardiness: "tender", daysToMaturity: { direct: [50, 55] },
+  };
+  const [cal] = resolveAll(CARRBORO, { catalog: { "bean-x": BEAN }, packs: [] });
+  const sow = cal.windows.find((w) => w.activity === "sowOutdoors");
+  // Carrboro fixture: lastFrost 105, firstFrost 301 → [112, 246] (Apr → early Sep).
+  assert.equal(sow.start, 112);
+  assert.equal(sow.end, 246, "sow runs until the last planting that matures before frost");
+  assert.ok(sow.end - sow.start > 120, "a genuine summer-long run, not a single window");
+  // Grid should show sow across spring AND summer.
+  assert.ok(cal.grid.may.half1.includes("s"));
+  assert.ok(cal.grid.aug.half1.includes("s"));
+});
+
+test("no computed calendars in an effectively frost-free climate (desert guard)", () => {
+  // Phoenix-like: 32/50 frost dates a few days apart → ~363 frost-free days.
+  const PHOENIX = {
+    lat: 33.4, lng: -112, zone: "9b", frostFreeDays: 363,
+    frost: { lastFrost: { "32/50": 5 }, firstFrost: { "32/50": 3 }, station: { id: "phx", distanceKm: 0 } },
+    datasetVersions: { ncei: "1991-2020" },
+  };
+  const cals = resolveAll(PHOENIX, { catalog: { "hardy-x": HARDY_DIRECT, "tender-x": TENDER_BOTH }, packs: [] });
+  assert.equal(cals.length, 0, "frost-anchored model must not emit calendars where there is no frost season");
+  // Sanity: a normal season still produces computed calendars.
+  const ok = resolveAll(CARRBORO, { catalog: { "hardy-x": HARDY_DIRECT }, packs: [] });
+  assert.ok(ok.length > 0, "normal frost season still resolves");
+});
+
+test("overwinter crops are fall-planted around firstFrost, not spring (Path A1 garlic fix)", () => {
+  const events = computedEvents(OVERWINTER);
+  // A single fall planting anchored to firstFrost — no spring sow window.
+  const set = findEvent(events, "computed-overwinter-set");
+  assert.equal(set.activity, "plantSet");
+  assert.equal(set.anchor.kind, "firstFrost");
+  assert.deepEqual(set.offsetDays, [-45, 14]);
+  assert.ok(!events.some((e) => e.id.includes("spring")), "no spring window for an overwinter crop");
+  assert.equal(findEvent(events, "computed-h-overwinter").method, "direct");
 });

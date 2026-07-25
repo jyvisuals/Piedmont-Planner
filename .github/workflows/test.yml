@@ -25,6 +25,15 @@ jobs:
       - name: Cross-check planting windows against NC State (informational)
         run: node scripts/compare-ncsu.mjs
 
+      - name: Validate computed engine vs curated truth (informational)
+        run: node scripts/validate-computed.mjs
+
+      - name: Validate climate-suitability engine vs curated truth (informational)
+        run: node scripts/validate-suitability.mjs
+
+      - name: Cross-check days-to-maturity vs NMSU (informational)
+        run: node scripts/validate-dth.mjs
+
       - name: Typecheck schema contracts
         run: npx --yes -p typescript@6 tsc --noEmit -p schema/tsconfig.json
 
@@ -41,3 +50,29 @@ jobs:
 
       - name: Verify national frost tiles (offline)
         run: node scripts/etl/verify-frost-tiles.mjs
+
+      - name: Verify temperature normals seed (offline)
+        run: node scripts/etl/verify-temp-normals.mjs
+
+      - name: Verify national temperature tiles (offline)
+        run: node scripts/etl/verify-temp-tiles.mjs
+
+  ui-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install UI test harness + Chromium
+        working-directory: tests/ui
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+
+      - name: UI smoke test (headless Chromium)
+        run: node tests/ui/smoke.mjs

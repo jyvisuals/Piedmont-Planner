@@ -93,6 +93,32 @@ function springDirectRun(events, sowOffset) {
     });
 }
 /**
+ * Succession run for warm-season direct-sown crops: sow continuously from just
+ * after last frost until the last date a planting can still mature before first
+ * frost (`firstFrost − maxDTH`). This is the single biggest fidelity gap the
+ * validation harness found — curated packs sow beans/squash/cucumbers across
+ * the whole summer while a single-window rule showed one date. The window is a
+ * two-anchor span (lastFrost start, firstFrost end), so it self-adjusts by
+ * season length and DTH: short-DTH crops get a long run, long-DTH crops (winter
+ * squash) get a correctly shorter one. Cool crops are NOT given this (they bolt
+ * in summer heat) — they keep the spring + fall two-window pattern.
+ */
+function successionDirectRun(events, direct) {
+    const [, maxDth] = direct;
+    events.push({
+        id: "computed-s-spring",
+        activity: "sowOutdoors",
+        anchor: { kind: "lastFrost" },
+        offsetDays: [7, -maxDth], // start: lastFrost+7 ; end: firstFrost−maxDth
+        endAnchor: { kind: "firstFrost" },
+    }, {
+        id: "computed-h-spring-direct",
+        activity: "harvest",
+        fromEventId: "computed-s-spring",
+        method: "direct",
+    });
+}
+/**
  * Backward-counted fall run, sized by the DTH range. For frost-intolerant
  * (half-hardy) crops the late edge reserves maxDTH so the slowest maturity
  * still lands by frost; frost-tolerant crops keep the -minDTH late edge and
@@ -126,12 +152,27 @@ export function computedEvents(entry) {
     if (!direct && !transplant)
         return null;
     const events = [];
+    // Overwintered crops (garlic): planted in fall around first frost, harvested
+    // the following season. Handled first because the hardiness-based spring
+    // rules below would otherwise plant them in spring — the misplacement Path A1
+    // surfaced. The cross-year harvest is fine on the season-day axis.
+    if (entry.overwinter) {
+        events.push({
+            id: "computed-overwinter-set",
+            activity: "plantSet",
+            anchor: { kind: "firstFrost" },
+            offsetDays: [-45, 14], // ~6 weeks before to ~2 weeks after first frost
+        });
+        const method = direct ? "direct" : "transplant";
+        events.push({ id: "computed-h-overwinter", activity: "harvest", fromEventId: "computed-overwinter-set", method });
+        return events;
+    }
     switch (entry.hardiness) {
         case "tender":
             if (transplant)
                 springTransplantRun(events, [-42, -28], [7, 21]);
             if (direct)
-                springDirectRun(events, [7, 28]);
+                successionDirectRun(events, direct); // warm-season: sow all summer
             break;
         case "half-hardy":
             if (transplant)
