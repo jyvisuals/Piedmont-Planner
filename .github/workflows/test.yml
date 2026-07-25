@@ -41,3 +41,23 @@ jobs:
 
       - name: Verify national frost tiles (offline)
         run: node scripts/etl/verify-frost-tiles.mjs
+
+  ui-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install UI test harness + Chromium
+        working-directory: tests/ui
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+
+      - name: UI smoke test (headless Chromium)
+        run: node tests/ui/smoke.mjs

@@ -64,7 +64,7 @@ Today a row is binary: curated or "est." A computed estimate gives no sense of
 
 ## Path B — Engineering resilience
 
-### B1. The UI has no automated test coverage — add a CI browser smoke test
+### B1. The UI has no automated test coverage — add a CI browser smoke test ✅ DONE
 The golden gate protects the *data*, and 91 node:tests protect the *engine*. But
 every UI regression this session (the missing tab handler, the missing
 `PREFERRED_VIEW_ORDER` entry) was caught by hand-run Playwright, not CI — and the
@@ -73,6 +73,12 @@ headless-Chromium smoke test (default renders 77 rows; a computed site marks
 "est."; the Now view populates; view-switching works) and run it in
 `test.yml`. This is the single biggest durability gap given how much UI now
 exists.
+
+**Done:** `tests/ui/smoke.mjs` — a self-contained headless-Chromium test (its
+own static server, plain assertions, isolated Playwright dep so the site stays
+dependency-free) covering default render, all three view switches, the site
+panel + ZIP entry, curated-vs-computed markers, reset, and a zero-console-error
+gate. Runs as the `ui-smoke` CI job. Verified to fail the build on regression.
 
 ### B2. Surface data provenance in-app
 The data indexes record source URLs, md5s, and fetch dates (good), but none of

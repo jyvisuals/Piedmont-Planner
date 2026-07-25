@@ -1,0 +1,14 @@
+{
+  "name": "piedmont-planner-ui-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Isolated headless-browser smoke test. Keeps the site itself dependency-free; only this harness pulls in Playwright.",
+  "scripts": {
+    "test": "node smoke.mjs",
+    "install-browser": "playwright install --with-deps chromium"
+  },
+  "devDependencies": {
+    "playwright": "1.62.0"
+  }
+}
