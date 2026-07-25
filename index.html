@@ -59,6 +59,11 @@
                 <div class="site-panel-body">
                     <div class="site-controls" role="group" aria-label="Choose a location">
                         <button id="siteGeoBtn" type="button">Use my location</button>
+                        <span class="site-manual">
+                            or ZIP:
+                            <input id="siteZip" type="text" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" placeholder="27510" aria-label="ZIP code">
+                            <button id="siteZipBtn" type="button">Go</button>
+                        </span>
                         <label class="site-quickpick-label">or pick a city:
                             <select id="siteQuickPick">
                                 <option value="">— choose —</option>

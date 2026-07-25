@@ -30,6 +30,8 @@ const els = {
   note: document.getElementById("siteNote"),
   quickPick: document.getElementById("siteQuickPick"),
   geoBtn: document.getElementById("siteGeoBtn"),
+  zip: document.getElementById("siteZip"),
+  zipBtn: document.getElementById("siteZipBtn"),
   lat: document.getElementById("siteLat"),
   lng: document.getElementById("siteLng"),
   applyBtn: document.getElementById("siteApplyBtn"),
@@ -37,28 +39,99 @@ const els = {
   error: document.getElementById("siteError"),
 };
 
-let bundles = null; // { frostTable, zonePoints, pack, providers }
+let bundles = null; // { frostTable, zonePoints, pack } — seed data (quick-picks + offline fallback)
+
+async function fetchJson(rel) {
+  const r = await fetch(new URL(rel, import.meta.url));
+  if (!r.ok) throw new Error(`failed to load ${rel}: ${r.status}`);
+  return r.json();
+}
 
 async function loadBundles() {
   if (bundles) return bundles;
-  const [frostTable, zonePoints, pack] = await Promise.all(
-    ["frost-stations.json", "zone-points.json", "piedmont-pack.json"].map((f) =>
-      fetch(new URL(`./data/${f}`, import.meta.url)).then((r) => {
-        if (!r.ok) throw new Error(`failed to load ${f}: ${r.status}`);
-        return r.json();
-      })
-    )
-  );
-  bundles = {
-    frostTable,
-    zonePoints,
-    pack,
-    providers: {
-      frost: createStaticFrostProvider(frostTable),
-      zone: createStaticZoneProvider(zonePoints),
-    },
-  };
+  const [frostTable, zonePoints, pack] = await Promise.all([
+    fetchJson("./data/frost-stations.json"),
+    fetchJson("./data/zone-points.json"),
+    fetchJson("./data/piedmont-pack.json"),
+  ]);
+  bundles = { frostTable, zonePoints, pack };
   return bundles;
+}
+
+// ---------------------------------------------------------------------------
+// Sharded national datasets (full NCEI + PRISM, emitted by scripts/etl/*).
+// 5°×5° geographic tiles, lazy-loaded per site with the 3×3 neighborhood so
+// nearest-station/point search is correct near tile edges. Falls back to the
+// 17-city bundled seed when the sharded data is unavailable (offline PWA).
+// ---------------------------------------------------------------------------
+
+const TILE_DEG = 5;
+const shardCache = new Map(); // url path -> parsed JSON (or null on miss)
+
+async function cachedJson(rel) {
+  if (shardCache.has(rel)) return shardCache.get(rel);
+  let value = null;
+  try {
+    value = await fetchJson(rel);
+  } catch {
+    value = null;
+  }
+  shardCache.set(rel, value);
+  return value;
+}
+
+function tileIds(lat, lng) {
+  const baseLat = Math.floor(lat / TILE_DEG) * TILE_DEG;
+  const baseLng = Math.floor(lng / TILE_DEG) * TILE_DEG;
+  const ids = [];
+  for (let dLat = -TILE_DEG; dLat <= TILE_DEG; dLat += TILE_DEG) {
+    for (let dLng = -TILE_DEG; dLng <= TILE_DEG; dLng += TILE_DEG) {
+      ids.push(`t${baseLat + dLat}_${baseLng + dLng}`);
+    }
+  }
+  return ids;
+}
+
+/** Full-coverage frost table for a site, or the seed table as fallback. */
+async function loadFrostTable(lat, lng) {
+  const index = await cachedJson("./data/frost/index.json");
+  const { frostTable: seed } = await loadBundles();
+  if (!index || !index.tiles) return { table: seed, national: false };
+  const wanted = tileIds(lat, lng).filter((id) => index.tiles[id]);
+  const tiles = await Promise.all(wanted.map((id) => cachedJson(`./data/frost/tiles/${id}.json`)));
+  const stations = tiles.filter(Boolean).flatMap((t) => t.stations || []);
+  if (!stations.length) return { table: seed, national: false };
+  return {
+    table: { datasetVersions: index.datasetVersions || seed.datasetVersions, stations },
+    national: true,
+  };
+}
+
+/** Full-coverage zone points for a site, or the seed points as fallback. */
+async function loadZoneTable(lat, lng) {
+  const index = await cachedJson("./data/zones/index.json");
+  const { zonePoints: seed } = await loadBundles();
+  if (!index || !index.tiles) return { table: seed, national: false };
+  const wanted = tileIds(lat, lng).filter((id) => index.tiles[id]);
+  const tiles = await Promise.all(wanted.map((id) => cachedJson(`./data/zones/tiles/${id}.json`)));
+  const points = tiles
+    .filter(Boolean)
+    .flatMap((t) => t.points || [])
+    .map(([pLat, pLng, zone]) => ({ lat: pLat, lng: pLng, zone }));
+  if (!points.length) return { table: seed, national: false };
+  return {
+    table: { datasetVersions: index.datasetVersions || seed.datasetVersions, points },
+    national: true,
+  };
+}
+
+/** ZIP → { lat, lng, zone } from the sharded PRISM/ZCTA join, or null. */
+async function lookupZip(zip) {
+  const shard = await cachedJson(`./data/zip/${zip.slice(0, 2)}.json`);
+  const hit = shard && shard[zip];
+  if (!hit) return null;
+  const [lat, lng, zone] = hit;
+  return { lat, lng, zone };
 }
 
 function fmtDay(doy) {
@@ -119,7 +192,15 @@ function showError(msg) {
 const MAX_STATION_KM = 250;
 
 async function applySite(site) {
-  const { pack, providers } = await loadBundles();
+  const { pack } = await loadBundles();
+  const [frost, zones] = await Promise.all([
+    loadFrostTable(site.lat, site.lng),
+    loadZoneTable(site.lat, site.lng),
+  ]);
+  const providers = {
+    frost: createStaticFrostProvider(frost.table),
+    zone: createStaticZoneProvider(zones.table),
+  };
   const ctx = await buildSiteContext(site.lat, site.lng, providers);
   if (ctx.frost.station.distanceKm > MAX_STATION_KM) {
     throw new Error(
@@ -150,7 +231,7 @@ async function applySite(site) {
       ["Last frost (50%)", fmtDay(last)],
       ["First frost (50%)", fmtDay(first)],
       ["Frost-free days", String(ctx.frostFreeDays)],
-      ["Frost data", `${ctx.frost.station.id} · ${Math.round(ctx.frost.station.distanceKm)} km away (NCEI ${ctx.datasetVersions.ncei ?? "1991-2020"})`],
+      ["Frost data", `${ctx.frost.station.id} · ${Math.round(ctx.frost.station.distanceKm)} km away (NCEI ${ctx.datasetVersions.ncei ?? "1991-2020"}${frost.national ? "" : " · seed preview data"})`],
       ["Calendar", computed === 0 ? `${curated} crops, hand-reviewed` : `${curated} hand-reviewed · ${computed} computed estimates`],
     ];
     for (const [k, v] of items) {
@@ -268,6 +349,24 @@ async function initPanel() {
       },
       { maximumAge: 600000, timeout: 10000 }
     );
+  });
+
+  const goZip = async () => {
+    const zip = (els.zip?.value ?? "").trim();
+    if (!/^\d{5}$/.test(zip)) {
+      showError("Enter a 5-digit ZIP code.");
+      return;
+    }
+    const hit = await lookupZip(zip);
+    if (!hit) {
+      showError(`ZIP ${zip} isn't in the dataset (PRISM 2023 / Census ZCTA). Try a nearby ZIP or coordinates.`);
+      return;
+    }
+    chooseSite(hit.lat, hit.lng, `ZIP ${zip}`);
+  };
+  els.zipBtn?.addEventListener("click", goZip);
+  els.zip?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") goZip();
   });
 
   els.applyBtn?.addEventListener("click", () => {
