@@ -25,6 +25,9 @@ let checked = 0;
 for (const s of data.stations) {
   const where = `${s.id} (${(s.name || "").trim()})`;
   if (!seedIds.has(s.id)) fail(`${where}: not a frost-stations seed id`);
+  if (s.elevM !== null && s.elevM !== undefined && (typeof s.elevM !== "number" || s.elevM < -100 || s.elevM > 5000)) {
+    fail(`${where}: elevM=${s.elevM} out of range (-100..5000 m)`);
+  }
   for (const key of ["tmaxF", "tminF", "tmaxSdF", "tminSdF"]) {
     if (!Array.isArray(s[key]) || s[key].length !== 24) fail(`${where}: ${key} must be length 24`);
   }

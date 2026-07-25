@@ -77,6 +77,9 @@ for (const key of [...listed].sort()) {
     seenIds.add(s.id);
     if (s.id < prevId) fail(`tile ${key}: stations not sorted by id (${s.id} after ${prevId})`);
     prevId = s.id;
+    if (s.elevM !== null && s.elevM !== undefined && (typeof s.elevM !== "number" || s.elevM < -100 || s.elevM > 5000)) {
+      fail(`station ${s.id} in ${key}: elevM=${s.elevM} out of range (-100..5000 m)`);
+    }
     checkArray24(s.tmaxF, "tmaxF", s.id, key, { nullable: false });
     checkArray24(s.tminF, "tminF", s.id, key, { nullable: false });
     checkArray24(s.tmaxSdF, "tmaxSdF", s.id, key, { nullable: true });

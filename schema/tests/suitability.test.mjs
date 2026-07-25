@@ -98,6 +98,26 @@ test("modelSiteClimate refuses a frost-free desert (Phoenix) honestly", () => {
   assert.throws(() => modelSiteClimate(siteFor(PHOENIX)), ClimateModelError);
 });
 
+test("realSiteClimate adjustF lapse-shifts the curve and moves frost dates", () => {
+  const st = tempFor(CHAPEL_HILL);
+  const base = realSiteClimate(st);
+  const colder = realSiteClimate(st, -9); // ~ +770 m elevation
+  // Every slot is exactly 9°F colder on both min and max.
+  for (let i = 0; i < 24; i++) {
+    assert.ok(Math.abs((base.tminF[i] - colder.tminF[i]) - 9) < 1e-6);
+    assert.ok(Math.abs((base.tmaxF[i] - colder.tmaxF[i]) - 9) < 1e-6);
+  }
+  // A colder site freezes later in spring and earlier in fall (shorter season).
+  assert.ok(colder.lastFrostDay >= base.lastFrostDay);
+  assert.ok(colder.firstFrostDay <= base.firstFrostDay);
+});
+
+test("temperature seed carries station elevation (meters)", () => {
+  const phx = tempFor(PHOENIX);
+  assert.equal(typeof phx.elevM, "number");
+  assert.ok(phx.elevM > 200 && phx.elevM < 500, `Phoenix elevM ${phx.elevM} should be ~337 m`);
+});
+
 test("realSiteClimate carries the real heat wall (max temp), heatModeled=true", () => {
   const cha = realSiteClimate(tempFor(CHAPEL_HILL));
   assert.equal(cha.heatModeled, true);

@@ -175,7 +175,7 @@ function stationFromCsv(text) {
   const col = new Map(H.map((n, i) => [n, i]));
   const ci = {
     station: col.get("STATION"), name: col.get("NAME"),
-    lat: col.get("LATITUDE"), lng: col.get("LONGITUDE"),
+    lat: col.get("LATITUDE"), lng: col.get("LONGITUDE"), elev: col.get("ELEVATION"),
     month: col.get("month"), day: col.get("day"),
     tmax: col.get("DLY-TMAX-NORMAL"), tmin: col.get("DLY-TMIN-NORMAL"),
     tmaxSd: col.get("DLY-TMAX-STDDEV"), tminSd: col.get("DLY-TMIN-STDDEV"),
@@ -188,6 +188,9 @@ function stationFromCsv(text) {
   const name = (first[ci.name] ?? "").trim();
   const lat = Number.parseFloat(first[ci.lat]);
   const lng = Number.parseFloat(first[ci.lng]);
+  // Station elevation (meters), for elevation-aware selection + lapse correction.
+  const elevRaw = ci.elev !== undefined ? num(first[ci.elev]) : null;
+  const elevM = elevRaw === null ? null : Math.round(elevRaw);
   if (!id || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
   if (!US_PREFIXES.has(id.slice(0, 2))) return null;
 
@@ -219,7 +222,7 @@ function stationFromCsv(text) {
   // station missing any slot is dropped whole rather than gap-filled here — the
   // suitability engine's climate curve needs every slot to be real.
   if (tmaxF.some((v) => v === null) || tminF.some((v) => v === null)) return null;
-  return { id, name, lat, lng, tmaxF, tminF, tmaxSdF, tminSdF };
+  return { id, name, lat, lng, elevM, tmaxF, tminF, tmaxSdF, tminSdF };
 }
 
 function tileKey(lat, lng) {
@@ -293,7 +296,7 @@ async function main() {
       `the bucket is NOAA-operated and mirrors the canonical per-station files at ${CANONICAL_ACCESS_URL}. ` +
       "Per station, for each of 24 half-month slots (jan h1..dec h2): tmaxF/tminF = mean of DLY-TMAX/TMIN-NORMAL over the slot's days (degF); " +
       "tmaxSdF/tminSdF = mean of DLY-TMAX/TMIN-STDDEV (interannual spread, degF, null when absent). Sentinels (-9999, blank) are OMITTED; a station " +
-      "is included only with COMPLETE annual TMAX+TMIN coverage (all 24 slots). id/name/lat/lng verbatim from STATION/NAME/LATITUDE/LONGITUDE. " +
+      "is included only with COMPLETE annual TMAX+TMIN coverage (all 24 slots). id/name/lat/lng/elevM (meters) verbatim from STATION/NAME/LATITUDE/LONGITUDE/ELEVATION. " +
       "Coverage: US states + territories (GHCN prefixes US/AQ/CQ/GQ/JQ/MQ/RQ/VQ/WQ/...); foreign stations excluded. Tiles are 5-degree squares keyed " +
       "t<floor(lat/5)*5>_<floor(lng/5)*5>. Regenerate with scripts/etl/fetch-ncei-temp-tiles.mjs; verify offline with scripts/etl/verify-temp-tiles.mjs.",
     datasetVersions: { ncei: "1991-2020" },

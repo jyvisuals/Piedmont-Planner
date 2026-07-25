@@ -142,10 +142,28 @@ function fillNulls(arr) {
     }
     return out;
 }
-/** Build a SiteClimate from real NCEI daily-normals slots. Heat wall modeled. */
-export function realSiteClimate(st) {
-    const tminF = fillNulls(st.tminF);
-    const tmaxF = fillNulls(st.tmaxF);
+/**
+ * Environmental lapse rate as °F per meter (6.5°C/km × 1.8). Higher ground is
+ * colder; a station used for a site at a different elevation is corrected by
+ * this rate (see estimateSiteElevationM + realSiteClimate's adjustF).
+ */
+export const LAPSE_F_PER_M = 0.0065 * 1.8;
+/**
+ * Build a SiteClimate from real NCEI daily-normals slots. Heat wall modeled.
+ * `adjustF` uniformly shifts the min/max curves (°F). It exists so a station can
+ * be lapse-corrected (LAPSE_F_PER_M) for a site at a KNOWN different elevation —
+ * but the app leaves it 0, because without a terrain/DEM elevation for the site
+ * there is no reliable gap to correct: interpolating the site elevation from the
+ * surrounding stations underestimates peaks and overestimates valleys (the exact
+ * extrema where a correction matters), so it can shift the wrong way. The honest
+ * approach ships the station's real elevation for the user to judge instead. This
+ * seam is ready for a real site-elevation source (DEM) to drive it. Frost
+ * crossings are recomputed from the shifted curve, so the frost-free span shifts
+ * with it.
+ */
+export function realSiteClimate(st, adjustF = 0) {
+    const tminF = fillNulls(st.tminF).map((v) => v + adjustF);
+    const tmaxF = fillNulls(st.tmaxF).map((v) => v + adjustF);
     const tminSpreadF = fillNulls(st.tminSdF.map((v) => (v === null ? 0 : v)));
     const tmaxSpreadF = fillNulls(st.tmaxSdF.map((v) => (v === null ? 0 : v)));
     return {

@@ -95,11 +95,13 @@ function compact(csv) {
   const H = parseCsvLine(lines[0]);
   const idx = (name) => H.indexOf(name);
   const ci = {
-    month: idx("month"), day: idx("day"),
+    month: idx("month"), day: idx("day"), elev: idx("ELEVATION"),
     tmax: idx("DLY-TMAX-NORMAL"), tmin: idx("DLY-TMIN-NORMAL"),
     tmaxSd: idx("DLY-TMAX-STDDEV"), tminSd: idx("DLY-TMIN-STDDEV"),
   };
-  for (const [k, v] of Object.entries(ci)) if (v < 0) throw new Error(`missing column for ${k}`);
+  for (const [k, v] of Object.entries(ci)) if (k !== "elev" && v < 0) throw new Error(`missing column for ${k}`);
+  const elevRaw = ci.elev >= 0 ? num(parseCsvLine(lines[1])[ci.elev]) : null;
+  const elevM = elevRaw === null ? null : Math.round(elevRaw);
 
   // Accumulate per slot.
   const acc = Array.from({ length: 24 }, () => ({ tmax: [], tmin: [], tmaxSd: [], tminSd: [] }));
@@ -129,7 +131,7 @@ function compact(csv) {
     tmaxSdF.push(sx === null ? null : round1(sx));
     tminSdF.push(sn === null ? null : round1(sn));
   }
-  return { tmaxF, tminF, tmaxSdF, tminSdF };
+  return { elevM, tmaxF, tminF, tmaxSdF, tminSdF };
 }
 
 async function fetchText(url) {

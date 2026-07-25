@@ -81,16 +81,42 @@ async function loadTempTable(lat, lng) {
   return { stations, national: true };
 }
 
-/** A real SiteClimate for the site + its source station, or null when too far. */
+// When nearby stations span more than this elevation range (m), the terrain is
+// complex enough that the nearest station may not represent the site's elevation
+// — surface a caveat so a mountain/valley gardener knows to apply judgment.
+const COMPLEX_TERRAIN_SPREAD_M = 500;
+const NEARBY_ELEV_KM = 40;
+
+/**
+ * A real SiteClimate for the site + its source station, or null when too far.
+ * Elevation-honest (not elevation-corrected): the station's real elevation is
+ * surfaced, and complex terrain (a wide spread of nearby station elevations) is
+ * flagged, so the user can judge the fit. A silent lapse correction is NOT
+ * applied — without a DEM the site elevation can't be estimated reliably at the
+ * peaks/valleys where it would matter (see climate-model.ts realSiteClimate).
+ */
 function buildClimate(lat, lng, stations) {
   let best = null;
+  const nearElev = [];
   for (const s of stations) {
     const km = haversineKm(lat, lng, s.lat, s.lng);
     if (!best || km < best.km) best = { station: s, km };
+    if (km <= NEARBY_ELEV_KM && typeof s.elevM === "number") nearElev.push(s.elevM);
   }
   if (!best || best.km > MAX_TEMP_KM) return null;
+
+  const stationElevM = typeof best.station.elevM === "number" ? best.station.elevM : null;
+  const spreadM = nearElev.length > 1 ? Math.max(...nearElev) - Math.min(...nearElev) : 0;
+  const complexTerrain = spreadM >= COMPLEX_TERRAIN_SPREAD_M;
   try {
-    return { climate: realSiteClimate(best.station), station: best.station, km: best.km };
+    return {
+      climate: realSiteClimate(best.station),
+      station: best.station,
+      km: best.km,
+      stationElevM,
+      complexTerrain,
+      elevSpreadM: Math.round(spreadM),
+    };
   } catch {
     return null; // degenerate station data — fall back to the offset engine
   }
@@ -333,7 +359,13 @@ async function applySite(site, gen) {
       ["Frost-free days", String(ctx.frostFreeDays)],
       ["Frost data", `${ctx.frost.station.id} · ${Math.round(ctx.frost.station.distanceKm)} km away (NCEI ${ctx.datasetVersions.ncei ?? "1991-2020"}${frost.national ? "" : " · seed preview data"})`],
       ["Computed model", climateInfo
-        ? `climate-suitability — NCEI daily normals from ${climateInfo.station.id} (${Math.round(climateInfo.km)} km${tempTable.national ? "" : " · seed preview"}), heat wall + reason codes`
+        ? `climate-suitability — NCEI daily normals from ${climateInfo.station.id}${
+            climateInfo.stationElevM !== null ? ` at ${climateInfo.stationElevM} m elev` : ""
+          } (${Math.round(climateInfo.km)} km${tempTable.national ? "" : " · seed preview"})${
+            climateInfo.complexTerrain
+              ? ` — ⚠ hilly area (nearby stations span ~${climateInfo.elevSpreadM} m); if your elevation differs, timing shifts ~3°F per 1000 ft`
+              : ""
+          }`
         : "frost-offset — timing from frost dates only (no nearby temperature station)"],
       ["Calendar", computed === 0 ? `${curated} crops, hand-reviewed` : `${curated} hand-reviewed · ${computed} computed estimates`],
     ];
