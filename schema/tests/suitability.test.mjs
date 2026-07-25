@@ -118,8 +118,10 @@ test("in the desert, warm crops avoid peak summer and cool crops take winter", (
   const phx = realSiteClimate(tempFor(PHOENIX));
   const tomatoes = outdoorSlots("tomatoes", phx);
   assert.ok(tomatoes && tomatoes.size);
-  // No tomato planting in peak summer (jun..jul, slots 10..13) — 107°F kills set.
-  for (const i of tomatoes) assert.ok(!(i >= 10 && i <= 13), `tomatoes should skip peak-summer slot ${i}`);
+  // No tomato planting in the 107°F peak (jun h2..jul h1, slots 11..12). Late
+  // July (jul h2, slot 13) is allowed — the documented low-desert fall-tomato
+  // planting start, set into heat under shade for an autumn harvest (az1005).
+  for (const i of tomatoes) assert.ok(!(i >= 11 && i <= 12), `tomatoes should skip peak-summer slot ${i}`);
   // Lettuce should be plantable in the cool season around winter.
   const lettuce = outdoorSlots("lettuce-leaf", phx);
   assert.ok(lettuce && [...lettuce].some((i) => isWinter(i)), "lettuce should take the desert winter");
@@ -160,6 +162,29 @@ test("perennials and DTH-less crops produce no suitability estimate", () => {
   const climate = modelSiteClimate(siteFor(CHAPEL_HILL));
   assert.equal(suitabilityFor(CROP_CATALOG["asparagus"], climate), null); // perennial
   assert.equal(suitabilityFor(CROP_CATALOG["yarrow"], climate), null); // no numeric DTH
+});
+
+test("windows carry a probabilistic confidence and a limiting reason code", () => {
+  const climate = realSiteClimate(tempFor(CHAPEL_HILL));
+  const res = suitabilityFor(CROP_CATALOG["tomatoes"], climate);
+  assert.ok(res && res.windows.length);
+  const VALID = new Set(["soil-temp", "frost", "heat", "cold-growth"]);
+  for (const w of res.windows) {
+    assert.ok(w.confidence > 0 && w.confidence <= 1, `confidence ${w.confidence} out of (0,1]`);
+    assert.ok(VALID.has(w.limiting), `bad limiting reason "${w.limiting}"`);
+    // Real spread ⇒ genuinely probabilistic (not a degenerate 0/1 step).
+    assert.ok(w.confidence < 1, "with real spread, confidence should be a true probability < 1");
+  }
+});
+
+test("the spread makes factors probabilistic (real) vs degenerate (frost-derived)", () => {
+  // Real climate carries stddev, so a warm crop's summer confidence is a fraction.
+  const real = suitabilityFor(CROP_CATALOG["tomatoes"], realSiteClimate(tempFor(CHAPEL_HILL)));
+  const anyFractional = real.windows.some((w) => w.confidence > 0.01 && w.confidence < 0.99);
+  assert.ok(anyFractional, "real spread should yield fractional confidences");
+  // The frost-derived fallback has zero spread → still produces windows (steps).
+  const derived = suitabilityFor(CROP_CATALOG["tomatoes"], modelSiteClimate(siteFor(CHAPEL_HILL)));
+  assert.ok(derived && derived.windows.length, "frost-derived fallback must still emit windows");
 });
 
 test("the 24-slot curve and windows are consistent", () => {

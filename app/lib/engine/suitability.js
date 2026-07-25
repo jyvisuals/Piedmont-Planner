@@ -1,93 +1,132 @@
-// The climate-suitability engine (Step 3, docs/climate-suitability-model.md):
+// The climate-suitability engine (Steps 3+, docs/climate-suitability-model.md):
 // the general COMPUTED base layer that scores every day of the year for how
 // likely a crop is to complete its life-span successfully, from the crop's
 // climate requirements (schema/climate/crop-climate.ts) and the site's modeled
 // temperature climatology (climate-model.ts). Frost and heat are not special
-// anchors here — they are just where the survival factors go to zero.
+// anchors here — they are just factors whose probability goes to zero.
 //
-// This is the TEMPERATURE-FIRST cut the doc calls for: Suitability(day) =
-// germFit · frostSurvival · tempFit, each ∈ [0,1], multiplied. Moisture and
-// day-length factors are deliberately omitted until temperature proves out on
-// the validation harness. Output is a 365-day suitability curve, a 24-slot
-// reduction of it, and the high-scoring spans as ResolvedWindows (byte-
-// compatible with the offset engine's output, so the resolver, grid bucketing,
-// and validation harness all consume it unchanged).
+// PROBABILISTIC: each factor is a real probability computed from the climate
+// DISTRIBUTION (per-slot mean AND stddev — the spread the temperature tiles
+// already ship). Suitability(day) = pGerm · pFrost · pHeat · growthFit, each
+// ∈ [0,1]. Two aggregations, by hazard semantics:
+//   frost is a KILL switch  → P(no killing freeze anywhere in the span) = the
+//                             product of daily non-freeze probabilities.
+//   heat is a STRESS gradient→ the mean daily non-exceedance probability over the
+//                             sensitive stage (a few hot days don't zero a crop).
+// Where the tiles carry zero spread (the frost-derived fallback) the normal CDF
+// degrades to the old step behavior, so nothing breaks.
+//
+// REASON CODES: every emitted window records which factor binds it (the limiting
+// factor at the window's optimum) and its peak success probability — the
+// "dominant limiting factor" the design doc calls for. Output is a 365-day
+// curve, a 24-slot reduction, and PlantingWindows (a superset of ResolvedWindow,
+// so the resolver, grid bucketing, and validation harness consume them unchanged).
 //
 // Pure and synchronous: no I/O, no clock.
 import { climateFor } from "../climate/crop-climate.js";
-import { maxTempF, meanTempF, minTempF } from "./climate-model.js";
+import { maxSpreadF, maxTempF, meanSpreadF, meanTempF, minSpreadF, minTempF } from "./climate-model.js";
 const HARD_FREEZE_F = 32;
 function clamp01(x) {
     return x < 0 ? 0 : x > 1 ? 1 : x;
 }
-/** Smooth 0→1 ramp across [a, b] (Hermite). */
-function smoothstep(a, b, x) {
-    if (a === b)
-        return x < a ? 0 : 1;
-    const t = clamp01((x - a) / (b - a));
-    return t * t * (3 - 2 * t);
+// --- normal-distribution helpers (Abramowitz-Stegun 7.1.26 erf) --------------
+function erf(x) {
+    const t = 1 / (1 + 0.3275911 * Math.abs(x));
+    const y = 1 -
+        ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) *
+            t *
+            Math.exp(-x * x);
+    return x >= 0 ? y : -y;
 }
-/** Per-day growth comfort ∈ [0,1]: cold-limited below, heat-limited above. */
-function dayComfort(cc, minF, maxF) {
-    const mean = (minF + maxF) / 2;
-    const cold = clamp01((mean - cc.baseF) / Math.max(1, cc.optMinF - cc.baseF));
-    const heat = clamp01((cc.ceilingF - maxF) / Math.max(1, cc.ceilingF - cc.optMaxF));
-    return Math.min(cold, heat);
+function normCdf(z) {
+    return 0.5 * (1 + erf(z / Math.SQRT2));
+}
+/** P(X ≥ threshold) for X ~ Normal(mean, sd). Degrades to a step when sd≈0. */
+function pAtLeast(mean, sd, threshold) {
+    if (sd <= 0.01)
+        return mean >= threshold ? 1 : 0;
+    return 1 - normCdf((threshold - mean) / sd);
+}
+/** P(X ≤ threshold) for X ~ Normal(mean, sd). Degrades to a step when sd≈0. */
+function pAtMost(mean, sd, threshold) {
+    if (sd <= 0.01)
+        return mean <= threshold ? 1 : 0;
+    return normCdf((threshold - mean) / sd);
+}
+function limitingOf(f) {
+    let key = "germ";
+    let min = f.germ;
+    if (f.frost < min) {
+        min = f.frost;
+        key = "frost";
+    }
+    if (f.heat < min) {
+        min = f.heat;
+        key = "heat";
+    }
+    if (f.growth < min) {
+        min = f.growth;
+        key = "growth";
+    }
+    return key === "germ" ? "soil-temp" : key === "frost" ? "frost" : key === "heat" ? "heat" : "cold-growth";
 }
 /**
- * Suitability of planting on `plantDay` for a life-span of `lo`..`hi` days:
- *   germFit        — daily-min over the establishment window meets germMinF.
- *   frostSurvival  — for frost-killed crops, the span reaches maturity before a
- *                    killing freeze (ramps from 0 if frost hits before earliest
- *                    maturity to 1 if it survives past latest maturity); 1 for
- *                    frost-tolerant crops.
- *   tempFit        — mean growth comfort across the whole span.
+ * Probabilistic suitability of planting on `plantDay` for a `lo`..`hi`-day span,
+ * returned as a factor breakdown (multiply for the scalar score). Each factor is
+ * a probability under the site's climate distribution — see the file header for
+ * the two aggregation rules (frost = product/kill, heat = mean/stress).
  */
 function scorePlanting(cc, climate, plantDay, lo, hi, isDirect) {
-    // Establishment gate over the first ~2–3 weeks, on the daily-MEAN temperature
-    // (a soil-temperature proxy; daily-min is air and runs colder than the
-    // seedbed). Two thresholds:
-    //   direct sow  — needs germMinF to germinate from seed.
-    //   transplant  — an already-grown seedling doesn't germinate, but it still
-    //                 must ROOT and grow, so it needs warmth meaningfully above the
-    //                 growth base (baseF + 8). Without this, the comfort average
-    //                 over a long-season frost-tolerant crop's whole occupancy
-    //                 masks that a mid-winter set-out barely establishes.
+    // germ: P(establishment daily-MEAN ≥ gate). Direct sow needs germMinF to
+    // germinate from seed; a transplant is already grown, but must still root, so
+    // it needs warmth above the growth base (baseF+8). Mean temp is a soil proxy.
     const estabEnd = plantDay + Math.min(isDirect ? 14 : 21, lo);
-    let meanSum = 0;
-    let meanN = 0;
+    let meanSum = 0, meanSdSum = 0, n = 0;
     for (let d = plantDay; d <= estabEnd; d++) {
         meanSum += meanTempF(climate, d);
-        meanN += 1;
+        meanSdSum += meanSpreadF(climate, d);
+        n += 1;
     }
-    const estabMean = meanSum / meanN;
     const gateF = isDirect ? cc.germMinF : cc.baseF + 8;
-    const germFit = smoothstep(gateF - 6, gateF + 6, estabMean);
-    // frostSurvival: how far into the span the crop gets before a killing freeze.
-    let frostSurvival = 1;
+    const germ = pAtLeast(meanSum / n, meanSdSum / n, gateF);
+    // frost: KILL semantics — P(no freeze on ANY span day) = product of daily
+    // non-freeze probabilities. In-season this is ≈1; near the frost edge it falls
+    // off smoothly (and slightly conservatively, which is correct for a kill risk).
+    let frost = 1;
     if (cc.frostKilled) {
-        let survived = hi;
         for (let k = 1; k <= hi; k++) {
-            if (minTempF(climate, plantDay + k) <= HARD_FREEZE_F) {
-                survived = k;
+            const d = plantDay + k;
+            frost *= 1 - pAtMost(minTempF(climate, d), minSpreadF(climate, d), HARD_FREEZE_F);
+            if (frost < 1e-4) {
+                frost = 0;
                 break;
             }
         }
-        // 0 if a freeze hits before earliest maturity; 1 if it survives past latest.
-        frostSurvival = clamp01((survived - lo) / Math.max(1, hi - lo));
-        if (survived >= hi)
-            frostSurvival = 1;
     }
-    // tempFit across the whole maturity span.
-    let comfortSum = 0;
-    let comfortN = 0;
+    // heat: STRESS semantics — mean daily P(max ≤ ceiling) across the WHOLE span.
+    // Averaging (not producting) is right because a few hot days stress but don't
+    // zero a crop. Whole-span (not just the reproductive stage) is deliberate: it
+    // catches lethal establishment heat too — a transplant set into a 107°F desert
+    // summer dies regardless of when it would have flowered. A gentler, night-
+    // specific fruit-set threshold is the separate next step (docs step 2).
+    let heatSum = 0, heatN = 0;
     for (let d = plantDay; d <= plantDay + hi; d++) {
-        comfortSum += dayComfort(cc, minTempF(climate, d), maxTempF(climate, d));
-        comfortN += 1;
+        heatSum += pAtMost(maxTempF(climate, d), maxSpreadF(climate, d), cc.ceilingF);
+        heatN += 1;
     }
-    const tempFit = comfortSum / comfortN;
-    return germFit * frostSurvival * tempFit;
+    const heat = heatSum / heatN;
+    // growth: cold-limited adequacy (mean temp vs the crop's growth band), the
+    // "too cold to develop" factor distinct from the frost KILL above.
+    let growthSum = 0, growthN = 0;
+    for (let d = plantDay; d <= plantDay + hi; d++) {
+        const mean = meanTempF(climate, d);
+        growthSum += clamp01((mean - cc.baseF) / Math.max(1, cc.optMinF - cc.baseF));
+        growthN += 1;
+    }
+    const growth = growthSum / growthN;
+    return { germ, frost, heat, growth };
 }
+const scoreOf = (f) => f.germ * f.frost * f.heat * f.growth;
 // 24 half-month slot boundaries (day-of-year), mirroring resolve.ts SLOTS.
 const MONTH_LEN = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const SLOT_BOUNDS = (() => {
@@ -175,7 +214,12 @@ export function suitabilityFor(entry, climate) {
                 mx = Math.max(mx, curve[d - 1]);
             return mx;
         });
-        return { origin: "computed", curve, slotCurve, windows: [{ activity: "plantSet", start, end }] };
+        return {
+            origin: "computed",
+            curve,
+            slotCurve,
+            windows: [{ activity: "plantSet", start, end, confidence: 1, limiting: "cold-growth" }],
+        };
     }
     const methods = [];
     if (entry.daysToMaturity.direct)
@@ -190,10 +234,13 @@ export function suitabilityFor(entry, climate) {
     for (const m of methods) {
         const [lo, hi] = m.dth;
         const isDirect = m.activity === "sowOutdoors";
+        const mFactors = new Array(365);
         const mCurve = new Array(365);
         let peak = 0;
         for (let i = 0; i < 365; i++) {
-            const s = scorePlanting(cc, climate, i + 1, lo, hi, isDirect);
+            const f = scorePlanting(cc, climate, i + 1, lo, hi, isDirect);
+            const s = scoreOf(f);
+            mFactors[i] = f;
             mCurve[i] = s;
             if (s > peak)
                 peak = s;
@@ -209,7 +256,24 @@ export function suitabilityFor(entry, climate) {
         // missing reference slots. Primary-timing is flat across the range.
         const threshold = Math.max(0.4, 0.7 * peak);
         for (const [start, end] of runsAbove(mCurve, threshold)) {
-            windows.push({ activity: m.activity, start, end });
+            // Reason code + confidence come from the window's OPTIMUM day (its tightest
+            // constraint there is the dominant limiting factor for the recommendation).
+            let bestI = ((start - 1) % 365 + 365) % 365;
+            let bestS = mCurve[bestI];
+            for (let d = start; d <= end; d++) {
+                const idx = ((d - 1) % 365 + 365) % 365;
+                if (mCurve[idx] > bestS) {
+                    bestS = mCurve[idx];
+                    bestI = idx;
+                }
+            }
+            windows.push({
+                activity: m.activity,
+                start,
+                end,
+                confidence: Math.round(bestS * 100) / 100,
+                limiting: limitingOf(mFactors[bestI]),
+            });
         }
     }
     // 24-slot reduction: peak suitability within each slot.

@@ -114,6 +114,26 @@ export function meanTempF(c: SiteClimate, day: number): number {
   return (minTempF(c, day) + maxTempF(c, day)) / 2;
 }
 
+/** Interannual spread (stddev, °F) of the daily min on day-of-year `day`. */
+export function minSpreadF(c: SiteClimate, day: number): number {
+  return sampleSlots(c.tminSpreadF, day);
+}
+/** Interannual spread (stddev, °F) of the daily max on day-of-year `day`. */
+export function maxSpreadF(c: SiteClimate, day: number): number {
+  return sampleSlots(c.tmaxSpreadF, day);
+}
+/**
+ * Spread (stddev, °F) of the daily MEAN. tmin and tmax co-vary, so their sum's
+ * variance is between max(var) (perfect correlation) and the independent sum;
+ * pooling as sqrt((s_min²+s_max²))/2 is the standard independent approximation
+ * and is honest enough for a placement model (documented in the design doc).
+ */
+export function meanSpreadF(c: SiteClimate, day: number): number {
+  const a = minSpreadF(c, day);
+  const b = maxSpreadF(c, day);
+  return Math.sqrt(a * a + b * b) / 2;
+}
+
 /** First day-of-year the interpolated daily-min crosses 32°F in a direction. */
 function freezeCrossing(tminF: number[], direction: "spring" | "fall"): number {
   for (let d = 2; d <= YEAR; d++) {

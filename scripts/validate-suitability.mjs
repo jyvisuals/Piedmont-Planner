@@ -197,9 +197,11 @@ if (desert) {
 
 console.log(`\n${"=".repeat(70)}`);
 console.log("The suitability engine and the offset engine are graded on the SAME");
-console.log("references. Now backed by REAL NCEI daily temperature normals (heat wall");
-console.log("modeled), so frost-free deserts get a calendar instead of a refusal.");
-console.log("A committed desert FIXTURE (U of A az1005) is the remaining validation gap.");
+console.log("references. Backed by REAL NCEI daily temperature normals (heat wall");
+console.log("modeled) and now PROBABILISTIC — each factor is a probability computed");
+console.log("from the per-slot mean AND stddev the tiles ship, and every window");
+console.log("carries a confidence + limiting reason code. A committed desert FIXTURE");
+console.log("(U of A az1005) is the remaining validation gap.");
 
 if (strict && worstPrimary < minRate) {
   console.error(`\nvalidate-suitability: worst primary-timing rate ${worstPrimary.toFixed(0)}% < ${minRate}% (--strict)`);

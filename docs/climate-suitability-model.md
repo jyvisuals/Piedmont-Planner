@@ -160,16 +160,30 @@ daily temperature normals (`node scripts/validate-suitability.mjs`):
 
 | Reference | offset primary | **suitability primary** | notes |
 |---|---|---|---|
-| Curated Piedmont pack (Carrboro) | 97% | **97%** | 2 misplaced: `leek`, `chamomile` — cool crops the curated pack windows tightly; **not** misplaced vs AG-756 |
+| Curated Piedmont pack (Carrboro) | 97% | **100%** (0 misplaced) | probabilistic factors fixed `leek`/`chamomile` |
 | NC State AG-756 (independent) | 100% | **100%** (0 misplaced) | apples-to-apples with an independent calendar |
 | **Phoenix low desert** | **refused** | **calendar produced** | cool crops in winter, warm crops in spring + fall shoulders |
 
-**Primary timing is at parity with the offset engine on the temperate
-references** — and the two crops it misses against the *curated* pack (`leek`,
-`chamomile`) are cool-season crops placed in the cool season, only "misplaced"
-against the author's deliberately-narrow windows; against the independent AG-756
-calendar they land correctly (the same pattern the offset engine's `parsnips`
-showed). Forcing them would regress the shared rules for the other crops.
+**Primary timing now beats the offset engine on the temperate references** — the
+probabilistic upgrade (below) pulled `leek` and `chamomile` into their correct
+windows, so there are zero misplaced crops against either the curated pack or the
+independent AG-756 calendar.
+
+### Probabilistic factors + reason codes (the spread the tiles already ship)
+
+Each factor is a real **probability** computed from the per-slot **mean AND
+stddev** the temperature tiles carry (previously unused). Two aggregations, by
+hazard semantics: **frost is a kill switch** → P(no killing freeze anywhere in
+the span) = the product of daily non-freeze probabilities; **heat is a stress
+gradient** → the mean daily P(max ≤ ceiling) over the span. Where a tile carries
+zero spread (the frost-derived fallback), the normal CDF degrades to the old step
+behavior, so nothing breaks. Every emitted window now also carries a
+**confidence** (its peak success probability) and a **limiting reason code**
+(`soil-temp` / `frost` / `heat` / `cold-growth`) — the "dominant limiting factor"
+the deep-research report calls for. The desert differentiates cleanly (winter
+tomatoes limited by `cold-growth`, shoulder tomatoes by `heat`); in temperate
+climates `heat` is usually the binding constraint that closes the season, which
+is why, e.g., fall spinach exists in the heat-shadow.
 
 **The desert is the real unlock.** The frost-offset engine *refuses* Phoenix
 (no frost anchors). With the real heat wall (July max **107°F**), the suitability
