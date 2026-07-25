@@ -1,15 +1,16 @@
 // Piedmont pack #1 — the reference regional override (D3/D5).
-// Today's data.js re-expressed as anchor-relative events for two crops:
-//   • tomato  — a tender, spring/warm-season crop anchored to lastFrost, with a
-//     soil-temperature readiness gate and a derived harvest.
-//   • spinach — a very-hardy crop with BOTH a spring run (forward from lastFrost)
-//     AND a fall/overwinter run (backward from firstFrost), showing why timing
-//     must be a list of anchored events, not one months-grid.
+// Demonstrates BOTH kinds of pack timing:
+//   • tomato  — VERBATIM: the reviewed half-month grid carried byte-for-byte
+//     from data.js. This is the migration default for curated data — zero-loss,
+//     no grid→offset inversion, and the "Carrboro must not move" regression
+//     gate holds by construction.
+//   • spinach — ANCHORED: day-resolution events, with a spring run counting
+//     forward from lastFrost AND a fall/overwinter run counting backward from
+//     firstFrost — the case a single months-grid structurally smears together.
 //
 // Confidence scores, sources, and review notes are the real values from data.js
 // (both crops score 5; both cite the NC State calendar, Piedmont guide, and NC
-// State veg handbook). Rendering this pack at Carrboro's frost dates must
-// reproduce today's calendar — that equality is the Phase-1 regression gate.
+// State veg handbook).
 
 import type { RegionPack } from "../types";
 
@@ -37,14 +38,13 @@ export const PIEDMONT_NC: RegionPack = {
   // Placeholder footprint ≈ the Piedmont ecoregion band across the Carolinas/GA.
   // Production would ship a simplified EPA Level-III ecoregion polygon (D5).
   footprint: { kind: "bbox", minLat: 33.6, minLng: -81.6, maxLat: 36.6, maxLng: -78.6 },
-  specificity: 50,
   zones: ["7b", "8a"],
   sources: SOURCES,
 
   crops: [
     // -------------------------------------------------------------------
-    // TOMATO — tender, warm-season; everything hangs off lastFrost.
-    // Legacy grid: si Mar1–Apr1 · t Apr2–Jun2 (soil-temp gated) · h Jul1–Oct1
+    // TOMATO — VERBATIM timing: the reviewed data.js grid, carried unchanged.
+    // The curated row IS the deliverable; no offsets are inferred from it.
     // -------------------------------------------------------------------
     {
       crop: "tomato",
@@ -55,34 +55,32 @@ export const PIEDMONT_NC: RegionPack = {
       },
       varieties:
         "Cherokee Purple (heirloom, needs airflow — prone to cat-facing/cracking), Celebrity Plus, Mountain Magic/Fresh and Mountain Girl (disease-resilient for humid late-summer Piedmont). Grafting onto RST/DRO rootstock extends the season; keep the graft union above soil.",
-      tips: "Deep-transplant (bury 2/3 of stem). Single-leader prune disease-prone heirlooms. Consistent water prevents cracking; add calcium.",
-      events: [
-        {
-          id: "t-si",
-          activity: "sowIndoors",
-          anchor: { kind: "lastFrost" },
-          offsetDays: [-45, -10], // ~6 to ~1.5 weeks before last frost
+      tips: "Deep-transplant (bury 2/3 of stem). Single-leader prune disease-prone heirlooms. Consistent water prevents cracking; add calcium. Wait for 60°F soil at 4″ before setting out.",
+      timing: {
+        kind: "verbatim",
+        grid: {
+          jan: { half1: [], half2: [] },
+          feb: { half1: [], half2: [] },
+          mar: { half1: ["si"], half2: ["si"] },
+          apr: { half1: ["si"], half2: ["t"] },
+          may: { half1: ["t"], half2: ["t"] },
+          jun: { half1: ["t"], half2: ["t"] },
+          jul: { half1: ["h"], half2: ["h"] },
+          aug: { half1: ["h"], half2: ["h"] },
+          sep: { half1: ["h"], half2: ["h"] },
+          oct: { half1: ["h"], half2: [] },
+          nov: { half1: [], half2: [] },
+          dec: { half1: [], half2: [] },
         },
-        {
-          id: "t-tp",
-          activity: "transplant",
-          anchor: { kind: "lastFrost" },
-          offsetDays: [7, 70], // after frost through early summer
-          gate: { kind: "soilTemp", depthIn: 4, thresholdF: 60, direction: "rising" },
-          note: "Wait for 60°F soil at 4″ before setting out.",
-        },
-        {
-          id: "t-h",
-          activity: "harvest",
-          fromEventId: "t-tp",
-          method: "transplant", // uses daysToMaturity.transplant = [75, 85]
-        },
-      ],
+      },
     },
 
     // -------------------------------------------------------------------
-    // SPINACH — very-hardy; spring run forward from lastFrost, fall/overwinter
-    // run backward from firstFrost. Legacy grid smeared both into one row.
+    // SPINACH — ANCHORED timing: spring run forward from lastFrost,
+    // fall/overwinter run backward from firstFrost. Legacy grid smeared both
+    // into one row; the event list keeps the two seasons distinct. Note the
+    // overwinter sowing's derived harvest lands in the NEXT calendar year —
+    // resolved windows live on the unbounded SeasonDay axis (may exceed 366).
     // -------------------------------------------------------------------
     {
       crop: "spinach",
@@ -92,7 +90,9 @@ export const PIEDMONT_NC: RegionPack = {
         note: "Realistic cool-season row: broad May–June sowing dropped, mid-August establishment restart kept as heat-managed, explicit late-Oct/early-Nov outdoor sowing restored for overwinter intent alongside protected-culture support.",
       },
       tips: "Flavor sweetens after frost. Fall/overwinter is the stronger Piedmont window; the November sow is overwinter intent, not a same-fall harvest.",
-      events: [
+      timing: {
+        kind: "anchored",
+        events: [
         // --- spring run (forward from lastFrost) ---
         {
           id: "s-sg-spring",
@@ -151,7 +151,8 @@ export const PIEDMONT_NC: RegionPack = {
           method: "direct",
           note: "Sweetest after hard frost; picking runs into winter under cover.",
         },
-      ],
+        ],
+      },
     },
   ],
 };

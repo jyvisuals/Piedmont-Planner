@@ -93,6 +93,40 @@ export interface DerivedHarvest {
 export type TimingEvent = AnchoredEvent | DerivedHarvest;
 
 // ---------------------------------------------------------------------------
+// D2b — Verbatim half-month grids (curated packs may skip anchoring entirely)
+// ---------------------------------------------------------------------------
+// A curated pack's timing is region-locked by definition, so it does not need
+// portable anchor rules. Carrying the reviewed half-month grid VERBATIM keeps
+// hand-tuned data zero-loss (no lossy grid→offset inversion), makes the
+// "Carrboro must not move" regression gate true by construction, and matches
+// how Extension calendars are actually published (date tables, not offsets).
+// Anchored events remain available for packs that want day precision; the
+// computed layer always uses them.
+
+/** The app's legacy single-letter codes, exactly as stored in data.js today. */
+export type HalfMonthCode = "s" | "si" | "sg" | "t" | "tg" | "B" | "h" | "*";
+
+export type MonthId =
+  | "jan" | "feb" | "mar" | "apr" | "may" | "jun"
+  | "jul" | "aug" | "sep" | "oct" | "nov" | "dec";
+
+export interface HalfMonthCells {
+  half1: HalfMonthCode[];
+  half2: HalfMonthCode[];
+}
+
+/** The 24-slot grid, byte-compatible with a data.js `months` object. */
+export type HalfMonthGrid = Record<MonthId, HalfMonthCells>;
+
+/**
+ * How a pack expresses a crop's timing. `verbatim` is the migration default
+ * for curated data; `anchored` opts into day precision.
+ */
+export type PackTiming =
+  | { kind: "verbatim"; grid: HalfMonthGrid }
+  | { kind: "anchored"; events: TimingEvent[] };
+
+// ---------------------------------------------------------------------------
 // D3 + D4 — Global crop catalog: stable slugs + structured days-to-maturity
 // ---------------------------------------------------------------------------
 // Crop identity lives here, keyed by a stable slug (never a per-file ordinal).
@@ -166,14 +200,14 @@ export type Footprint =
 
 /**
  * One crop's override within a pack. Three intents are distinguishable:
- *   - override timing  → `events` present
- *   - inherit computed → `events` omitted (may still override prose/varieties)
+ *   - override timing  → `timing` present (verbatim grid or anchored events)
+ *   - inherit computed → `timing` omitted (may still override prose/varieties)
  *   - exclude here      → `excluded: true` (crop hidden for this region)
- * Field-level: `varieties`/`tips` override independently of `events` (D5).
+ * Field-level: `varieties`/`tips` override independently of `timing` (D5).
  */
 export interface PackCropOverride {
   crop: CropSlug;
-  events?: TimingEvent[];
+  timing?: PackTiming;
   varieties?: string;
   tips?: string;
   excluded?: boolean;
@@ -188,8 +222,13 @@ export interface RegionPack {
   name: string;
   description?: string;
   footprint: Footprint;
-  /** Most-specific footprint wins when packs overlap; higher = wins (D5). */
-  specificity: number;
+  /**
+   * Precedence when footprints overlap is DERIVED from the footprint itself —
+   * counties > polygon > bbox, then smaller area wins — so contributors cannot
+   * collide by all picking the same magic number. This optional field is a
+   * tie-breaker only (higher wins), not the primary key (D5).
+   */
+  specificityTieBreaker?: number;
   /** Informational only — NOT the resolution key. Zone alone is too coarse (D5/D7). */
   zones?: string[];
   /** Pack-local source library, referenced by Provenance.sources. */
@@ -203,9 +242,28 @@ export interface RegionPack {
 // Declared as interfaces (no implementations here). Locking these signatures is
 // the reversibility hedge: any provider can move from a static-JSON client impl
 // to a serverless proxy without touching the engine, resolver, or UI.
+//
+// Layering rule: providers are the ASYNC acquisition layer (every method
+// returns a Promise, so static-JSON and network impls are interchangeable);
+// they assemble a SiteContext, which is PLAIN SERIALIZABLE DATA (no functions)
+// so it can be cached in localStorage for offline PWA use and snapshotted as a
+// test fixture; the engine/resolver is pure and synchronous over that context.
 
-/** 1–366. */
+/** 1–366: an anchor date within the calendar year. */
 export type DayOfYear = number;
+
+/**
+ * The unbounded day axis timing math runs on: days since Jan 1 of the plan
+ * year, allowed to exceed 366. Cross-year crops need this — garlic planted in
+ * October (~day 290) is harvested the following June (~day 520), and an
+ * overwinter sowing's derived harvest lands in the next calendar year.
+ * Normalize modulo the year ONLY at render time; never do modular interval
+ * arithmetic mid-computation.
+ */
+export type SeasonDay = number;
+
+/** Typed key into the frost table: `${thresholdF}/${probabilityPct}`. */
+export type FrostKey = `${FrostThresholdF}/${FrostProbabilityPct}`;
 
 export interface SoilSummary {
   textureClass: string; // e.g. "clay", "sandy loam"
@@ -213,27 +271,33 @@ export interface SoilSummary {
   ph?: number;
 }
 
-/** D7 — lat/lng is canonical; ZIP is merely one way to obtain it. */
+/**
+ * D7 — lat/lng is canonical; ZIP is merely one way to obtain it.
+ * Plain data by design: assembled once by providers, cached, fed to the engine.
+ */
 export interface SiteContext {
   lat: number;
   lng: number;
   zone: string; // USDA hardiness zone, e.g. "8a"
   frostFreeDays: number;
-  /** Resolved anchor dates for this site (provider-backed). */
-  lastFrost: (ref?: Partial<FrostAnchorRef>) => DayOfYear;
-  firstFrost: (ref?: Partial<FrostAnchorRef>) => DayOfYear;
+  /** Resolved frost-date table; the engine looks anchors up by FrostKey. */
+  frost: {
+    lastFrost: Partial<Record<FrostKey, DayOfYear>>;
+    firstFrost: Partial<Record<FrostKey, DayOfYear>>;
+    /** Nearest-station identity, for honest sourcing in the UI (D8). */
+    station: { id: string; distanceKm: number };
+  };
   soil?: SoilSummary;
+  /** Dataset versions that produced this context — pinned per D8. */
+  datasetVersions: Record<string, string>; // e.g. { ncei: "1991-2020", phz: "2023" }
 }
 
 export interface FrostProvider {
-  lastFrost(lat: number, lng: number, ref: FrostAnchorRef): DayOfYear;
-  firstFrost(lat: number, lng: number, ref: FrostAnchorRef): DayOfYear;
-  /** Nearest station id + distance, for honest sourcing in the UI (D8). */
-  station(lat: number, lng: number): { id: string; distanceKm: number };
+  frostTable(lat: number, lng: number): Promise<SiteContext["frost"]>;
 }
 
 export interface ZoneProvider {
-  zone(lat: number, lng: number): string;
+  zone(lat: number, lng: number): Promise<string>;
 }
 
 export interface SoilProvider {
@@ -241,15 +305,20 @@ export interface SoilProvider {
 }
 
 export interface WeatherProvider {
-  soilTempCrossing(lat: number, lng: number, depthIn: number, thresholdF: number): DayOfYear | null;
-  activeFrostAlert(lat: number, lng: number): boolean;
+  soilTempCrossing(
+    lat: number,
+    lng: number,
+    depthIn: number,
+    thresholdF: number
+  ): Promise<DayOfYear | null>;
+  activeFrostAlert(lat: number, lng: number): Promise<boolean>;
 }
 
-/** A resolved timing window, in day-of-year, ready to bucket into half-months. */
+/** A resolved timing window on the season-day axis, pre-bucketing. */
 export interface ResolvedWindow {
   activity: Activity;
-  start: DayOfYear;
-  end: DayOfYear;
+  start: SeasonDay;
+  end: SeasonDay; // >= start; may exceed 366 (wraps into the next year at render)
   special?: boolean;
   gated?: boolean;
   note?: string;
@@ -257,7 +326,13 @@ export interface ResolvedWindow {
 
 export interface ResolvedCropCalendar {
   crop: CropSlug;
-  windows: ResolvedWindow[];
+  /**
+   * The UI currency — always present. Verbatim curated timing passes through
+   * unchanged; anchored/computed timing is bucketed into it by the engine.
+   */
+  grid: HalfMonthGrid;
+  /** Day-precision windows, present only when timing was anchored/computed. */
+  windows?: ResolvedWindow[];
   /** "curated" when a pack supplied timing; "computed" otherwise (D8 — never blurred). */
   origin: "curated" | "computed";
   provenance?: Provenance;

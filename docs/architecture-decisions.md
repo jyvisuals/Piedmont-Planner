@@ -91,24 +91,43 @@ Two coupled traps in today's model, both structural:
   lettuce counts *backward* from `firstFrost`. Today those two seasons are
   smeared into one row of scattered codes.
 
-**Decision:** the canonical unit is a **list of anchored events per crop**, each
-event day-resolution:
+**Decision (revised after review):** the **computed layer and any pack that
+wants day precision** use a **list of anchored events per crop**, day-resolution:
 
 ```jsonc
-// tomato, one pack row (illustrative)
+// spinach fall run, one pack row (illustrative)
 "events": [
-  { "activity": "sowIndoors", "anchor": "lastFrost", "offset": [-56, -42] },   // days
-  { "activity": "transplant", "anchor": "lastFrost", "offset": [7, 21],
-    "gate": { "anchor": "soilTemp", "depth": 4, "min": 60 } },
-  { "activity": "harvest", "derived": "transplant + daysToMaturity" }
+  { "activity": "sowOutdoors", "anchor": "firstFrost", "offset": [-56, -14] },  // days
+  { "activity": "sowOutdoors", "anchor": "firstFrost", "offset": [0, 14],
+    "special": true },                                                          // overwinter intent
+  { "activity": "harvest", "derived": "sow + daysToMaturity" }
 ]
 ```
 
-Half-months remain the **rendering** (bucket day-ranges into the 24 slots the UI
-already knows). The grid stays on screen; it stops being the source of truth.
+**But curated packs may instead carry their timing *verbatim*** — the literal
+reviewed half-month grid, byte-compatible with today's `data.js`. Converting
+hand-reviewed grids into inferred offsets is a lossy, underdetermined inversion
+that would inject derivation error into the one layer the override model swears
+is authoritative — and it would make "Carrboro must not move" nearly impossible
+to guarantee. Verbatim carriage makes that regression gate hold **by
+construction**, drops the risky grid→offset migration off the critical path
+entirely, and matches how Extension calendars are actually published (date
+tables, not offsets). Packs are region-locked by definition, so they don't need
+portable rules; only the computed layer does. Timing is therefore a union:
+`{ kind: "verbatim", grid } | { kind: "anchored", events }`.
 
-**Cost of getting it wrong:** retrofitting multi-season + day precision onto a
-grid-shaped corpus of packs is a full re-encode.
+Half-months remain the **rendering currency** in both cases: verbatim grids pass
+through unchanged; anchored/computed windows are bucketed into the same 24 slots.
+
+**Year-wrap pin (part of this contract):** computed windows live on an
+**unbounded season-day axis** (days since Jan 1 of the plan year, allowed to
+exceed 366) — garlic planted in October is harvested the following June, and an
+overwinter sowing's derived harvest lands in the next calendar year. Normalize
+modulo the year only at render time; never do modular interval arithmetic
+mid-computation.
+
+**Cost of getting it wrong:** retrofitting multi-season + day precision (or
+cross-year semantics) onto a grid-shaped corpus of packs is a full re-encode.
 
 ---
 
@@ -161,9 +180,11 @@ upfront, even the parts you won't exercise for months:
   pack overrides just `tomato` and `pea-snap-pole` and lets the rest compute; it
   may override *dates* while inheriting *prose*, or vice-versa. Encode
   "intentionally omits" distinctly from "inherits."
-- **Overlap resolution = most-specific footprint wins.** A county pack beats a
-  state pack beats the computed layer. Make specificity explicit so two
-  overlapping packs are never ambiguous.
+- **Overlap resolution = most-specific footprint wins, and specificity is
+  *derived*, not hand-picked.** A county pack beats a state pack beats the
+  computed layer. Derive precedence from the footprint itself (counties >
+  polygon > bbox, then smaller area wins) so contributors can't collide by all
+  choosing the same magic number; keep a manual field only as a tie-breaker.
 - **Footprint geometry is a required field from day one.** A pack declares
   *where it applies* as geometry (simplified polygon / county set / bbox); the
   resolver does point-in-polygon. Keying packs by hardiness zone alone is a
@@ -194,6 +215,15 @@ static-JSON-backed client providers; keep the *option* to move any one of them
 behind a tiny serverless proxy later **without touching the engine, resolver, or
 UI**. The one-way door is not the hosting choice — it's *scattering `fetch()` and
 dataset assumptions through the codebase*. The interface is the reversibility.
+
+Two signature pins that make the seam real (added after review):
+
+- **Every provider method is async**, even ones a static-JSON impl could answer
+  synchronously — a seam whose signatures forbid the network impl isn't a seam.
+- **Providers assemble a `SiteContext` that is plain serializable data** (a
+  frost-date *table*, not closures). No functions in the context: it must be
+  cacheable in `localStorage` for offline PWA use and snapshottable as a test
+  fixture. The engine/resolver stays pure and synchronous over that context.
 
 **Deliberately deferred behind this seam:** the actual serverless proxy, the
 SSURGO fetch-and-cache, and the live-weather layer. Decide the seam now, build
@@ -308,14 +338,21 @@ region immediately** — even a rough, purely-computed one (say, a short-season
 northern zone) — so the resolver, crop catalog, anchor vocabulary, pack schema,
 and providers are all exercised by **two** consumers from day one, not one.
 
-Suggested first milestone (**Phase 1.0 — the skeleton**), in dependency order:
+Suggested first milestone (**Phase 1.0 — the skeleton**), in dependency order
+(revised: verbatim carriage moves the Piedmont migration off the risky path):
 
 1. Crop catalog + structured DTH (D3, D4) — extracted from today's data.
-2. Anchor vocabulary + offset engine (D1, D2), pure and unit-tested.
-3. Pack schema (D5); re-express **Piedmont as pack #1**, regression-gated to
-   byte-for-byte-unchanged output.
-4. `FrostProvider` + `ZoneProvider` as static-JSON client providers (D6, D7).
+2. **Loader**: mechanically translate `data.js` into **Piedmont pack #1 with
+   verbatim timing** (D2/D5). Regression gate — output grid identical to
+   `data.js` — holds by construction and is asserted by a golden test.
+3. Anchor vocabulary + offset engine (D1, D2), pure and unit-tested with
+   `node:test` — golden tests for anchored crops (e.g. spinach) at fixture
+   sites, including the cross-year season-day cases (garlic, overwinter sows).
+4. `FrostProvider` + `ZoneProvider` as static-JSON client providers (D6, D7),
+   assembling a serializable `SiteContext`.
 5. Resolver + **one computed second region** to prove override-vs-computed.
+6. **Runtime pack validator** — TS types only protect TS-authored packs;
+   contributor packs arriving as JSON need schema validation at load time.
 
 Only after that skeleton holds two packs do you scale: more packs, `SoilProvider`
 prose, the live-weather layer, personalization.
@@ -327,11 +364,11 @@ prose, the live-weather layer, personalization.
 | # | Decision | Recommendation | Reversibility |
 |---|---|---|---|
 | D1 | Anchor vocabulary & frost semantics | Small fixed set; frost = threshold+probability parameter | One-way ⭐ |
-| D2 | Canonical timing shape | Day-resolution anchored-event list; half-months are render-only | One-way ⭐ |
+| D2 | Canonical timing shape | Union: curated packs may carry the reviewed grid **verbatim**; anchored day-resolution events for computed + opt-in packs; unbounded season-day axis for cross-year crops; half-months are render-only | One-way ⭐ |
 | D3 | Crop identity across packs | Global catalog, stable slugs; varieties stay in packs | One-way ⭐ |
 | D4 | Days-to-maturity | Structured numeric per method | Hard to reverse |
 | D5 | Pack schema & precedence | Per-crop+field merge; most-specific footprint wins; provenance + `schemaVersion` required; geometry from day one | One-way ⭐ |
-| D6 | External data access | Provider interfaces; static-client first, proxy optional | Seam one-way, impl two-way |
+| D6 | External data access | Provider interfaces, all-async signatures; providers assemble a plain-data serializable `SiteContext`; static-client first, proxy optional | Seam one-way, impl two-way |
 | D7 | Location identity | lat/lng canonical; ZIP an input; US-only now | One-way |
 | D8 | Provenance & uncertainty | Computed≠curated labeled; probabilities not dates; pin dataset versions | Hard to reverse |
 | D9 | Language & stack | TypeScript as the contract layer; one runtime (TS, incl. any proxy); Python only for build-time ETL; data-as-data + tests; no framework/WASM now | Soft |

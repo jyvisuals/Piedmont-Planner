@@ -274,12 +274,14 @@ Add ZIP/geolocation input. Fetch & display frost dates (NCEI), hardiness zone
 (PRISM/phzmapi), and soil summary (SSURGO). *Don't change the calendar yet.*
 Ships value immediately and proves the data pipes before touching the crop model.
 
-**Phase 1 — Re-anchor the calendar + stand up the override resolver (the big one).**
-Add anchor-relative offset rules to build the computed base layer, and add the
-**resolver** (§3) that prefers a curated regional pack over the computed calendar.
-Re-cast today's `data.js` as the **Piedmont pack** — unchanged — so Carrboro
-output is byte-for-byte identical (regression gate — reuse the `compare-ncsu.mjs`
-pattern). Add the crop-applicability filter for computed regions.
+**Phase 1 — Stand up the override resolver + the computed engine (the big one).**
+Re-cast today's `data.js` as the **Piedmont pack carrying its reviewed grid
+verbatim** — curated timing is never converted to offsets, so Carrboro output is
+byte-for-byte identical by construction (asserted by a golden test; reuse the
+`compare-ncsu.mjs` pattern). Separately, build the anchor-relative offset engine
+as the **computed base layer** for uncurated regions, and the **resolver** (§3)
+that prefers packs over computed. Add the crop-applicability filter for computed
+regions.
 
 **Phase 2 — Live overlays.**
 NWS frost/freeze alerts and Open-Meteo soil-temp readiness surfaced on the chore

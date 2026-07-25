@@ -10,9 +10,9 @@ the contracts are exercised by real data instead of prose.
 
 | File | Decision(s) | What it is |
 |---|---|---|
-| `types.ts` | D1–D8 | The contract layer — anchors, anchored-event timing, crop catalog, pack schema + footprint/precedence, provenance, and the provider/resolver seams. |
+| `types.ts` | D1–D8 | The contract layer — anchors, the timing union (verbatim grid \| anchored events), crop catalog, pack schema + footprint/precedence, provenance, and the provider/resolver seams. |
 | `crop-catalog.ts` | D3, D4 | Global crop catalog: stable slugs + **structured** days-to-maturity (parsed from the old free text). |
-| `packs/piedmont-nc.ts` | D3, D5 | Pack #1 — today's data re-expressed as anchor-relative events, with **tomato** (spring) and **spinach** (spring + fall/overwinter) written out fully. |
+| `packs/piedmont-nc.ts` | D2, D3, D5 | Pack #1, demonstrating **both timing kinds**: **tomato** carries its reviewed grid *verbatim* (the migration default — zero-loss), **spinach** is *anchored* (spring forward from `lastFrost`, fall/overwinter backward from `firstFrost`). |
 | `tsconfig.json` | D9 | Strict typecheck (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`). |
 
 ## How the pieces map to the decisions
@@ -22,10 +22,15 @@ the contracts are exercised by real data instead of prose.
   `calendarDate`). Frost is a *reference* (`FrostAnchorRef`: threshold +
   probability, default 32°F/50%), never a bare date — so the 10–90% spread stays
   expressible.
-- **D2 — day-resolution anchored events.** A crop's timing is a `TimingEvent[]`.
-  Spinach shows why: its spring events count forward from `lastFrost` and its
-  fall events count backward from `firstFrost`, in the same list. Half-months are
-  a rendering of these day windows, not the storage.
+- **D2 — the timing union.** Curated packs may carry their reviewed half-month
+  grid **verbatim** (`{ kind: "verbatim", grid }`) — no lossy grid→offset
+  inversion, and the "Carrboro must not move" gate holds by construction. Day
+  precision is opt-in via **anchored events** (`{ kind: "anchored", events }`),
+  which the computed layer always uses. Spinach shows why events matter: spring
+  counts forward from `lastFrost`, fall counts backward from `firstFrost`, in
+  one list. Resolved windows live on the unbounded **season-day axis** (may
+  exceed 366) so cross-year crops (garlic, overwinter sows) work; half-months
+  are the rendering currency in both cases.
 - **D3 — stable crop identity.** Everything keys off `CropSlug`. Varieties/tips
   live in the *pack* (regional); identity + DTH live in the *catalog* (global).
 - **D4 — structured DTH.** `DaysToMaturity` is numeric per method; a derived
@@ -44,12 +49,16 @@ cd schema && tsc --noEmit -p tsconfig.json    # strict; currently passes
 
 ## Next steps (not in this spec)
 
-1. **Offset engine** — implement `Resolver` / `resolveEvent`: given a
-   `SiteContext`, turn `TimingEvent`s into `ResolvedWindow`s (day-of-year), then
-   bucket to half-months. Pure and unit-tested.
-2. **The regression gate** — assert that rendering `piedmont-nc` at Carrboro's
-   frost dates reproduces today's `data.js` calendar (generalize
-   `scripts/compare-ncsu.mjs`).
-3. **Providers** — static-JSON `FrostProvider` + `ZoneProvider` first (D6/D7).
+1. **Loader + regression gate** — mechanically translate `data.js` into the
+   full verbatim Piedmont pack, and assert (golden test) that its grids equal
+   `data.js` exactly. By-construction, but still asserted.
+2. **Offset engine** — implement `Resolver`: given a plain-data `SiteContext`,
+   turn `TimingEvent`s into `ResolvedWindow`s on the season-day axis, then
+   bucket to half-month grids. Pure, synchronous, unit-tested with `node:test`
+   (built into Node — no new dependencies), including cross-year cases.
+3. **Providers** — static-JSON `FrostProvider` + `ZoneProvider` first (D6/D7),
+   assembling the serializable `SiteContext`.
 4. **Second region** — add one computed-only region to force N=2 on every seam
    before scaling (the sequencing insight in the decisions doc).
+5. **Runtime pack validator** — TS types protect only TS-authored packs;
+   contributor packs arriving as JSON need load-time schema validation.
