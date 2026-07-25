@@ -34,6 +34,16 @@ export interface CropClimate {
   ceilingF: number;
   frostKilled: boolean;
   season: "warm" | "cool";
+  /**
+   * Reproductive NIGHT-temperature limits for warm fruiting crops (°F, daily
+   * min). Distinct from `ceilingF` (a daytime-max lethal/stress limit): fruit set
+   * fails when flowering nights are too WARM (pollen sterility — tomatoes above
+   * ~72°F, peppers above ~75°F) or, for peppers, too COOL (below ~60°F). Modeled
+   * only over the flowering/fruiting stage, and only for crops that carry it —
+   * this is why a warm-season crop can fail in midsummer with zero frost risk.
+   */
+  nightSetMaxF?: number;
+  nightSetMinF?: number;
 }
 
 // Class defaults keyed off the catalog's existing hardiness — the bootstrap the
@@ -55,9 +65,12 @@ const CLASS_DEFAULTS: Record<Hardiness, CropClimate | null> = {
 // Anything not listed uses its hardiness-class default above.
 const CROP_OVERRIDES: Partial<Record<CropSlug, Partial<CropClimate>>> = {
   // Warm-season fruiting crops — germinate warm, set fruit poorly in extreme heat.
-  tomatoes: { germMinF: 60, optMinF: 65, optMaxF: 85, ceilingF: 92 },
-  peppers: { germMinF: 65, optMinF: 70, optMaxF: 88, ceilingF: 95 },
-  eggplant: { germMinF: 65, optMinF: 70, optMaxF: 90, ceilingF: 98 },
+  // nightSet* captures reproductive night-temperature limits (pollen viability):
+  // tomatoes abort fruit set above ~72°F nights; peppers above ~75°F and below
+  // ~60°F. This is why they stall in midsummer despite no frost (Florida/AZ).
+  tomatoes: { germMinF: 60, optMinF: 65, optMaxF: 85, ceilingF: 92, nightSetMaxF: 72 },
+  peppers: { germMinF: 65, optMinF: 70, optMaxF: 88, ceilingF: 95, nightSetMaxF: 75, nightSetMinF: 58 },
+  eggplant: { germMinF: 65, optMinF: 70, optMaxF: 90, ceilingF: 98, nightSetMaxF: 75 },
   cucumbers: { germMinF: 60, optMinF: 65, optMaxF: 90, ceilingF: 95 },
   "squash-summer": { germMinF: 60, optMaxF: 90, ceilingF: 95 },
   "squash-winter": { germMinF: 60, optMaxF: 90, ceilingF: 95 },

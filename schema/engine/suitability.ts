@@ -75,10 +75,12 @@ export interface Factors {
   heat: number;
   /** Cold-limited growth adequacy (mean temp vs the crop's growth band). */
   growth: number;
+  /** Mean P(flowering nights allow fruit set); 1 for crops without night limits. */
+  fruitSet: number;
 }
 
 /** Which factor most limits a window — the human-facing reason code. */
-export type LimitingFactor = "soil-temp" | "frost" | "heat" | "cold-growth";
+export type LimitingFactor = "soil-temp" | "frost" | "heat" | "cold-growth" | "night-heat";
 
 function limitingOf(f: Factors): LimitingFactor {
   let key: keyof Factors = "germ";
@@ -86,7 +88,14 @@ function limitingOf(f: Factors): LimitingFactor {
   if (f.frost < min) { min = f.frost; key = "frost"; }
   if (f.heat < min) { min = f.heat; key = "heat"; }
   if (f.growth < min) { min = f.growth; key = "growth"; }
-  return key === "germ" ? "soil-temp" : key === "frost" ? "frost" : key === "heat" ? "heat" : "cold-growth";
+  if (f.fruitSet < min) { min = f.fruitSet; key = "fruitSet"; }
+  switch (key) {
+    case "germ": return "soil-temp";
+    case "frost": return "frost";
+    case "heat": return "heat";
+    case "fruitSet": return "night-heat";
+    default: return "cold-growth";
+  }
 }
 
 /**
@@ -151,10 +160,30 @@ function scorePlanting(
   }
   const growth = growthSum / growthN;
 
-  return { germ, frost, heat, growth };
+  // fruitSet: reproductive NIGHT-temperature suitability, only for warm fruiting
+  // crops that carry night limits. Evaluated over the flowering/fruiting stage
+  // (the back ~60% of the span), on the daily MIN (night low). This is the
+  // "warm crop fails in midsummer despite no frost" factor — pollen sterility.
+  let fruitSet = 1;
+  if (cc.nightSetMaxF !== undefined || cc.nightSetMinF !== undefined) {
+    const repStart = plantDay + Math.round(hi * 0.4);
+    let setSum = 0, setN = 0;
+    for (let d = repStart; d <= plantDay + hi; d++) {
+      const nMean = minTempF(climate, d);
+      const nSd = minSpreadF(climate, d);
+      let p = 1;
+      if (cc.nightSetMaxF !== undefined) p *= pAtMost(nMean, nSd, cc.nightSetMaxF);
+      if (cc.nightSetMinF !== undefined) p *= pAtLeast(nMean, nSd, cc.nightSetMinF);
+      setSum += p;
+      setN += 1;
+    }
+    fruitSet = setN ? setSum / setN : 1;
+  }
+
+  return { germ, frost, heat, growth, fruitSet };
 }
 
-const scoreOf = (f: Factors): number => f.germ * f.frost * f.heat * f.growth;
+const scoreOf = (f: Factors): number => f.germ * f.frost * f.heat * f.growth * f.fruitSet;
 
 /** A planting window plus its success probability and limiting reason code. */
 export interface PlantingWindow extends ResolvedWindow {

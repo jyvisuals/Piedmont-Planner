@@ -41,9 +41,12 @@ const CLASS_DEFAULTS = {
 // Anything not listed uses its hardiness-class default above.
 const CROP_OVERRIDES = {
     // Warm-season fruiting crops — germinate warm, set fruit poorly in extreme heat.
-    tomatoes: { germMinF: 60, optMinF: 65, optMaxF: 85, ceilingF: 92 },
-    peppers: { germMinF: 65, optMinF: 70, optMaxF: 88, ceilingF: 95 },
-    eggplant: { germMinF: 65, optMinF: 70, optMaxF: 90, ceilingF: 98 },
+    // nightSet* captures reproductive night-temperature limits (pollen viability):
+    // tomatoes abort fruit set above ~72°F nights; peppers above ~75°F and below
+    // ~60°F. This is why they stall in midsummer despite no frost (Florida/AZ).
+    tomatoes: { germMinF: 60, optMinF: 65, optMaxF: 85, ceilingF: 92, nightSetMaxF: 72 },
+    peppers: { germMinF: 65, optMinF: 70, optMaxF: 88, ceilingF: 95, nightSetMaxF: 75, nightSetMinF: 58 },
+    eggplant: { germMinF: 65, optMinF: 70, optMaxF: 90, ceilingF: 98, nightSetMaxF: 75 },
     cucumbers: { germMinF: 60, optMinF: 65, optMaxF: 90, ceilingF: 95 },
     "squash-summer": { germMinF: 60, optMaxF: 90, ceilingF: 95 },
     "squash-winter": { germMinF: 60, optMaxF: 90, ceilingF: 95 },

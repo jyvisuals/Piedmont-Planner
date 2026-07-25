@@ -68,7 +68,17 @@ function limitingOf(f) {
         min = f.growth;
         key = "growth";
     }
-    return key === "germ" ? "soil-temp" : key === "frost" ? "frost" : key === "heat" ? "heat" : "cold-growth";
+    if (f.fruitSet < min) {
+        min = f.fruitSet;
+        key = "fruitSet";
+    }
+    switch (key) {
+        case "germ": return "soil-temp";
+        case "frost": return "frost";
+        case "heat": return "heat";
+        case "fruitSet": return "night-heat";
+        default: return "cold-growth";
+    }
 }
 /**
  * Probabilistic suitability of planting on `plantDay` for a `lo`..`hi`-day span,
@@ -124,9 +134,30 @@ function scorePlanting(cc, climate, plantDay, lo, hi, isDirect) {
         growthN += 1;
     }
     const growth = growthSum / growthN;
-    return { germ, frost, heat, growth };
+    // fruitSet: reproductive NIGHT-temperature suitability, only for warm fruiting
+    // crops that carry night limits. Evaluated over the flowering/fruiting stage
+    // (the back ~60% of the span), on the daily MIN (night low). This is the
+    // "warm crop fails in midsummer despite no frost" factor — pollen sterility.
+    let fruitSet = 1;
+    if (cc.nightSetMaxF !== undefined || cc.nightSetMinF !== undefined) {
+        const repStart = plantDay + Math.round(hi * 0.4);
+        let setSum = 0, setN = 0;
+        for (let d = repStart; d <= plantDay + hi; d++) {
+            const nMean = minTempF(climate, d);
+            const nSd = minSpreadF(climate, d);
+            let p = 1;
+            if (cc.nightSetMaxF !== undefined)
+                p *= pAtMost(nMean, nSd, cc.nightSetMaxF);
+            if (cc.nightSetMinF !== undefined)
+                p *= pAtLeast(nMean, nSd, cc.nightSetMinF);
+            setSum += p;
+            setN += 1;
+        }
+        fruitSet = setN ? setSum / setN : 1;
+    }
+    return { germ, frost, heat, growth, fruitSet };
 }
-const scoreOf = (f) => f.germ * f.frost * f.heat * f.growth;
+const scoreOf = (f) => f.germ * f.frost * f.heat * f.growth * f.fruitSet;
 // 24 half-month slot boundaries (day-of-year), mirroring resolve.ts SLOTS.
 const MONTH_LEN = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const SLOT_BOUNDS = (() => {

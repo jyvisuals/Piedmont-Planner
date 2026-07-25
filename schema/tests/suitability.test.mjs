@@ -158,6 +158,25 @@ test("overwintered garlic gets a fall plantSet window, not spring", () => {
   assert.ok(!spring, "garlic should not be planted in spring");
 });
 
+test("night fruit-set limits warm fruiting crops in hot-night climates", () => {
+  // Phoenix summer nights (~84°F) fail tomato/pepper fruit set even with no frost.
+  const phx = realSiteClimate(tempFor(PHOENIX));
+  const cc = climateFor(CROP_CATALOG["tomatoes"]);
+  assert.equal(cc.nightSetMaxF, 72, "tomatoes should carry a night fruit-set limit");
+  const tom = suitabilityFor(CROP_CATALOG["tomatoes"], phx);
+  // No planting whose fruiting stage lands in the hot-night peak (jul, slots 12-13).
+  const slots = new Set();
+  const grid = bucketWindows(tom.windows);
+  SLOTS.forEach((sl, i) => {
+    if ((grid[sl.month][sl.half] || []).some((c) => ["s", "t", "B"].includes(c))) slots.add(i);
+  });
+  assert.ok(![12, 13].some((i) => slots.has(i)), "no tomato planting into the Jul hot-night peak");
+  // Peppers (both hot- and cold-night limits) surface the night-heat reason.
+  const pep = suitabilityFor(CROP_CATALOG["peppers"], phx);
+  assert.ok(pep && pep.windows.length);
+  assert.ok(pep.windows.some((w) => w.limiting === "night-heat"), "peppers should be night-heat limited in the desert");
+});
+
 test("perennials and DTH-less crops produce no suitability estimate", () => {
   const climate = modelSiteClimate(siteFor(CHAPEL_HILL));
   assert.equal(suitabilityFor(CROP_CATALOG["asparagus"], climate), null); // perennial
