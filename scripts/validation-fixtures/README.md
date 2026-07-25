@@ -67,6 +67,8 @@ calendar into a fixture and the harness can validate there too.
   — forcing these two would regress many. Left as "est."-labeled estimates;
   a future per-crop computed-override mechanism could address them without
   touching the shared rule.
-- Dominant coverage gap: succession-sown summer crops (beans, squash, cucumbers)
-  where curated sows continuously but computed gives one window — a rule
-  enhancement (succession windows), not a timing error.
+- **Succession windows added:** warm-season direct crops (beans, squash,
+  cucumbers…) now sow continuously from after last frost to the last planting
+  that matures before first frost, via a two-anchor window that self-adjusts to
+  season length. This closed most of the coverage gap: full fidelity **12%→29%**,
+  missed slots **153→82**.

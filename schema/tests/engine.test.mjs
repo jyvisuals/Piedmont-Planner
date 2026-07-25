@@ -105,6 +105,25 @@ test("spinach events: two seasons, derived harvests, cross-year overwinter", () 
   assert.ok(sows.some((w) => w.start === 301 && w.end === 315 && w.special));
 });
 
+test("two-anchor window: start on lastFrost, end on firstFrost", () => {
+  const events = [
+    { id: "succ", activity: "sowOutdoors", anchor: { kind: "lastFrost" }, offsetDays: [7, -55], endAnchor: { kind: "firstFrost" } },
+  ];
+  const [w] = resolveAnchoredEvents(events, SITE, CROP_CATALOG.spinach);
+  assert.equal(w.start, 105 + 7); // lastFrost(105) + 7
+  assert.equal(w.end, 301 - 55); // firstFrost(301) − 55
+});
+
+test("two-anchor window clamps to a point when the season can't fit it", () => {
+  // maxDTH so long the computed end precedes the start → clamp to start (one planting).
+  const events = [
+    { id: "tight", activity: "sowOutdoors", anchor: { kind: "lastFrost" }, offsetDays: [7, -400], endAnchor: { kind: "firstFrost" } },
+  ];
+  const [w] = resolveAnchoredEvents(events, SITE, CROP_CATALOG.spinach);
+  assert.equal(w.start, 112);
+  assert.equal(w.end, 112, "end clamped to start, never inverted");
+});
+
 test("derived harvest without the needed DTH range throws loudly", () => {
   const events = [
     { id: "p", activity: "sowOutdoors", anchor: { kind: "lastFrost" }, offsetDays: [0, 10] },

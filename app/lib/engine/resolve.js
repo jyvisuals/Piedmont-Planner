@@ -152,10 +152,22 @@ export function resolveAnchoredEvents(events, site, catalogEntry) {
             continue;
         const e = ev;
         const [lo, hi] = e.offsetDays;
-        if (lo > hi)
-            throw new Error(`event ${e.id}: offsetDays [${lo}, ${hi}] inverted`);
-        const base = anchorDay(site, e.anchor);
-        const span = { start: base + lo, end: base + hi };
+        const startBase = anchorDay(site, e.anchor);
+        let span;
+        if (e.endAnchor) {
+            // Two-anchor window (e.g. succession run): each edge on its own anchor.
+            // lo>hi is fine here since the offsets are relative to different anchors;
+            // a resolved end before start just means the crop barely fits one
+            // planting at this site — clamp to a point window rather than error.
+            const endBase = anchorDay(site, e.endAnchor);
+            const start = startBase + lo;
+            span = { start, end: Math.max(start, endBase + hi) };
+        }
+        else {
+            if (lo > hi)
+                throw new Error(`event ${e.id}: offsetDays [${lo}, ${hi}] inverted`);
+            span = { start: startBase + lo, end: startBase + hi };
+        }
         planted.set(e.id, span);
         windows.push({
             activity: e.activity,

@@ -72,6 +72,13 @@ export interface AnchoredEvent {
   activity: Exclude<Activity, "harvest">;
   anchor: AnchorRef;
   offsetDays: OffsetDays;
+  /**
+   * Optional second anchor for the window's END. When present, the window spans
+   * from `anchor + offsetDays[0]` to `endAnchor + offsetDays[1]` — e.g. a
+   * succession sow that runs from after last frost until the last date a crop
+   * can still mature before first frost. When absent, both edges use `anchor`.
+   */
+  endAnchor?: AnchorRef;
   /** Optional readiness gate that must ALSO hold, e.g. soil ≥ 60°F @ 4″. */
   gate?: AnchorRef;
   /** The app's `*`: heat-managed germination, overwinter intent, etc. */

@@ -46,10 +46,11 @@ to other regions by transcribing their extension calendars.
   true window; forcing them would regress the shared rule that handles the other
   55 crops, so they're left as honest "est." estimates pending a per-crop
   computed-override mechanism.
-- **Full fidelity 10%**, but that gap is overwhelmingly the curated pack's
-  *succession runs* (beans/squash/cucumbers sown continuously all summer) that
-  the conservative single-window rule omits — a coverage enhancement, not a
-  timing error.
+- **Full fidelity: 10% → 29%** after adding **succession windows** (warm-season
+  direct crops now sow continuously from after last frost to the last planting
+  that matures before first frost — a two-anchor window that self-adjusts to
+  season length). Missed slots dropped 159→82. The remaining gap is finer
+  succession/quality nuance the conservative estimate doesn't chase.
 
 **Still open:** extend to non-Piedmont regions (the computed layer's real risk is
 elsewhere); the harness is ready, it needs transcribed reference fixtures.
