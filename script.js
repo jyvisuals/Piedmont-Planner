@@ -3,6 +3,10 @@
 // window.__applyPlantData below. Everything downstream reads ACTIVE_*.
 let ACTIVE_PLANTS = PLANTS;
 let ACTIVE_TASKS = typeof TASKS !== 'undefined' ? TASKS : null;
+// Names of rows whose timing is a computed estimate for the selected site.
+// Carrboro's name-keyed review/guide metadata must NOT be shown for these —
+// it would imply the computed timing was hand-reviewed.
+let COMPUTED_PLANT_NAMES = new Set();
 
 // State Management
 let state = {
@@ -793,6 +797,7 @@ function filterPlants() {
 }
 
 function getPlantReviewConfidenceMeta(plantName) {
+    if (COMPUTED_PLANT_NAMES.has(plantName)) return null;
     if (typeof getPlantReviewConfidence !== 'function') return null;
 
     const confidence = getPlantReviewConfidence(plantName);
@@ -821,6 +826,10 @@ function createReviewConfidenceBadge(plantName) {
 function hasPlantDetailData(plantName) {
     if (!plantName) return false;
 
+    // Computed rows stay clickable — the panel explains the estimate instead
+    // of showing Carrboro's review data.
+    if (COMPUTED_PLANT_NAMES.has(plantName)) return true;
+
     if (typeof hasGuideData === 'function' && hasGuideData(plantName)) return true;
     if (typeof getPlantReviewNote === 'function' && getPlantReviewNote(plantName)) return true;
     if (typeof getPlantReviewConfidence === 'function' && getPlantReviewConfidence(plantName)) return true;
@@ -833,6 +842,11 @@ function hasPlantDetailData(plantName) {
 
 function renderPlantDetailReview(plant) {
     const panelReview = document.getElementById('panelReview');
+
+    if (panelReview && COMPUTED_PLANT_NAMES.has(plant.name)) {
+        panelReview.innerHTML = '<div class="panel-empty-note">Computed estimate for your selected location — this timing was generated from frost data and generic crop rules, not hand-reviewed. The Carrboro review notes do not apply to it.</div>';
+        return;
+    }
 
     const confidenceMeta = getPlantReviewConfidenceMeta(plant.name);
     const evidenceSources = typeof getPlantReviewEvidenceSources === 'function'
@@ -1592,7 +1606,9 @@ function renderPlantDetailGuide(plant) {
     const panelVarieties = document.getElementById('panelVarieties');
     const panelTips = document.getElementById('panelTips');
 
-    const guideData = getPlantGuide(plant.name);
+    // Varieties/tips are Carrboro-regional guidance — not applicable to
+    // computed-estimate rows.
+    const guideData = COMPUTED_PLANT_NAMES.has(plant.name) ? null : getPlantGuide(plant.name);
 
     panelVarieties.innerHTML = '';
     if (guideData && guideData.varietiesText) {
@@ -1857,6 +1873,9 @@ function initApp() {
 // null = no localized chores for this site.
 window.__applyPlantData = function (plants, tasks) {
     ACTIVE_PLANTS = plants || PLANTS;
+    COMPUTED_PLANT_NAMES = new Set(
+        (plants || []).filter(p => p.computedEstimate).map(p => p.name)
+    );
     if (plants) {
         ACTIVE_TASKS = tasks || null;
     } else {

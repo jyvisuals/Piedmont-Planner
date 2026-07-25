@@ -126,11 +126,17 @@ test("half-hardy with both DTH: earlier lead, straddling set-out, fall window", 
   assert.deepEqual(findEvent(events, "computed-si-spring").offsetDays, [-49, -35]);
   assert.deepEqual(findEvent(events, "computed-t-spring").offsetDays, [-7, 14]);
   assert.deepEqual(findEvent(events, "computed-s-spring").offsetDays, [-14, 14]);
-  // Fall window sized by direct DTH [40, 50]: [-(50+14), -40].
+  // Fall window sized by direct DTH [40, 50]. Half-hardy crops are ended by
+  // frost, so the LATE edge reserves maxDTH: [-(50+14), -50] — this guarantees
+  // the derived harvest (latest sow + maxDTH) lands exactly at frost, never
+  // past it (PR #3 review finding).
   const fall = findEvent(events, "computed-s-fall");
   assert.equal(fall.anchor.kind, "firstFrost");
-  assert.deepEqual(fall.offsetDays, [-64, -40]);
+  assert.deepEqual(fall.offsetDays, [-64, -50]);
   assert.equal(findEvent(events, "computed-h-fall-direct").method, "direct");
+  // Regression: latest fall sowing + max maturity must not overshoot frost.
+  const [, lateEdge] = fall.offsetDays;
+  assert.ok(lateEdge + 50 <= 0, "half-hardy fall harvest must end by firstFrost");
 });
 
 test("hardy with direct DTH: early spring sow + backward-counted fall window", () => {

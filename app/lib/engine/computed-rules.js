@@ -34,12 +34,18 @@
 //                              no way to size a fall window; stay silent
 //
 // FALL window (half-hardy and hardy classes, only when a direct DTH exists):
-// count BACKWARD from firstFrost so the crop matures before frost shuts it
-// down: sowOutdoors at firstFrost [-(maxDTH + 14), -(minDTH)] — the extra 14
-// days of lead on the early edge buys slowing autumn growth; the late edge
-// still leaves minDTH days before the average first freeze. Tender crops get
-// no computed fall window: a frost-killed crop maturing INTO frost is not a
-// conservative estimate.
+// count BACKWARD from firstFrost, sized by the DTH range, with 14 extra days of
+// lead on the early edge to buy slowing autumn growth. The LATE edge depends on
+// frost tolerance:
+//   - half-hardy (frost ends the crop): late edge = -(maxDTH), so even the
+//     slowest maturity in the range lands by the average first freeze — the
+//     derived harvest window can never overshoot frost.
+//   - hardy/very-hardy (frost-tolerant): late edge = -(minDTH); the derived
+//     harvest may deliberately run past the frost date, because these crops
+//     survive it (and often improve — the curated data harvests kale and
+//     spinach well into winter).
+// Tender crops get no computed fall window: a frost-killed crop maturing INTO
+// frost is not a conservative estimate.
 //
 // When both DTH methods exist, both corresponding schedules are emitted (e.g. a
 // tender crop with transplant AND direct ranges gets both runs), except for the
@@ -86,14 +92,19 @@ function springDirectRun(events, sowOffset) {
         method: "direct",
     });
 }
-/** Backward-counted fall run: mature before firstFrost, sized by the DTH range. */
-function fallDirectRun(events, direct) {
+/**
+ * Backward-counted fall run, sized by the DTH range. For frost-intolerant
+ * (half-hardy) crops the late edge reserves maxDTH so the slowest maturity
+ * still lands by frost; frost-tolerant crops keep the -minDTH late edge and
+ * may harvest past the frost date on purpose.
+ */
+function fallDirectRun(events, direct, frostTolerant) {
     const [minDth, maxDth] = direct;
     events.push({
         id: "computed-s-fall",
         activity: "sowOutdoors",
         anchor: { kind: "firstFrost" },
-        offsetDays: [-(maxDth + 14), -minDth],
+        offsetDays: [-(maxDth + 14), frostTolerant ? -minDth : -maxDth],
     }, {
         id: "computed-h-fall-direct",
         activity: "harvest",
@@ -127,14 +138,14 @@ export function computedEvents(entry) {
                 springTransplantRun(events, [-49, -35], [-7, 14]);
             if (direct) {
                 springDirectRun(events, [-14, 14]);
-                fallDirectRun(events, direct);
+                fallDirectRun(events, direct, false);
             }
             break;
         case "hardy":
         case "very-hardy":
             if (direct) {
                 springDirectRun(events, [-45, -15]);
-                fallDirectRun(events, direct);
+                fallDirectRun(events, direct, true);
             }
             else if (transplant) {
                 springTransplantRun(events, [-63, -49], [-21, 0]);

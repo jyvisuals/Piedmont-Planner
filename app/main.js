@@ -112,9 +112,22 @@ function showError(msg) {
   }
 }
 
+// The seed tables are 17 stations/points — nearest-neighbor lookup beyond this
+// radius silently serves an unrelated city's climate (Anchorage would get
+// Seattle's data from 2,300 km away). Refusing is the honest failure mode
+// until the full NCEI/PRISM datasets ship.
+const MAX_STATION_KM = 250;
+
 async function applySite(site) {
   const { pack, providers } = await loadBundles();
   const ctx = await buildSiteContext(site.lat, site.lng, providers);
+  if (ctx.frost.station.distanceKm > MAX_STATION_KM) {
+    throw new Error(
+      `the nearest frost station in the preview dataset (${ctx.frost.station.id}) is ` +
+        `${Math.round(ctx.frost.station.distanceKm)} km away — too far to be honest about ` +
+        `local frost dates. Pick one of the seeded cities for now; full US station coverage is planned.`
+    );
+  }
   const calendars = resolveAll(ctx, { catalog: CROP_CATALOG, packs: [pack] });
   if (!calendars.length) throw new Error("no crops resolvable for this location");
 
