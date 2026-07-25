@@ -26,6 +26,10 @@
 import { climateFor } from "../climate/crop-climate.js";
 import { maxSpreadF, maxTempF, meanSpreadF, meanTempF, minSpreadF, minTempF } from "./climate-model.js";
 const HARD_FREEZE_F = 32;
+// Indoor-sow lead before outdoor set-out for transplant crops (days) — a generic
+// 4–6 week head start, matching the offset engine's transplant lead.
+const INDOOR_LEAD_EARLY = 42;
+const INDOOR_LEAD_LATE = 28;
 function clamp01(x) {
     return x < 0 ? 0 : x > 1 ? 1 : x;
 }
@@ -245,12 +249,15 @@ export function suitabilityFor(entry, climate) {
                 mx = Math.max(mx, curve[d - 1]);
             return mx;
         });
-        return {
-            origin: "computed",
-            curve,
-            slotCurve,
-            windows: [{ activity: "plantSet", start, end, confidence: 1, limiting: "cold-growth" }],
-        };
+        const windows = [
+            { activity: "plantSet", start, end, confidence: 1, limiting: "cold-growth" },
+        ];
+        // Cross-year harvest from the crop's DTH (garlic: ~180–210 days later).
+        const owDth = entry.daysToMaturity.direct ?? entry.daysToMaturity.transplant;
+        if (owDth) {
+            windows.push({ activity: "harvest", start: start + owDth[0], end: end + owDth[1], confidence: 1, limiting: "cold-growth" });
+        }
+        return { origin: "computed", curve, slotCurve, windows };
     }
     const methods = [];
     if (entry.daysToMaturity.direct)
@@ -298,13 +305,18 @@ export function suitabilityFor(entry, climate) {
                     bestI = idx;
                 }
             }
-            windows.push({
-                activity: m.activity,
-                start,
-                end,
-                confidence: Math.round(bestS * 100) / 100,
-                limiting: limitingOf(mFactors[bestI]),
-            });
+            const confidence = Math.round(bestS * 100) / 100;
+            const limiting = limitingOf(mFactors[bestI]);
+            windows.push({ activity: m.activity, start, end, confidence, limiting });
+            // Derived lifecycle windows (parity with the offset engine, so the grid
+            // and Now view keep their core actions), inheriting the planting window's
+            // confidence/reason:
+            //  - harvest: planting window + the crop's days-to-maturity range.
+            //  - indoor sow (transplant crops only): a 4–6 week lead before set-out.
+            windows.push({ activity: "harvest", start: start + lo, end: end + hi, confidence, limiting });
+            if (!isDirect) {
+                windows.push({ activity: "sowIndoors", start: start - INDOOR_LEAD_EARLY, end: end - INDOOR_LEAD_LATE, confidence, limiting });
+            }
         }
     }
     // 24-slot reduction: peak suitability within each slot.

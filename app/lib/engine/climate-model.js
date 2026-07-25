@@ -119,6 +119,24 @@ function freezeCrossing(tminF, direction) {
     }
     return NaN; // frost-free: never crosses
 }
+/**
+ * Estimate-grade fallback spread (°F) for the ~428 national stations NCEI
+ * publishes temperature normals but no STDDEV for. Using it — rather than 0 —
+ * keeps the suitability probabilities genuinely probabilistic instead of
+ * collapsing to deterministic step behavior for those sites. ~7°F is a typical
+ * interannual daily-temperature standard deviation across the record.
+ */
+const FALLBACK_SPREAD_F = 7;
+/**
+ * Fill a spread (stddev) array: partial gaps from the nearest non-null neighbor,
+ * a whole-array fallback when the station published no variability at all (so it
+ * never silently becomes zero variance).
+ */
+function fillSpread(arr) {
+    if (arr.every((v) => v === null))
+        return new Array(24).fill(FALLBACK_SPREAD_F);
+    return fillNulls(arr);
+}
 /** Fill any null slot by carrying the nearest non-null neighbor (circular). */
 function fillNulls(arr) {
     const out = arr.slice();
@@ -164,8 +182,8 @@ export const LAPSE_F_PER_M = 0.0065 * 1.8;
 export function realSiteClimate(st, adjustF = 0) {
     const tminF = fillNulls(st.tminF).map((v) => v + adjustF);
     const tmaxF = fillNulls(st.tmaxF).map((v) => v + adjustF);
-    const tminSpreadF = fillNulls(st.tminSdF.map((v) => (v === null ? 0 : v)));
-    const tmaxSpreadF = fillNulls(st.tmaxSdF.map((v) => (v === null ? 0 : v)));
+    const tminSpreadF = fillSpread(st.tminSdF);
+    const tmaxSpreadF = fillSpread(st.tmaxSdF);
     return {
         tminF,
         tmaxF,

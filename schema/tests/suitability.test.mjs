@@ -168,10 +168,11 @@ test("overwintered garlic gets a fall plantSet window, not spring", () => {
   const climate = modelSiteClimate(siteFor(CHAPEL_HILL));
   const res = suitabilityFor(CROP_CATALOG["garlic"], climate);
   assert.ok(res);
-  assert.equal(res.windows.length, 1);
-  assert.equal(res.windows[0].activity, "plantSet");
-  const grid = bucketWindows(res.windows);
-  // Should cover fall (sep..nov), and not spring (mar..may).
+  const plantSet = res.windows.filter((w) => w.activity === "plantSet");
+  assert.equal(plantSet.length, 1);
+  assert.ok(res.windows.some((w) => w.activity === "harvest"), "overwinter crop derives a harvest window");
+  // Only the plantSet window drives placement; the harvest is a derived readout.
+  const grid = bucketWindows([plantSet[0]]);
   const fall = ["sep", "oct", "nov"].some((m) => (grid[m].half1.length || grid[m].half2.length));
   const spring = ["mar", "apr", "may"].some((m) => (grid[m].half1.length || grid[m].half2.length));
   assert.ok(fall, "garlic should be planted in fall");
@@ -256,15 +257,33 @@ test("the spread makes factors probabilistic (real) vs degenerate (frost-derived
   assert.ok(derived && derived.windows.length, "frost-derived fallback must still emit windows");
 });
 
-test("the 24-slot curve and windows are consistent", () => {
+test("the 24-slot curve tracks the PLANTING windows (harvest/indoor are derived)", () => {
   const climate = modelSiteClimate(siteFor(CHAPEL_HILL));
   const res = suitabilityFor(CROP_CATALOG["beans-snap-bush"], climate);
   assert.ok(res);
   assert.equal(res.curve.length, 365);
   assert.equal(res.slotCurve.length, 24);
-  // Every slot the windows cover should have a positive suitability score.
+  // The slotCurve is planting suitability, so only OUTDOOR PLANTING slots (s/t/B)
+  // must have a positive score — harvest (h) and indoor-sow (si) legitimately fall
+  // in slots with zero planting suitability.
   const grid = bucketWindows(res.windows);
   SLOTS.forEach((sl, i) => {
-    if ((grid[sl.month][sl.half] || []).length) assert.ok(res.slotCurve[i] > 0, `slot ${i} covered but zero score`);
+    if ((grid[sl.month][sl.half] || []).some((c) => ["s", "t", "B"].includes(c))) {
+      assert.ok(res.slotCurve[i] > 0, `planting slot ${i} covered but zero score`);
+    }
   });
+});
+
+test("computed calendars restore harvest + indoor-sow lifecycle windows", () => {
+  const climate = realSiteClimate(tempFor(CHAPEL_HILL));
+  // A transplant crop (tomatoes) gets sow-indoors, transplant, and harvest.
+  const tom = suitabilityFor(CROP_CATALOG["tomatoes"], climate);
+  const acts = new Set(tom.windows.map((w) => w.activity));
+  assert.ok(acts.has("transplant"), "transplant window present");
+  assert.ok(acts.has("sowIndoors"), "indoor-sow lead restored for transplant crops");
+  assert.ok(acts.has("harvest"), "harvest window derived from DTH");
+  // The grid then shows the harvest code, as the offset engine did.
+  const grid = bucketWindows(tom.windows);
+  const hasHarvest = SLOTS.some((sl) => (grid[sl.month][sl.half] || []).includes("h"));
+  assert.ok(hasHarvest, "harvest code appears on the grid");
 });

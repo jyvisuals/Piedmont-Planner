@@ -321,6 +321,7 @@ async function applySite(site, gen) {
   // works even in frost-free climates. Otherwise the resolver uses the frost-
   // offset engine, which refuses frost-free sites.
   const tempTable = await loadTempTable(site.lat, site.lng);
+  if (!isCurrent(gen)) return false; // shard fetch is async — a newer choice may have won
   const climateInfo = buildClimate(site.lat, site.lng, tempTable.stations);
   const calendars = resolveAll(ctx, { catalog: CROP_CATALOG, packs: [pack] }, climateInfo?.climate);
 
