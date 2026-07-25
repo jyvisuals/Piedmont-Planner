@@ -82,11 +82,27 @@ frost-free season ≥ 350 days, and the app shows an honest "effectively
 frost-free; check your local extension office" message instead of an empty or
 nonsensical grid. This defines the computed layer's domain of validity.
 
-**Still open:** a committable fixture for a **frost-bounded** out-of-region site
-(northern/mountain), which would give a *fair* computed-validation number (the
-desert is out of the frost model's scope by construction). A free public
-extension calendar uploaded as a file drops straight into
-`scripts/validation-fixtures/`. Fabricating dates is never an option.
+**Fair out-of-region number achieved (not committed).** A Zone 5–6 planting
+schedule ("approximate for North Missouri"), resolved against Kirksville MO's
+real NCEI frost dates (182 frost-free days), scored the computed layer at
+**100% primary timing (35/35 right season)** — the definitive fair test: a
+genuinely different frost-bounded climate, and every crop lands in the right
+season. Our windows run *broader* than the chart's tight optimal windows
+(succession model being generous), not misplaced. Not committed: copyrighted
+commercial source, used for one-off analysis only.
+
+**Validation summary (computed layer):** 97% (curated Piedmont) · 100% (NC
+AG-756, independent) · 100% (PNW generic offsets @ Seattle) · 100% (Zone 5–6 @
+North Missouri) primary timing, plus a correct refusal in the frost-free desert
+(Phoenix) and independent DTH support (37/38 vs NMSU). The frost-anchored model
+is well-validated where it applies and honestly bounded where it doesn't.
+
+**Still open (nice-to-have):** a *committable* fixture — a **free public**
+(university-extension / government) calendar with per-crop planting dates for a
+frost-bounded region. The public sources received so far were same-region
+(AG-756), DTH-only (NMSU CR457-B), or out-of-scope desert (U of A); the
+perfect-format ones (Grow More Food, Zone 5–6 chart) are copyrighted. Fabricating
+dates is never an option.
 
 ### A1b. (original note) Validate against other regions' calendars
 The computed layer is generic offsets (`[-42,-28]` for tender indoor sow, etc.)
