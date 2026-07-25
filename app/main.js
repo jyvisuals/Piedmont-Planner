@@ -22,6 +22,7 @@ import {
 } from "./lib/providers/static.js";
 
 const STORAGE_KEY = "pp:site:v1";
+const DEFAULT_TITLE = document.title; // captured before any per-site override
 const MONTH_LEN = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -342,6 +343,7 @@ async function applySite(site, gen) {
   const inPackFootprint = curated > 0;
 
   nowSiteLabel = site.label ?? `${site.lat.toFixed(2)}, ${site.lng.toFixed(2)}`;
+  document.title = `${nowSiteLabel} Planting Calendar — Piedmont Planner`;
   const plants = adaptCalendars(calendars, pack);
   window.__applyPlantData?.(plants, inPackFootprint ? pack.regional?.tasks ?? null : null);
 
@@ -420,9 +422,47 @@ function setSite(site) {
   }
 }
 
+// Shareable location URLs (?zip=59715 or ?lat=..&lng=..). replaceState keeps the
+// address bar in sync without polluting history; a shared link deep-links to the
+// same site on load, so "here's your planting calendar" is just a link.
+function siteFromUrl() {
+  try {
+    const p = new URLSearchParams(location.search);
+    const zip = p.get("zip");
+    if (zip && /^\d{5}$/.test(zip)) return { kind: "zip", zip };
+    const latRaw = p.get("lat");
+    const lngRaw = p.get("lng");
+    if (latRaw !== null && lngRaw !== null) {
+      const lat = Number(latRaw);
+      const lng = Number(lngRaw);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) return { kind: "coords", lat, lng };
+    }
+  } catch {
+    /* ignore malformed query */
+  }
+  return null;
+}
+
+function updateUrl(site) {
+  try {
+    const p = new URLSearchParams();
+    if (site?.zip) p.set("zip", site.zip);
+    else if (site) {
+      p.set("lat", site.lat.toFixed(4));
+      p.set("lng", site.lng.toFixed(4));
+    }
+    const qs = p.toString();
+    history.replaceState(null, "", qs ? `${location.pathname}?${qs}` : location.pathname);
+  } catch {
+    /* history unavailable — non-fatal */
+  }
+}
+
 function resetToDefault() {
   newGeneration(); // invalidate any in-flight site load
   setSite(null);
+  updateUrl(null);
+  document.title = DEFAULT_TITLE;
   nowSiteLabel = "Carrboro, NC (default)";
   window.__applyPlantData?.(null);
   if (els.summary) els.summary.textContent = "Carrboro, NC (default) — zone 8a";
@@ -435,16 +475,19 @@ function resetToDefault() {
   showError("");
 }
 
-async function chooseSite(lat, lng, label) {
+async function chooseSite(lat, lng, label, zip) {
   if (!(lat >= 17 && lat <= 72 && lng >= -180 && lng <= -60)) {
     showError("This planner uses US data sources (NOAA/USDA) — that point looks outside their coverage.");
     return;
   }
-  const site = { lat, lng, ...(label ? { label } : {}) };
+  const site = { lat, lng, ...(label ? { label } : {}), ...(zip ? { zip } : {}) };
   const gen = newGeneration();
   try {
     const committed = await applySite(site, gen);
-    if (committed && isCurrent(gen)) setSite(site);
+    if (committed && isCurrent(gen)) {
+      setSite(site);
+      updateUrl(site);
+    }
   } catch (err) {
     if (isCurrent(gen)) {
       showError(`Could not build a calendar for that location: ${err.message}`);
@@ -498,18 +541,21 @@ async function initPanel() {
     );
   });
 
-  const goZip = async () => {
-    const zip = (els.zip?.value ?? "").trim();
-    if (!/^\d{5}$/.test(zip)) {
-      showError("Enter a 5-digit ZIP code.");
-      return;
-    }
+  const applyZip = async (zip) => {
     const hit = await lookupZip(zip);
     if (!hit) {
       showError(`ZIP ${zip} isn't in the dataset (PRISM 2023 / Census ZCTA). Try a nearby ZIP or coordinates.`);
       return;
     }
-    chooseSite(hit.lat, hit.lng, `ZIP ${zip}`);
+    chooseSite(hit.lat, hit.lng, `ZIP ${zip}`, zip);
+  };
+  const goZip = () => {
+    const zip = (els.zip?.value ?? "").trim();
+    if (!/^\d{5}$/.test(zip)) {
+      showError("Enter a 5-digit ZIP code.");
+      return;
+    }
+    applyZip(zip);
   };
   els.zipBtn?.addEventListener("click", goZip);
   els.zip?.addEventListener("keydown", (e) => {
@@ -528,16 +574,29 @@ async function initPanel() {
 
   els.resetBtn?.addEventListener("click", resetToDefault);
 
-  const saved = currentSite();
-  if (saved && Number.isFinite(saved.lat) && Number.isFinite(saved.lng)) {
-    const gen = newGeneration();
-    applySite(saved, gen).catch((err) => {
-      if (!isCurrent(gen)) return;
-      showError(`Saved location failed to load (${err.message}) — showing the Carrboro default.`);
-      resetToDefault();
-    });
+  // A shared ?zip=/?lat&lng link wins over the saved site, so opening someone
+  // else's link shows THEIR calendar (and updates your address bar to match).
+  const fromUrl = siteFromUrl();
+  if (fromUrl?.kind === "zip") {
+    applyZip(fromUrl.zip);
+  } else if (fromUrl?.kind === "coords") {
+    chooseSite(fromUrl.lat, fromUrl.lng);
   } else {
-    resetToDefault();
+    const saved = currentSite();
+    if (saved && Number.isFinite(saved.lat) && Number.isFinite(saved.lng)) {
+      const gen = newGeneration();
+      applySite(saved, gen)
+        .then((committed) => {
+          if (committed && isCurrent(gen)) updateUrl(saved);
+        })
+        .catch((err) => {
+          if (!isCurrent(gen)) return;
+          showError(`Saved location failed to load (${err.message}) — showing the Carrboro default.`);
+          resetToDefault();
+        });
+    } else {
+      resetToDefault();
+    }
   }
 }
 

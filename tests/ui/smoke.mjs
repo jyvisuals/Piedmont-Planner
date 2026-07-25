@@ -111,12 +111,17 @@ async function main() {
     await page.waitForTimeout(1200);
     ok((await page.locator(".computed-estimate").count()) > 0, "computed site (Bozeman) marks rows as estimates");
 
+    // --- shareable URL + dynamic title ---
+    ok(page.url().includes("zip=59715"), `applying a ZIP deep-links the URL (got ${page.url()})`);
+    ok((await page.title()).includes("59715"), "document title reflects the selected site");
+
     // --- reset restores default ---
     await page.locator("#siteResetBtn").click();
     await page.waitForTimeout(400);
     const resetRows = await page.locator("#gridTableBody tr").count();
     ok(resetRows === 77, `reset restores 77-crop default (got ${resetRows})`);
     ok((await page.locator(".computed-estimate").count()) === 0, "reset clears estimate markers");
+    ok(!page.url().includes("zip="), "reset clears the URL query");
 
     ok(pageErrors.length === 0, `no console/page errors (got ${pageErrors.length}: ${pageErrors.slice(0, 3).join(" | ")})`);
   } finally {
