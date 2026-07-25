@@ -51,8 +51,11 @@ jobs:
       - name: Verify national frost tiles (offline)
         run: node scripts/etl/verify-frost-tiles.mjs
 
-      - name: Verify temperature normals tiles (offline)
+      - name: Verify temperature normals seed (offline)
         run: node scripts/etl/verify-temp-normals.mjs
+
+      - name: Verify national temperature tiles (offline)
+        run: node scripts/etl/verify-temp-tiles.mjs
 
   ui-smoke:
     runs-on: ubuntu-latest

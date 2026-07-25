@@ -67,6 +67,15 @@ location — the same order as the frost tiles, lazy-loaded the same way — and
 enough to compute every probability the model needs by integrating the crop's
 stage windows over those distributions.
 
+**✅ Shipped nationally** — `scripts/etl/fetch-ncei-temp-tiles.mjs` streams the
+NCEI daily-normals archive tarball and emits 5°×5° tiles under
+`app/data/temp/tiles/` (**7,284 stations**, 81 tiles, ~4 MB), lazy-loaded by the
+app exactly like the frost tiles (offline verifier `verify-temp-tiles.mjs`, CI).
+So the climate-suitability engine — heat wall, frost-free desert calendars,
+reason codes — now reaches the whole country, not just the 17-city seed. Verified
+across climates: Miami (winter/fall calendar), Honolulu, Fargo, and Phoenix all
+produce sane, distinct calendars.
+
 Sources (all reusable via the tile ETL we already built):
 - **NCEI U.S. Climate Normals** already publish monthly/daily normals *and
   quantiles* — the distributional summary, build-time.

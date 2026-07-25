@@ -64,16 +64,27 @@ async function loadBundles() {
 // Real temperature climatology (NCEI daily normals) for the computed layer:
 // when a site is near a temperature station, the resolver runs the climate-
 // SUITABILITY engine (heat wall modeled, frost-free handled, reason codes)
-// instead of the frost-offset engine. Currently the 17-city seed set — national
-// temperature tiles are the next ETL (docs/climate-suitability-model.md, step 4),
-// so most sites still get the frost-offset fallback. Temperature (and elevation)
-// vary locally, so this is deliberately a tight radius and labeled "preview".
+// instead of the frost-offset engine. National tiles (7k+ stations) cover the
+// whole country; the 17-city seed is the offline fallback. Temperature (and
+// elevation) vary locally, so a site beyond this radius still uses frost offsets.
 const MAX_TEMP_KM = 120;
 
+/** Full-coverage temperature stations for a site, or the seed as fallback. */
+async function loadTempTable(lat, lng) {
+  const index = await cachedJson("./data/temp/index.json");
+  const { tempNormals: seed } = await loadBundles();
+  if (!index || !index.tiles) return { stations: seed.stations, national: false };
+  const wanted = tileIds(lat, lng).filter((id) => index.tiles[id]);
+  const tiles = await Promise.all(wanted.map((id) => cachedJson(`./data/temp/tiles/${id}.json`)));
+  const stations = tiles.filter(Boolean).flatMap((t) => t.stations || []);
+  if (!stations.length) return { stations: seed.stations, national: false };
+  return { stations, national: true };
+}
+
 /** A real SiteClimate for the site + its source station, or null when too far. */
-function buildClimate(lat, lng, tempNormals) {
+function buildClimate(lat, lng, stations) {
   let best = null;
-  for (const s of tempNormals.stations) {
+  for (const s of stations) {
     const km = haversineKm(lat, lng, s.lat, s.lng);
     if (!best || km < best.km) best = { station: s, km };
   }
@@ -282,8 +293,8 @@ async function applySite(site, gen) {
   // computed layer to the climate-suitability engine (heat wall modeled), which
   // works even in frost-free climates. Otherwise the resolver uses the frost-
   // offset engine, which refuses frost-free sites.
-  const { tempNormals } = await loadBundles();
-  const climateInfo = buildClimate(site.lat, site.lng, tempNormals);
+  const tempTable = await loadTempTable(site.lat, site.lng);
+  const climateInfo = buildClimate(site.lat, site.lng, tempTable.stations);
   const calendars = resolveAll(ctx, { catalog: CROP_CATALOG, packs: [pack] }, climateInfo?.climate);
 
   // Honest refusal: an effectively frost-free climate with NO real temperature
@@ -322,8 +333,8 @@ async function applySite(site, gen) {
       ["Frost-free days", String(ctx.frostFreeDays)],
       ["Frost data", `${ctx.frost.station.id} · ${Math.round(ctx.frost.station.distanceKm)} km away (NCEI ${ctx.datasetVersions.ncei ?? "1991-2020"}${frost.national ? "" : " · seed preview data"})`],
       ["Computed model", climateInfo
-        ? `climate-suitability — NCEI daily normals from ${climateInfo.station.id} (${Math.round(climateInfo.km)} km · preview), heat wall + reason codes`
-        : "frost-offset — timing from frost dates only (no nearby temperature station yet)"],
+        ? `climate-suitability — NCEI daily normals from ${climateInfo.station.id} (${Math.round(climateInfo.km)} km${tempTable.national ? "" : " · seed preview"}), heat wall + reason codes`
+        : "frost-offset — timing from frost dates only (no nearby temperature station)"],
       ["Calendar", computed === 0 ? `${curated} crops, hand-reviewed` : `${curated} hand-reviewed · ${computed} computed estimates`],
     ];
     if (!zoneKnown) {
