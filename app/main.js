@@ -185,13 +185,21 @@ function showError(msg) {
   }
 }
 
-// The seed tables are 17 stations/points — nearest-neighbor lookup beyond this
-// radius silently serves an unrelated city's climate (Anchorage would get
-// Seattle's data from 2,300 km away). Refusing is the honest failure mode
-// until the full NCEI/PRISM datasets ship.
-const MAX_STATION_KM = 250;
+// Nearest-neighbor lookups beyond these radii would silently serve an
+// unrelated place's data (the Fairbanks-gets-Seattle's-zone problem).
+// Refusing / marking unknown is the honest failure mode.
+const MAX_STATION_KM = 250; // frost: calendar depends on it → reject the site
+const MAX_ZONE_KM = 150; // zone: display-only → show "n/a" but keep the calendar
 
-async function applySite(site) {
+// Only the most recent site choice may commit its result — per-site shard
+// fetches can resolve out of order, and a stale slow response must never
+// overwrite a newer selection or a reset.
+let siteGeneration = 0;
+const newGeneration = () => ++siteGeneration;
+const isCurrent = (gen) => gen === siteGeneration;
+
+/** Applies the site if (and only if) still the latest request; true = committed. */
+async function applySite(site, gen) {
   const { pack } = await loadBundles();
   const [frost, zones] = await Promise.all([
     loadFrostTable(site.lat, site.lng),
@@ -202,13 +210,24 @@ async function applySite(site) {
     zone: createStaticZoneProvider(zones.table),
   };
   const ctx = await buildSiteContext(site.lat, site.lng, providers);
+  if (!isCurrent(gen)) return false; // a newer choice or reset superseded us
   if (ctx.frost.station.distanceKm > MAX_STATION_KM) {
     throw new Error(
-      `the nearest frost station in the preview dataset (${ctx.frost.station.id}) is ` +
+      `the nearest frost station in the dataset (${ctx.frost.station.id}) is ` +
         `${Math.round(ctx.frost.station.distanceKm)} km away — too far to be honest about ` +
-        `local frost dates. Pick one of the seeded cities for now; full US station coverage is planned.`
+        `local frost dates.`
     );
   }
+  // Zone honesty guard: the zone table is CONUS-only (PRISM 2023), so a site
+  // with good frost coverage (e.g. Fairbanks) can still be far from every zone
+  // point — never display an unrelated city's zone as if it were local.
+  let zoneKm = Infinity;
+  for (const pt of zones.table.points) {
+    const d = haversineKm(site.lat, site.lng, pt.lat, pt.lng);
+    if (d < zoneKm) zoneKm = d;
+  }
+  const zoneKnown = zoneKm <= MAX_ZONE_KM;
+
   const calendars = resolveAll(ctx, { catalog: CROP_CATALOG, packs: [pack] });
   if (!calendars.length) throw new Error("no crops resolvable for this location");
 
@@ -223,7 +242,7 @@ async function applySite(site) {
   const last = ctx.frost.lastFrost["32/50"];
   const first = ctx.frost.firstFrost["32/50"];
   if (els.summary) {
-    els.summary.textContent = `${site.label ?? `${site.lat.toFixed(2)}, ${site.lng.toFixed(2)}`} — zone ${ctx.zone}`;
+    els.summary.textContent = `${site.label ?? `${site.lat.toFixed(2)}, ${site.lng.toFixed(2)}`} — zone ${zoneKnown ? ctx.zone : "n/a"}`;
   }
   if (els.stats) {
     els.stats.innerHTML = "";
@@ -234,6 +253,12 @@ async function applySite(site) {
       ["Frost data", `${ctx.frost.station.id} · ${Math.round(ctx.frost.station.distanceKm)} km away (NCEI ${ctx.datasetVersions.ncei ?? "1991-2020"}${frost.national ? "" : " · seed preview data"})`],
       ["Calendar", computed === 0 ? `${curated} crops, hand-reviewed` : `${curated} hand-reviewed · ${computed} computed estimates`],
     ];
+    if (!zoneKnown) {
+      items.splice(3, 0, [
+        "Hardiness zone",
+        `not available — nearest PRISM 2023 reference is ${Math.round(zoneKm)} km away (zone dataset covers the contiguous US)`,
+      ]);
+    }
     for (const [k, v] of items) {
       const li = document.createElement("li");
       const b = document.createElement("strong");
@@ -258,6 +283,7 @@ async function applySite(site) {
     els.note.hidden = false;
   }
   showError("");
+  return true;
 }
 
 function currentSite() {
@@ -279,6 +305,7 @@ function setSite(site) {
 }
 
 function resetToDefault() {
+  newGeneration(); // invalidate any in-flight site load
   setSite(null);
   window.__applyPlantData?.(null);
   if (els.summary) els.summary.textContent = "Carrboro, NC (default) — zone 8a";
@@ -297,11 +324,14 @@ async function chooseSite(lat, lng, label) {
     return;
   }
   const site = { lat, lng, ...(label ? { label } : {}) };
+  const gen = newGeneration();
   try {
-    await applySite(site);
-    setSite(site);
+    const committed = await applySite(site, gen);
+    if (committed && isCurrent(gen)) setSite(site);
   } catch (err) {
-    showError(`Could not build a calendar for that location: ${err.message}`);
+    if (isCurrent(gen)) {
+      showError(`Could not build a calendar for that location: ${err.message}`);
+    }
   }
 }
 
@@ -383,7 +413,9 @@ async function initPanel() {
 
   const saved = currentSite();
   if (saved && Number.isFinite(saved.lat) && Number.isFinite(saved.lng)) {
-    applySite(saved).catch((err) => {
+    const gen = newGeneration();
+    applySite(saved, gen).catch((err) => {
+      if (!isCurrent(gen)) return;
       showError(`Saved location failed to load (${err.message}) — showing the Carrboro default.`);
       resetToDefault();
     });
