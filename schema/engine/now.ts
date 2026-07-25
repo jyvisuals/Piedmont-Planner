@@ -20,6 +20,9 @@ export interface NowRow {
   grid: HalfMonthGrid;
   /** True when this row's timing is a computed estimate (honesty carries over). */
   computedEstimate?: boolean;
+  /** Suitability reason code + peak success probability (climate-suitability rows). */
+  limiting?: string;
+  confidence?: number;
 }
 
 export interface NowAction {
@@ -27,6 +30,9 @@ export interface NowAction {
   name: string;
   type: string;
   computedEstimate: boolean;
+  /** Suitability reason code + peak success probability (climate-suitability rows). */
+  limiting?: string;
+  confidence?: number;
   code: HalfMonthCode;
   /** Present in the current slot but not the following one — last chance. */
   endingSoon: boolean;
@@ -131,6 +137,8 @@ export function computeNow(
         name: row.name,
         type: row.type,
         computedEstimate: Boolean(row.computedEstimate),
+        ...(row.limiting !== undefined ? { limiting: row.limiting } : {}),
+        ...(row.confidence !== undefined ? { confidence: row.confidence } : {}),
         code,
         endingSoon,
         justOpened,

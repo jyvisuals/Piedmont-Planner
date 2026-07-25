@@ -11,6 +11,7 @@
 // scripts/build-app-lib.mjs (CI enforces freshness) — no deploy-time build.
 
 import { resolveAll, frostRegimeApplies } from "./lib/engine/resolve.js";
+import { realSiteClimate } from "./lib/engine/climate-model.js";
 import { computeNow } from "./lib/engine/now.js";
 import { CROP_CATALOG } from "./lib/crop-catalog.js";
 import {
@@ -50,13 +51,38 @@ async function fetchJson(rel) {
 
 async function loadBundles() {
   if (bundles) return bundles;
-  const [frostTable, zonePoints, pack] = await Promise.all([
+  const [frostTable, zonePoints, pack, tempNormals] = await Promise.all([
     fetchJson("./data/frost-stations.json"),
     fetchJson("./data/zone-points.json"),
     fetchJson("./data/piedmont-pack.json"),
+    fetchJson("./data/temp-normals.json"),
   ]);
-  bundles = { frostTable, zonePoints, pack };
+  bundles = { frostTable, zonePoints, pack, tempNormals };
   return bundles;
+}
+
+// Real temperature climatology (NCEI daily normals) for the computed layer:
+// when a site is near a temperature station, the resolver runs the climate-
+// SUITABILITY engine (heat wall modeled, frost-free handled, reason codes)
+// instead of the frost-offset engine. Currently the 17-city seed set — national
+// temperature tiles are the next ETL (docs/climate-suitability-model.md, step 4),
+// so most sites still get the frost-offset fallback. Temperature (and elevation)
+// vary locally, so this is deliberately a tight radius and labeled "preview".
+const MAX_TEMP_KM = 120;
+
+/** A real SiteClimate for the site + its source station, or null when too far. */
+function buildClimate(lat, lng, tempNormals) {
+  let best = null;
+  for (const s of tempNormals.stations) {
+    const km = haversineKm(lat, lng, s.lat, s.lng);
+    if (!best || km < best.km) best = { station: s, km };
+  }
+  if (!best || best.km > MAX_TEMP_KM) return null;
+  try {
+    return { climate: realSiteClimate(best.station), station: best.station, km: best.km };
+  } catch {
+    return null; // degenerate station data — fall back to the offset engine
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -175,8 +201,31 @@ function adaptCalendars(calendars, pack) {
       daysToHarvest: fmtDth(entry?.daysToMaturity),
       months: cal.grid,
       computedEstimate: cal.origin === "computed",
+      // Suitability-engine reason code + success probability (present only for
+      // climate-suitability computed rows; absent for curated and frost-offset).
+      limiting: cal.limiting,
+      confidence: cal.confidence,
     };
   });
+}
+
+// Human-readable label for a suitability limiting-factor reason code.
+const LIMIT_LABEL = {
+  "soil-temp": "soil not warm enough to start",
+  frost: "frost risk bounds the window",
+  heat: "summer heat bounds the window",
+  "cold-growth": "too cool to reach maturity",
+  "night-heat": "warm nights limit fruit set",
+};
+
+/** Tooltip text for the "est." tag, enriched with the reason code when present. */
+function estTitle(item) {
+  let t = "Computed estimate for your location — not hand-reviewed";
+  if (item.limiting && LIMIT_LABEL[item.limiting]) {
+    t += `. Main limit: ${LIMIT_LABEL[item.limiting]}`;
+    if (typeof item.confidence === "number") t += ` (~${Math.round(item.confidence * 100)}% success at the best date)`;
+  }
+  return t;
 }
 
 function showError(msg) {
@@ -229,17 +278,24 @@ async function applySite(site, gen) {
   }
   const zoneKnown = zoneKm <= MAX_ZONE_KM;
 
-  const calendars = resolveAll(ctx, { catalog: CROP_CATALOG, packs: [pack] });
+  // Real temperature climatology, if we have a nearby station: this switches the
+  // computed layer to the climate-suitability engine (heat wall modeled), which
+  // works even in frost-free climates. Otherwise the resolver uses the frost-
+  // offset engine, which refuses frost-free sites.
+  const { tempNormals } = await loadBundles();
+  const climateInfo = buildClimate(site.lat, site.lng, tempNormals);
+  const calendars = resolveAll(ctx, { catalog: CROP_CATALOG, packs: [pack] }, climateInfo?.climate);
 
-  // Honest refusal: in an effectively frost-free climate (low desert / tropical)
-  // with no curated pack, the computed frost-anchored model doesn't apply, so
-  // there's nothing to show. Explain rather than render an empty or nonsense grid.
+  // Honest refusal: an effectively frost-free climate with NO real temperature
+  // data and no curated pack — the frost-anchored model doesn't apply and we have
+  // no heat model for the site, so there's nothing honest to show. (With a nearby
+  // temperature station the suitability engine handles this and never lands here.)
   if (!calendars.length && !frostRegimeApplies(ctx.frostFreeDays)) {
     throw new Error(
       "this location is effectively frost-free (a near-year-round growing season), " +
         "so our computed planting model — which is built around your last and first frost — " +
-        "doesn't apply. Desert and tropical gardens are timed around summer heat instead. " +
-        "Check your local Cooperative Extension office for a heat-based planting calendar."
+        "doesn't apply, and we don't yet have a nearby temperature station to model summer " +
+        "heat instead. Check your local Cooperative Extension office for a heat-based calendar."
     );
   }
   if (!calendars.length) throw new Error("no crops resolvable for this location");
@@ -265,6 +321,9 @@ async function applySite(site, gen) {
       ["First frost (50%)", fmtDay(first)],
       ["Frost-free days", String(ctx.frostFreeDays)],
       ["Frost data", `${ctx.frost.station.id} · ${Math.round(ctx.frost.station.distanceKm)} km away (NCEI ${ctx.datasetVersions.ncei ?? "1991-2020"}${frost.national ? "" : " · seed preview data"})`],
+      ["Computed model", climateInfo
+        ? `climate-suitability — NCEI daily normals from ${climateInfo.station.id} (${Math.round(climateInfo.km)} km · preview), heat wall + reason codes`
+        : "frost-offset — timing from frost dates only (no nearby temperature station yet)"],
       ["Calendar", computed === 0 ? `${curated} crops, hand-reviewed` : `${curated} hand-reviewed · ${computed} computed estimates`],
     ];
     if (!zoneKnown) {
@@ -518,7 +577,7 @@ function renderNowView() {
         const tag = document.createElement("span");
         tag.className = "now-tag now-tag-est";
         tag.textContent = "est.";
-        tag.title = "Computed estimate for your location — not hand-reviewed";
+        tag.title = estTitle(item);
         li.appendChild(tag);
       }
       ul.appendChild(li);

@@ -385,6 +385,14 @@ export interface ResolvedCropCalendar {
   /** "curated" when a pack supplied timing; "computed" otherwise (D8 — never blurred). */
   origin: "curated" | "computed";
   provenance?: Provenance;
+  /**
+   * Suitability-engine outputs (computed rows from the climate-suitability
+   * engine only): the dominant window's success probability and the factor that
+   * most limits it ("soil-temp" | "frost" | "heat" | "cold-growth" |
+   * "night-heat"). Absent for curated rows and for the frost-offset fallback.
+   */
+  confidence?: number;
+  limiting?: string;
 }
 
 export interface ResolveInput {

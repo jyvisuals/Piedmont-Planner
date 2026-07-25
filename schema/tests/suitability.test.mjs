@@ -21,7 +21,7 @@ import {
   maxTempF,
 } from "../engine/climate-model.ts";
 import { suitabilityFor } from "../engine/suitability.ts";
-import { bucketWindows, SLOTS } from "../engine/resolve.ts";
+import { bucketWindows, SLOTS, resolveAll } from "../engine/resolve.ts";
 import { CROP_CATALOG } from "../crop-catalog.ts";
 
 const ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
@@ -175,6 +175,36 @@ test("night fruit-set limits warm fruiting crops in hot-night climates", () => {
   const pep = suitabilityFor(CROP_CATALOG["peppers"], phx);
   assert.ok(pep && pep.windows.length);
   assert.ok(pep.windows.some((w) => w.limiting === "night-heat"), "peppers should be night-heat limited in the desert");
+});
+
+test("resolveAll uses the suitability engine when a climate is supplied", () => {
+  const site = siteFor(CHAPEL_HILL);
+  const climate = realSiteClimate(tempFor(CHAPEL_HILL));
+  const withClimate = resolveAll(site, { catalog: CROP_CATALOG, packs: [] }, climate);
+  const withoutClimate = resolveAll(site, { catalog: CROP_CATALOG, packs: [] });
+  assert.ok(withClimate.length, "climate path should produce computed rows");
+  // Suitability rows carry a confidence + limiting reason; offset rows do not.
+  const tom = withClimate.find((c) => c.crop === "tomatoes");
+  assert.ok(tom && tom.origin === "computed");
+  assert.ok(tom.confidence > 0 && tom.confidence <= 1);
+  assert.ok(typeof tom.limiting === "string");
+  const tomOffset = withoutClimate.find((c) => c.crop === "tomatoes");
+  assert.equal(tomOffset.confidence, undefined, "offset rows carry no confidence");
+});
+
+test("resolveAll with a real climate produces a calendar for a frost-free desert", () => {
+  const phxFrost = siteFor(PHOENIX);
+  const phxClimate = realSiteClimate(tempFor(PHOENIX));
+  // The suitability engine (real heat wall) produces a full desert calendar with
+  // reason codes — where the frost-offset engine can at best emit frost-anchored
+  // nonsense. Every computed row carries a confidence + limiting factor.
+  const suit = resolveAll(phxFrost, { catalog: CROP_CATALOG, packs: [] }, phxClimate);
+  assert.ok(suit.length > 10, "suitability engine produces a desert calendar");
+  for (const c of suit) {
+    assert.equal(c.origin, "computed");
+    assert.ok(c.confidence > 0 && c.confidence <= 1, `bad confidence for ${c.crop}`);
+    assert.ok(typeof c.limiting === "string");
+  }
 });
 
 test("perennials and DTH-less crops produce no suitability estimate", () => {

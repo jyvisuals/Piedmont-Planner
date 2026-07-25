@@ -1002,7 +1002,7 @@ function renderGridView() {
         plantName.textContent = plant.name;
         if (plant.computedEstimate) {
             plantNameCell.classList.add('computed-estimate');
-            plantNameCell.title = 'Computed estimate for your location — not hand-reviewed';
+            plantNameCell.title = computedEstimateTitle(plant);
         }
 
         const plantNameRow = document.createElement('span');
@@ -1314,6 +1314,29 @@ function renderNowView() {
     }
 }
 
+// Human-readable label for a climate-suitability limiting-factor reason code.
+const COMPUTED_LIMIT_LABEL = {
+    'soil-temp': 'soil not warm enough to start',
+    frost: 'frost risk bounds the window',
+    heat: 'summer heat bounds the window',
+    'cold-growth': 'too cool to reach maturity',
+    'night-heat': 'warm nights limit fruit set'
+};
+
+// Tooltip for a computed row, enriched with the suitability reason code + peak
+// success probability when the climate-suitability engine produced it.
+function computedEstimateTitle(plant) {
+    let t = 'Computed estimate for your location — not hand-reviewed';
+    const label = plant.limiting && COMPUTED_LIMIT_LABEL[plant.limiting];
+    if (label) {
+        t += `. Main limit: ${label}`;
+        if (typeof plant.confidence === 'number') {
+            t += ` (~${Math.round(plant.confidence * 100)}% success at the best date)`;
+        }
+    }
+    return t;
+}
+
 // Active dataset in the shape the Now selector wants (name + half-month grid).
 window.__getNowRows = function () {
     return state.filteredPlants.map(plant => ({
@@ -1321,7 +1344,9 @@ window.__getNowRows = function () {
         name: plant.name,
         type: plant.type,
         grid: plant.months,
-        computedEstimate: Boolean(plant.computedEstimate)
+        computedEstimate: Boolean(plant.computedEstimate),
+        limiting: plant.limiting,
+        confidence: plant.confidence
     }));
 };
 

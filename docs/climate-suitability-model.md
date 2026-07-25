@@ -145,10 +145,16 @@ engine across all references *and* produces sane windows for Phoenix.
    against the same references as the offset engine, side by side.
 5. **Swap** the resolver's computed fallback from offset rules → suitability
    engine once it wins on the harness. Curated packs, resolver, honesty markers,
-   grid rendering: all unchanged. ⏳ **next** — the engine now matches the offset
-   engine on the temperate references AND handles the desert (below), so this is
-   the next step: wire `realSiteClimate` + a temp-normals provider into
-   `resolveAll`, national temp tiles behind it, then retire the frost-free guard.
+   grid rendering: all unchanged. ✅ **DONE (wired into the live app)** —
+   `resolveAll(site, input, climate?)` runs the climate-suitability engine when a
+   real `SiteClimate` is supplied (frost-free handled, per-crop confidence +
+   limiting reason code), and falls back to the frost-offset engine otherwise.
+   The app (`buildClimate`) builds a real climate from the nearest temperature
+   station within 120 km, so sites near a station (incl. Phoenix/Tucson) now get
+   a real calendar — the desert refusal is gone there — with the reason code
+   surfaced on each computed row's tooltip and a "Computed model" provenance line.
+   Coverage is the 17-city seed until **step 4** ships national temperature tiles;
+   beyond 120 km the resolver still uses the validated frost-offset fallback.
 6. **Surface the probability curve** in the UI (risk-tiered windows) — richer than
    the grid, and the model produces it for free.
 7. Retire `computed-rules.ts`.

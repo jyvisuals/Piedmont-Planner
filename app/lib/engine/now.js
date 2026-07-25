@@ -80,6 +80,8 @@ export function computeNow(rows, todayDoy, slotsAhead = 1) {
                 name: row.name,
                 type: row.type,
                 computedEstimate: Boolean(row.computedEstimate),
+                ...(row.limiting !== undefined ? { limiting: row.limiting } : {}),
+                ...(row.confidence !== undefined ? { confidence: row.confidence } : {}),
                 code,
                 endingSoon,
                 justOpened,

@@ -12,6 +12,7 @@
 //   testing containment against one throws rather than silently never matching.
 import { DEFAULT_FROST_REF } from "../types.js";
 import { computedEvents } from "./computed-rules.js";
+import { suitabilityFor } from "./suitability.js";
 // ---------------------------------------------------------------------------
 // Calendar geometry (non-leap 365-day year; leap day is noise at this scale)
 // ---------------------------------------------------------------------------
@@ -333,7 +334,7 @@ export function byPrecedence(a, b) {
  *   - the crop-applicability filter skips entries whose `minFrostFreeDays`
  *     exceeds the site's frost-free season.
  */
-export function resolveAll(site, input) {
+export function resolveAll(site, input, climate) {
     const applicable = input.packs
         .filter((p) => footprintContains(p.footprint, site.lat, site.lng))
         .sort(byPrecedence);
@@ -381,24 +382,49 @@ export function resolveAll(site, input) {
             provenance: timingRow.provenance,
         });
     }
-    // The computed base layer is a FROST-ANCHORED model. Where there is
-    // effectively no frost season (low desert / tropical — e.g. Phoenix, whose
-    // 32°F/50% freeze dates sit within a few days of each other), the anchors
-    // collapse and the model produces confident nonsense ("plant tomatoes in
-    // January"). Emit NO computed calendars there rather than mislead — a Phoenix
-    // gardener plants by avoiding summer heat, which this model does not capture.
-    // Curated packs, if any, still apply. (Surfaced by the U of A Maricopa
-    // calendar; see docs/improvement-paths.md.)
+    // The computed base layer. Two engines, chosen by whether a real climate
+    // distribution is available for this site:
+    //
+    //  - WITH `climate` (real NCEI temperature normals): the climate-SUITABILITY
+    //    engine (suitability.ts). It models the heat wall, so it works in frost-
+    //    free deserts/tropics — no refusal — and every window carries a confidence
+    //    and a limiting reason code.
+    //  - WITHOUT `climate`: the FROST-ANCHORED offset engine (computed-rules.ts).
+    //    It collapses in near-frost-free climates (Phoenix's freeze dates sit days
+    //    apart → "plant tomatoes in January"), so it emits nothing there rather
+    //    than mislead. This is the honest fallback until temperature tiles cover a
+    //    site (docs/climate-suitability-model.md).
+    //
+    // Either way, curated packs above still win; computed carries no provenance
+    // (D8 — computed is never dressed as curated).
     const frostRegimeValid = frostRegimeApplies(site.frostFreeDays);
-    // Computed base layer: catalog crops the curated layer left unsettled.
     for (const crop of Object.keys(input.catalog)) {
-        if (!frostRegimeValid)
-            break;
         if (settledByCurated.has(crop))
             continue;
         const entry = input.catalog[crop];
         if (!entry)
             continue;
+        if (climate) {
+            const res = suitabilityFor(entry, climate);
+            if (!res || !res.windows.length)
+                continue;
+            // Dominant window = highest confidence; its reason code labels the crop.
+            let best = res.windows[0];
+            for (const w of res.windows)
+                if (w.confidence > best.confidence)
+                    best = w;
+            out.push({
+                crop,
+                grid: bucketWindows(res.windows),
+                windows: res.windows,
+                origin: "computed",
+                confidence: best.confidence,
+                limiting: best.limiting,
+            });
+            continue;
+        }
+        if (!frostRegimeValid)
+            continue; // offset engine can't do frost-free
         // Crop-applicability filter: the season must be long enough to finish.
         if (entry.minFrostFreeDays !== undefined && entry.minFrostFreeDays > site.frostFreeDays) {
             continue;
@@ -407,13 +433,7 @@ export function resolveAll(site, input) {
         if (!events)
             continue; // perennial / no usable DTH — no honest estimate
         const windows = resolveAnchoredEvents(events, site, entry);
-        out.push({
-            crop,
-            grid: bucketWindows(windows),
-            windows,
-            origin: "computed",
-            // No provenance on purpose (D8) — computed is never dressed as curated.
-        });
+        out.push({ crop, grid: bucketWindows(windows), windows, origin: "computed" });
     }
     return out;
 }
