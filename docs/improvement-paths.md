@@ -61,12 +61,20 @@ AG-756 — the earlier "miss" was only against the author's tightened pack, so t
 computed layer actually agrees with NC State's own recommendation. That's the
 value of an independent reference.
 
-**Still open:** a genuine out-of-region fixture. Extension-service calendars
-(U of MN, etc.) were **not fetchable in this build environment (403)**, and the
-open datasets are generic, not region-specific ground truth. Rather than
-fabricate planting dates (which would corrupt the validation), the slot is left
-ready: transcribe one real extension calendar into a fixture and it's measured
-automatically.
+**Third reference checked (not committed):** an independent *frost-relative*
+planting-offset guide (*Grow More Food*, Seattle Urban Farm Co.), resolved at
+Seattle's real NCEI frost dates, scored the computed layer at **100% primary
+timing (48/48 right season)** — a direct, apples-to-apples check of our offset
+choices against a published offset guide, and it confirms the garlic overwinter
+fix (matches the guide's "plant Oct–Nov"). Not committed as a fixture: it's a
+generic guide (not region-specific) and a commercial-book source, so it was used
+for one-off analysis only, not redistributed.
+
+**Still open:** a genuine, committable, region-specific out-of-region fixture.
+Extension-service calendars were **not fetchable in this build environment
+(403)**; a free public extension vegetable calendar (uploaded as a file, since
+URLs are blocked) would drop straight into `scripts/validation-fixtures/`.
+Fabricating dates is never an option — it would corrupt the validation.
 
 ### A1b. (original note) Validate against other regions' calendars
 The computed layer is generic offsets (`[-42,-28]` for tender indoor sow, etc.)
