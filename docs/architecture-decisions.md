@@ -314,6 +314,32 @@ project is the data model, not the view.
 
 ---
 
+## D10. Accounts & personal overlays (soft one-way door): local-first, pack-shaped, signals-not-writes
+
+Added when the roadmap grew a login + per-user customization requirement, with
+a long-run GitHub/Wikipedia-style community vision (details in
+`docs/accounts-and-community.md`). Three pins:
+
+- **The overlay IS a pack.** Per-user customization is a `RegionPack` with a
+  tiny coarse footprint at highest precedence — same schema, validator, and
+  resolver as every other pack. This is what makes customizations *aggregable*
+  later (structured diffs, not freeform edits).
+- **Accounts are optional; local-first.** The overlay works from
+  `localStorage` with no backend (static-PWA ethos intact); login adds only
+  sync/durability behind the `OverlayStore` seam. First-pass backend: a dumb
+  per-user JSON store with row-level security (Supabase-class), client-side
+  validation both directions.
+- **Community signals inform curators; they never auto-edit shared data.**
+  Aggregated overlay diffs (k-anonymity ≥ ~10, region-cell granularity) become
+  a curator report — the `compare-ncsu.mjs` pattern — and accepted signals
+  enter packs as a new provenance kind ("community-corroborated, N gardeners").
+  The no-mechanical-change guardrail applies to crowds too.
+- **Privacy is decided now, not retrofitted:** garden location = home address;
+  coarse footprints by default, precise coordinates never leave the device
+  without explicit sharing, fuzzed footprints on anything published.
+
+---
+
 ## What to deliberately NOT decide now (two-way doors — don't over-invest)
 
 - **Live weather layer** (NWS/Open-Meteo overlays) — behind `WeatherProvider`
@@ -411,6 +437,7 @@ prose, the live-weather layer, personalization.
 | D7 | Location identity | lat/lng canonical; ZIP an input; US-only now | One-way |
 | D8 | Provenance & uncertainty | Computed≠curated labeled; probabilities not dates; pin dataset versions | Hard to reverse |
 | D9 | Language & stack | TypeScript as the contract layer; one runtime (TS, incl. any proxy); Python only for build-time ETL; data-as-data + tests; no framework/WASM now | Soft |
+| D10 | Accounts & overlays | Overlay = a pack (tiny coarse footprint, top precedence); local-first, login additive behind `OverlayStore`; community signals → curator review, never auto-edits; privacy pins up front | Soft |
 
 **The through-line:** pin D1–D5 (the five seams) before writing a second pack;
 treat D6–D9 as directions with escape hatches; and prove the whole thing with

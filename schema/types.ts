@@ -383,3 +383,22 @@ export interface ResolveInput {
 export interface Resolver {
   resolve(site: SiteContext, input: ResolveInput): ResolvedCropCalendar[];
 }
+
+// ---------------------------------------------------------------------------
+// D10 — Personal overlays & accounts (local-first; login is additive)
+// ---------------------------------------------------------------------------
+// A user's customization is just a RegionPack with a tiny (coarse!) footprint
+// at highest precedence — validated by validateRegionPack, resolved by the
+// normal resolver. This seam is the only accounts-facing contract: swap the
+// localStorage implementation for a remote per-user store (e.g. Supabase with
+// row-level security) without touching engine, resolver, or UI. The store
+// never interprets the overlay; clients validate on save AND on load.
+// Privacy pin: footprints stored here are coarse (ZIP-centroid); precise
+// coordinates never leave the device unless the user explicitly shares.
+
+export interface OverlayStore {
+  /** The user's overlay pack, or null if none exists yet. */
+  load(): Promise<RegionPack | null>;
+  save(overlay: RegionPack): Promise<void>;
+  clear(): Promise<void>;
+}
