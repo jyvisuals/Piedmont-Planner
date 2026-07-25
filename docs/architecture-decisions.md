@@ -330,6 +330,45 @@ project is the data model, not the view.
 
 ---
 
+## What the transition actually costs the Carrboro data (and the guardrails)
+
+The golden gate pins the grids, but the grid was never the whole dataset. An
+honest ledger of what is lost or at risk, with the guardrail for each:
+
+1. **Content with no home in the pack contract yet (already true).** The pack
+   schema carries crop rows; it does NOT carry the `TASKS` chore calendar
+   (the most Carrboro-flavored content: NC State soil tests, 25°F protection,
+   60°F-soil gates), the greenhouse-confidence subsystem
+   (`PLANT_GREENHOUSE_CONFIDENCE` / `GREENHOUSE_RULES` / rule categories), the
+   confidence-rubric text, or app-embedded touches like the deer-resistant
+   flower set. → **Guardrail: extend `RegionPack` with a `regional` block
+   (tasks + greenhouse confidence) and carry it in the loader BEFORE the app
+   switches to consuming packs.** Until then `data.js` must remain live.
+2. **Spatial dilution.** The data was validated at one point (Carrboro, on the
+   7b/8a line); the pack footprint is a ±2-weeks-of-frost band. "Curated for
+   your region" overstates what "curated" means away from the reference point.
+   → **Guardrail: add `referencePoint` to the pack schema and surface
+   "curated at Carrboro, N km from you" in the UI (D8 honesty-by-distance).**
+3. **Judgment embedded in grids that arithmetic can't reproduce** — hand-placed
+   harvests (Brussels sprouts' "November is the real start"), deliberate
+   absences (the removed May–June spinach run), and slot-level either/or
+   correlations (`["s","t"]`). Protected today by verbatim carriage; the risk
+   is a future "cleanup" conversion to anchored events. → **Guardrail
+   (standing policy): Piedmont rows stay verbatim unless the curator
+   re-authors them deliberately; a mechanical verbatim→anchored migration is
+   forbidden.**
+4. **Voice and legibility.** `data.js` is a single readable, single-voice
+   artifact; the layered system (catalog/packs/engine/providers) is the right
+   trade but less legible, and multi-contributor packs erode editorial
+   coherence. → Keep review-note prose first-class and per-pack authored, not
+   generated.
+5. **Structured consumers ignore free text.** DTH parsing preserves nuance in
+   `note` fields ("60-70, 42-56" = sets vs. seed), but downstream code computes
+   from the primary range and silently drops the second meaning. → Treat
+   `note`-bearing DTH as reduced-confidence inputs for derivation.
+
+---
+
 ## The sequencing insight: force the seams with N=2 before scaling
 
 Single-pack abstractions are always wrong, because nothing pushes back on them.
