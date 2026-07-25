@@ -22,6 +22,8 @@ import path from 'node:path';
 import process from 'node:process';
 import vm from 'node:vm';
 
+import { NCSU_NAME_MAP as NAME_MAP } from './lib/ncsu-name-map.mjs';
+
 const rootDir = process.cwd();
 const strict = process.argv.includes('--strict');
 
@@ -32,63 +34,8 @@ const ORDER_INDEX = new Map(ORDER.map((key, i) => [key, i]));
 
 // app plant name -> NC State crop name. null means the crop has no comparable
 // NC State row (flowers, perennial herbs, fruit, ginger), so it is skipped.
-const NAME_MAP = {
-  'Arugula': 'Arugula',
-  'Asparagus': 'Asparagus',
-  'Basil': 'Basil',
-  'Beets': 'Beets',
-  'Beans, Snap (Bush)': 'Beans snap/bush',
-  'Beans, Snap (Pole)': 'Beans snap/pole',
-  'Lima Bean (Bush)': 'Beans lima/bush',
-  'Lima Bean (Pole)': 'Beans lima/pole',
-  'Bok Choy': 'Pac choi/bok choy',
-  'Broccoli': 'Broccoli',
-  'Brussels Sprouts': 'Brussels sprouts',
-  'Cabbage': 'Cabbage',
-  'Cabbage (Chinese)': 'Cabbage (Chinese)',
-  'Cantaloupe': 'Melon (cantaloupe)',
-  'Carrots': 'Carrots',
-  'Cauliflower': 'Cauliflower',
-  'Celery': 'Celery',
-  'Chard, Swiss': 'Chard (Swiss)',
-  'Cilantro': 'Cilantro',
-  'Collard Greens': 'Collard greens',
-  'Corn (Sweet)': 'Corn (sweet)',
-  'Cucumbers': 'Cucumbers',
-  'Dill': 'Dill',
-  'Eggplant': 'Eggplant',
-  'Fennel': 'Fennel (Florence)',
-  'Garlic': 'Garlic',
-  'Kale': 'Kale',
-  'Kohlrabi': 'Kohlrabi',
-  'Leek': 'Leek',
-  'Lettuce, Head': 'Lettuce (head)',
-  'Lettuce, Leaf': 'Lettuce (leaf)',
-  'Mustard': 'Mustard',
-  'Okra': 'Okra',
-  'Onions, Bulb': 'Onions (bulb)',
-  'Onions, Green': 'Onions (green)',
-  'Parsley': 'Parsley',
-  'Parsnips': 'Parsnips',
-  'Peas (Field)': 'Peas (field/southern)',
-  'Peas, Bush': 'Peas (bush)',
-  'Peas, Vining': 'Peas (vining)',
-  'Snap Pea (Bush)': 'Peas (bush)',
-  'Snap Pea (Pole)': 'Peas (vining)',
-  'Peppers': 'Peppers',
-  'Potatoes (Irish)': 'Potatoes (Irish)',
-  'Potatoes (Sweet)': 'Potatoes (sweet)',
-  'Pumpkin': 'Pumpkin',
-  'Radishes': 'Radishes',
-  'Rutabaga': 'Rutabaga',
-  'Spinach': 'Spinach',
-  'Squash (Summer)': 'Squash (summer)',
-  'Squash (Winter)': 'Squash (winter)',
-  'Sunflower': 'Sunflower',
-  'Tomatoes': 'Tomatoes',
-  'Turnips': 'Turnips',
-  'Watermelon': 'Melon (watermelon)',
-};
+// NAME_MAP is imported from ./lib/ncsu-name-map.mjs (shared with the AG-756
+// validation-fixture builder).
 
 function loadPlants() {
   const source = `${fs.readFileSync(path.join(rootDir, 'data.js'), 'utf8')}

@@ -2,13 +2,22 @@
 
 `scripts/validate-computed.mjs` measures how far the **computed** planting
 calendar (generic hardiness + DTH rules, run blind of any curated data) diverges
-from **hand-reviewed ground truth**. v1 validates at the one place we have solid
-truth in-repo: the **Piedmont**, against the curated pack at Carrboro's real NCEI
-frost dates.
+from **hand-reviewed ground truth**. It is **reference-driven**: it validates
+against the curated Piedmont pack AND every `*.json` fixture in this directory,
+each at its own frost dates.
+
+Shipped fixtures:
+- `nc-central-ag756.json` — the NC State AG-756 Central-NC calendar (generated
+  from the in-repo transcription by `scripts/etl/build-ag756-fixture.mjs`). A
+  genuine *independent* reference (the curated pack deliberately diverges from
+  AG-756), though the same geographic region. Computed scores **100% primary
+  timing** against it.
 
 The computed layer's real risk is *other* regions, so this directory is the
 extension point: transcribe another region's published extension planting
-calendar into a fixture and the harness can validate there too.
+calendar into a fixture and the harness validates there automatically. (None
+shipped yet — extension calendars were not fetchable in the build environment,
+and fabricating dates would corrupt the validation.)
 
 ## Fixture schema (`<region>.json`)
 

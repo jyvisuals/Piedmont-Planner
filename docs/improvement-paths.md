@@ -52,8 +52,21 @@ to other regions by transcribing their extension calendars.
   season length). Missed slots dropped 159→82. The remaining gap is finer
   succession/quality nuance the conservative estimate doesn't chase.
 
-**Still open:** extend to non-Piedmont regions (the computed layer's real risk is
-elsewhere); the harness is ready, it needs transcribed reference fixtures.
+**Now reference-driven:** the harness auto-loads `scripts/validation-fixtures/*.json`,
+so any region drops in as a file. Validated against a second, *independent*
+in-repo reference — the **NC State AG-756** calendar (distinct from the curated
+pack, which deliberately diverges from it): **100% primary timing** (40/40 crops
+in the right season), 0 misplaced. Notably parsnips is *not* misplaced against
+AG-756 — the earlier "miss" was only against the author's tightened pack, so the
+computed layer actually agrees with NC State's own recommendation. That's the
+value of an independent reference.
+
+**Still open:** a genuine out-of-region fixture. Extension-service calendars
+(U of MN, etc.) were **not fetchable in this build environment (403)**, and the
+open datasets are generic, not region-specific ground truth. Rather than
+fabricate planting dates (which would corrupt the validation), the slot is left
+ready: transcribe one real extension calendar into a fixture and it's measured
+automatically.
 
 ### A1b. (original note) Validate against other regions' calendars
 The computed layer is generic offsets (`[-42,-28]` for tender indoor sow, etc.)
