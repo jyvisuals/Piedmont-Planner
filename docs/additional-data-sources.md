@@ -99,25 +99,72 @@ static normals when offline** so the PWA never breaks. Honesty rules carry over:
 a phenology-adjusted date is labeled as adjusted; drought status shows its
 as-of date; native/invasive claims cite USDA PLANTS.
 
+## The "Now" view — the surface that makes temporal data pay off ⭐
+
+Think of it as two products from one engine:
+
+- The **calendar** = the whole year, a *reference* (what we have today).
+- The **"Now" view** = this moment, a *dashboard*: "here's what to do at your
+  site in the next ~2 weeks, and what's closing soon."
+
+**Why it's the linchpin, not just another feature:** the temporal data sources
+above are *invisible on a static year-grid*. "Spring is 11 days early" does
+nothing to a table of all twelve months; "apple maggot is active this week" has
+nowhere to land. They only become meaningful on a surface that asks *what do I
+do now* — and conversely, a Now view is already useful on today's static data,
+with no new sources at all. So the Now view is the **frame every temporal source
+plugs into**, and it should come first.
+
+**Cheap to build on the current engine.** The engine already emits
+`ResolvedWindow[]` on a season-day axis. A Now view is a pure selector over
+that: filter to windows overlapping `today ± N days`, group by activity (sow
+indoors / transplant / direct-sow / harvest), and flag windows *ending soon*
+(the highest-value nudge — those are the ones you can miss). No new data
+required for v1; it's mostly a selector + a screen.
+
+**Then each temporal source lights up a row in it** — attached as an advisory to
+the relevant action, not a separate panel:
+
+| Source | How it shows up in the Now view |
+|---|---|
+| USA-NPN Spring Index | shifts *what counts as "now"* — "spring is early; these windows moved up ~11 days" |
+| NWS frost/freeze alert | "❄️ freeze tonight — hold tender transplants, cover blooms" on the affected actions |
+| USA-NPN pest Pheno Forecast | "🐛 scout for apple maggot — control window open this week" |
+| US Drought Monitor | "you're in D2 — prioritize watering; hold thirsty transplants" |
+| Open-Meteo soil temp | turns "wait for 60°F soil" into a live ✅/⏳ on tomato/pepper set-out |
+| Precipitation normal | "dry stretch typical now — water new sowings" |
+| Photoperiod | "Persephone period starts Nov 18 — last window for fall greens" |
+
+Honesty and offline behavior carry over unchanged: computed rows stay marked,
+adjusted dates say "adjusted for an early spring," and the view works offline
+from the static calendar, enriching when live sources are reachable. It's also
+the natural home for the personal frost-date overlay (Stage A — "based on *your*
+frost date") and, later, a weekly digest ("your week in the garden").
+
 ## Recommendation & sequencing
 
-1. **Precipitation normals** — trivial extension of the NCEI ETL, immediate
-   water-guidance value, no new live infrastructure. Do it alongside any NCEI
-   re-run.
-2. **USA-NPN Spring Index** — the highest-*impact* item: it makes the calendar
-   respond to the real year, which nothing else here does. Bigger lift (live
-   provider + making `gddAccum` a resolvable anchor), so it's the flagship
-   next-data project rather than a quick win.
-3. **US Drought Monitor + Pheno Forecast pests** — live "what's happening now"
-   layer; natural companions to #2 and to the planned NWS/Open-Meteo weather
-   work (they're all the same live-overlay pattern).
-4. **USDA PLANTS (native/pollinator/invasive)** — a distinct "beneficial
-   garden" feature track; static, do whenever it's the priority.
+The Now-view insight reorders this: build the **frame** first, then light it up.
 
-The theme: we've built an excellent **static climatology** engine. The most
-interesting frontier is adding a **temporal** layer — phenology and current
-conditions — that tells a gardener not just what month, but whether *this* year
-is early, whether the pests are out *this* week, and whether it's too dry *right
+1. **The "Now" view (static v1)** — build it on today's data, no new sources.
+   Cheap (a selector + a screen over the engine's existing windows), immediately
+   useful, and it's the surface everything below plugs into. Do this first.
+2. **Precipitation normals** — trivial NCEI-ETL extension; adds the first
+   advisory row (water guidance) and a whole climatic dimension for near-zero
+   cost.
+3. **USA-NPN Spring Index** — the highest-*impact* source: it makes "now" itself
+   respond to the real year. Bigger lift (live `PhenologyProvider` + promoting
+   `gddAccum` to a resolvable anchor), so it's the flagship once the frame
+   exists.
+4. **US Drought Monitor + Pheno Forecast pests + NWS/Open-Meteo** — the live
+   "what's happening now" overlays; all the same pattern, each one more advisory
+   row in the Now view.
+5. **USDA PLANTS (native/pollinator/invasive)** — a distinct "beneficial garden"
+   track; static, do whenever it's the priority.
+
+The theme: we've built an excellent **static climatology** engine. The frontier
+is a **temporal** layer — and the "Now" view is what turns that layer from data
+into action: it tells a gardener not just what month, but whether *this* year is
+early, whether the pests are out *this* week, and whether it's too dry *right
 now*.
 
 ### Sources
