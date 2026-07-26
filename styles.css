@@ -511,22 +511,22 @@ header h1 {
 
 /* Activity Badge Colors */
 .activity-all { background-color: var(--gray-50); color: var(--white); }
-.activity-si { background-color: var(--color-si); color: rgba(0, 0, 0, 0.3); }
-.activity-t { background-color: var(--color-t); color: rgba(0, 0, 0, 0.3); }
-.activity-s { background-color: var(--color-s); color: rgba(0, 0, 0, 0.3); }
-.activity-sg { background-color: var(--color-sg); color: rgba(0, 0, 0, 0.3); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25); }
-.activity-tg { background-color: var(--color-tg); color: rgba(0, 0, 0, 0.3); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25); }
+.activity-si { background-color: var(--color-si); color: rgba(0, 0, 0, 0.82); }
+.activity-t { background-color: var(--color-t); color: rgba(0, 0, 0, 0.82); }
+.activity-s { background-color: var(--color-s); color: rgba(0, 0, 0, 0.82); }
+.activity-sg { background-color: var(--color-sg); color: rgba(0, 0, 0, 0.82); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25); }
+.activity-tg { background-color: var(--color-tg); color: rgba(0, 0, 0, 0.82); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25); }
 .activity-h {
     background-color: transparent;
     color: var(--gray-20);
 }
 .legend-badge.activity-h {
     background-color: var(--color-h);
-    color: rgba(0, 0, 0, 0.45);
+    color: rgba(0, 0, 0, 0.82);
 }
 .activity-o,
-.activity-special { background-color: var(--color-special); color: rgba(0, 0, 0, 0.3); }
-.activity-B { background-color: var(--color-s); color: rgba(0, 0, 0, 0.3); }
+.activity-special { background-color: var(--color-special); color: rgba(0, 0, 0, 0.82); }
+.activity-B { background-color: var(--color-s); color: rgba(0, 0, 0, 0.82); }
 
 /* Views */
 .view {
@@ -577,7 +577,20 @@ header h1 {
 }
 
 body.has-grid-sticky-header #gridTable thead {
-    display: none;
+    /* The sticky clone (#gridStickyHeader, aria-hidden) renders the *visual*
+       column header. Keep the real thead in the accessibility tree — clipped,
+       not display:none — so screen readers still announce each column's header
+       for its data cells. */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    border: 0;
+    white-space: nowrap;
 }
 
 .calendar-table {
@@ -979,9 +992,11 @@ body.has-grid-sticky-header #gridTable thead {
 .activity-cell.has-activity {
     flex-direction: row;
     flex-wrap: wrap;
-    font-size: 0.55rem;
+    font-size: 0.62rem;
     font-weight: 800;
-    color: rgba(0, 0, 0, 0.3);
+    /* Dark text (~0.82 alpha) over the pastel activity backgrounds clears WCAG
+       AA contrast; the previous 0.3 alpha was ~1.7:1 and effectively unreadable. */
+    color: rgba(0, 0, 0, 0.82);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     padding: 2px 1px;
@@ -1005,7 +1020,7 @@ body.has-grid-sticky-header #gridTable thead {
 }
 
 .activity-cell.harvest-only .activity-token-h {
-    color: rgba(0, 0, 0, 0.3);
+    color: rgba(0, 0, 0, 0.82);
 }
 
 .activity-cell.filtered-out {

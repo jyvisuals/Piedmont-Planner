@@ -1,8 +1,13 @@
 name: Deploy to GitHub Pages
 
+# Deploy only after the full "Validate" workflow (validation, engine, artifact,
+# and UI smoke jobs in test.yml) has succeeded on main. Gating on workflow_run
+# — rather than re-running a lightweight subset here — guarantees the deployed
+# site passed the same checks that guard every PR.
 on:
-  push:
-    branches: [ main ]
+  workflow_run:
+    workflows: ["Validate"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -15,22 +20,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Validate site
-        run: node scripts/validate-site.mjs
-
   deploy:
-    needs: validate
+    # workflow_dispatch always deploys; workflow_run only when the Validate run
+    # succeeded on main.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
