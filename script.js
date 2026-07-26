@@ -1759,6 +1759,118 @@ function renderPlantDetailGuide(plant) {
     }
 }
 
+// --- Detail-panel planting timing -------------------------------------------
+// A plain-language schedule for the open plant, plus a "right now" line keyed to
+// today with a real closing date ("sow until Aug 15"), not a rolling "2 weeks".
+
+// The activities we surface, in the order a gardener performs them. Raw codes
+// (not normalizeActivityCode, which merges B→s and o→*) so "plant bulbs" and
+// "sow under cover" stay distinct from a plain outdoor sowing.
+const TIMING_ACTIVITY_ORDER = [
+    { code: 'si', verb: 'Start indoors' },
+    { code: 's', verb: 'Sow' },
+    { code: 'sg', verb: 'Sow under cover' },
+    { code: 'B', verb: 'Plant' },
+    { code: 't', verb: 'Transplant' },
+    { code: 'tg', verb: 'Transplant under cover' },
+    { code: 'h', verb: 'Harvest' }
+];
+const TIMING_MONTH_LEN = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+const timingSlot = (i) => ((i % 24) + 24) % 24;
+const timingMonthOf = (i) => Math.floor(timingSlot(i) / 2);
+const timingFirstHalf = (i) => timingSlot(i) % 2 === 0;
+// "Aug 15" (half1 closes mid-month) / "Aug 31" (half2 closes month-end).
+const slotEndDate = (i) => `${MONTHS[timingMonthOf(i)].short} ${timingFirstHalf(i) ? 15 : TIMING_MONTH_LEN[timingMonthOf(i)]}`;
+// "early Aug" (half1) / "late Aug" (half2).
+const slotStartLabel = (i) => `${timingFirstHalf(i) ? 'early' : 'late'} ${MONTHS[timingMonthOf(i)].short}`;
+
+// Raw half-month codes for a plant (no normalization), so si/s/sg/t/tg/B/h stay distinct.
+function rawHalfMonthCodes(plant, i) {
+    const monthData = plant.months?.[MONTHS[timingMonthOf(i)].id];
+    if (!monthData) return [];
+    return (timingFirstHalf(i) ? monthData.half1 : monthData.half2) || [];
+}
+
+// The 0..23 slots carrying `code` for this plant.
+function slotsWithCode(plant, code) {
+    const set = new Set();
+    for (let i = 0; i < 24; i++) if (rawHalfMonthCodes(plant, i).includes(code)) set.add(i);
+    return set;
+}
+
+// Contiguous runs over a slot set, inclusive, handling the year wrap (a Nov→Feb
+// harvest is one run, not two). Anchoring iteration at a run start keeps a run
+// from being split across the 23→0 boundary.
+function slotRuns(slotSet) {
+    if (!slotSet.size) return [];
+    if (slotSet.size === 24) return [{ start: 0, end: 23 }];
+    let anchor = 0;
+    for (let i = 0; i < 24; i++) if (slotSet.has(i) && !slotSet.has(timingSlot(i - 1))) { anchor = i; break; }
+    const runs = [];
+    let runStart = null, prev = null;
+    for (let k = 0; k < 24; k++) {
+        const s = timingSlot(anchor + k);
+        if (slotSet.has(s)) { if (runStart === null) runStart = s; prev = s; }
+        else if (runStart !== null) { runs.push({ start: runStart, end: prev }); runStart = null; }
+    }
+    if (runStart !== null) runs.push({ start: runStart, end: prev });
+    return runs;
+}
+
+const formatRuns = (runs) => runs
+    .map((r) => (r.start === r.end ? slotStartLabel(r.start) : `${slotStartLabel(r.start)}–${slotStartLabel(r.end)}`))
+    .join(', ');
+
+function renderPlantDetailTiming(plant) {
+    const nowEl = document.getElementById('panelTimingNow');
+    const summaryEl = document.getElementById('panelTimingSummary');
+    if (!nowEl || !summaryEl) return;
+
+    // Whole-year schedule sentence.
+    const parts = [];
+    for (const { code, verb } of TIMING_ACTIVITY_ORDER) {
+        const runs = slotRuns(slotsWithCode(plant, code));
+        if (runs.length) parts.push(`${verb} ${formatRuns(runs)}`);
+    }
+    summaryEl.textContent = parts.join(' · ');
+    summaryEl.hidden = parts.length === 0;
+
+    // "Right now" line, keyed to today, with a concrete closing date.
+    const today = new Date();
+    const cur = today.getMonth() * 2 + (today.getDate() <= 15 ? 0 : 1);
+    const openParts = [];
+    for (const { code, verb } of TIMING_ACTIVITY_ORDER) {
+        const set = slotsWithCode(plant, code);
+        if (!set.has(cur)) continue;
+        let end = cur, guard = 0;
+        while (guard++ < 24 && set.has(timingSlot(end + 1))) end = timingSlot(end + 1);
+        openParts.push(`${verb.toLowerCase()} until ${slotEndDate(end)}`);
+    }
+    if (openParts.length) {
+        nowEl.textContent = `Right now: ${openParts.join(' · ')}`;
+        nowEl.classList.add('is-active');
+        nowEl.hidden = false;
+        return;
+    }
+    // Nothing open today — name the next window that opens.
+    let best = null;
+    for (const { verb, code } of TIMING_ACTIVITY_ORDER) {
+        const set = slotsWithCode(plant, code);
+        if (!set.size) continue;
+        for (let k = 1; k <= 24; k++) {
+            if (set.has(timingSlot(cur + k))) { if (!best || k < best.k) best = { k, verb, s: timingSlot(cur + k) }; break; }
+        }
+    }
+    if (best) {
+        nowEl.textContent = `Nothing to do now — next: ${best.verb.toLowerCase()} from ${slotStartLabel(best.s)}`;
+        nowEl.classList.remove('is-active');
+        nowEl.hidden = false;
+    } else {
+        nowEl.hidden = true;
+    }
+}
+
 function renderPlantDetailPanelContent(plant) {
     const panelPlantName = document.getElementById('panelPlantName');
     const panelPlantIcon = document.getElementById('panelPlantIcon');
@@ -1781,6 +1893,7 @@ function renderPlantDetailPanelContent(plant) {
     panelSpacing.textContent = formatSpacingForDisplay(plant.spacing);
     panelDaysToHarvest.textContent = plant.daysToHarvest || '—';
 
+    renderPlantDetailTiming(plant);
     renderPlantDetailReview(plant);
     renderPlantDetailGuide(plant);
 }

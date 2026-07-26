@@ -767,14 +767,12 @@ function renderNowView() {
 
     const ul = document.createElement("ul");
     ul.className = "now-list";
-    for (const item of group.items) {
+
+    const appendItem = (item) => {
       const li = document.createElement("li");
       li.className = "now-item";
-      if (item.endingSoon) li.classList.add("now-item-closing");
-
       const icon = window.__plantIconEl?.(item.name);
       if (icon) li.appendChild(icon);
-
       const name = document.createElement("span");
       name.className = "now-item-name";
       name.textContent = item.name;
@@ -782,19 +780,28 @@ function renderNowView() {
       // owns the plant records + a11y wiring; we hand it the item's key).
       window.__bindNowItem?.(name, item.key);
       li.appendChild(name);
-
-      if (item.endingSoon) {
-        const tag = document.createElement("span");
-        tag.className = "now-tag now-tag-closing";
-        tag.textContent = "Last Chance";
-        li.appendChild(tag);
-      } else if (item.justOpened) {
-        const tag = document.createElement("span");
-        tag.className = "now-tag now-tag-new";
-        tag.textContent = "New";
-        li.appendChild(tag);
-      }
       ul.appendChild(li);
+    };
+
+    // Status is a SUB-GROUPING within the activity section, not a per-item chip:
+    // "Last chance" leads (miss-risk first), "New" trails, everything else sits
+    // in between. A lone "In season" run needs no header — only label it when a
+    // flagged run shares the section.
+    const buckets = [
+      { key: "last", label: "Last chance", items: group.items.filter((i) => i.endingSoon) },
+      { key: "regular", label: "In season", items: group.items.filter((i) => !i.endingSoon && !i.justOpened) },
+      { key: "new", label: "New", items: group.items.filter((i) => i.justOpened) },
+    ];
+    const flagged = buckets.some((b) => b.key !== "regular" && b.items.length);
+    for (const bucket of buckets) {
+      if (!bucket.items.length) continue;
+      if (bucket.key !== "regular" || flagged) {
+        const sub = document.createElement("li");
+        sub.className = `now-subhead now-subhead-${bucket.key}`;
+        sub.textContent = bucket.label;
+        ul.appendChild(sub);
+      }
+      bucket.items.forEach(appendItem);
     }
     section.appendChild(ul);
     content.appendChild(ul.children.length ? section : document.createComment("empty"));
