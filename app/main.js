@@ -559,11 +559,6 @@ async function chooseSite(lat, lng, label, zip) {
     return;
   }
   const site = { lat, lng, ...(label ? { label } : {}), ...(zip ? { zip } : {}) };
-  // A fresh location starts in curated mode; refresh the toggle for its region.
-  currentGeo = site;
-  showCalculated = false;
-  if (els.calcToggle) els.calcToggle.checked = false;
-  updateCalcToggle(lat, lng);
   const gen = newGeneration();
   // Announce work-in-progress: per-site climate shards load asynchronously, and
   // #siteNote is an aria-live region, so this reaches screen readers. On success
@@ -573,6 +568,13 @@ async function chooseSite(lat, lng, label, zip) {
   try {
     const committed = await applySite(site, gen);
     if (committed && isCurrent(gen)) {
+      // Commit the geography + toggle state ONLY on success — if the load fails
+      // the previously rendered calendar stays on screen, so currentGeo and the
+      // comparison toggle must keep matching it, not the failed location.
+      currentGeo = site;
+      showCalculated = false;
+      if (els.calcToggle) els.calcToggle.checked = false;
+      updateCalcToggle(site.lat, site.lng);
       setSite(site);
       updateUrl(site);
     }
@@ -683,12 +685,16 @@ async function initPanel() {
   } else {
     const saved = currentSite();
     if (saved && Number.isFinite(saved.lat) && Number.isFinite(saved.lng)) {
-      currentGeo = saved;
-      updateCalcToggle(saved.lat, saved.lng);
       const gen = newGeneration();
       applySite(saved, gen)
         .then((committed) => {
-          if (committed && isCurrent(gen)) updateUrl(saved);
+          if (committed && isCurrent(gen)) {
+            // Only adopt the saved geography once it actually loaded (the catch
+            // falls back to the Carrboro default, which sets its own state).
+            currentGeo = saved;
+            updateCalcToggle(saved.lat, saved.lng);
+            updateUrl(saved);
+          }
         })
         .catch((err) => {
           if (!isCurrent(gen)) return;
