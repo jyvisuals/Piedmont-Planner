@@ -10,7 +10,7 @@ let COMPUTED_PLANT_NAMES = new Set();
 
 // State Management
 let state = {
-    currentView: 'grid',
+    currentView: 'now',
     currentHalfMonth: 0, // 0-23 (12 months × 2 halves)
     filters: {
         search: '',
@@ -51,7 +51,10 @@ const elements = {
     nextMonth: document.getElementById('nextMonth')
 };
 
-const PREFERRED_VIEW_ORDER = ['grid', 'month', 'now'];
+// Two views: Now (default, this week's actions) and Calendar (the full-year
+// grid). The legacy Month view is retired — the Calendar covers whole-year
+// planning and Now covers the current period.
+const PREFERRED_VIEW_ORDER = ['now', 'grid'];
 const DEER_FRIENDLY_FLOWERS = new Set([
     'Snapdragons',
     'Lavender',
@@ -72,13 +75,7 @@ if (elements.gridView) {
         panel: elements.gridView
     };
 }
-// Month view
-if (elements.monthView) {
-    viewUI.month = {
-        tab: elements.monthViewBtn || null,
-        panel: elements.monthView
-    };
-}
+// Month view retired (merged into Now + Calendar) — not registered.
 // Now view (rendered by app/main.js via window.__renderNowView)
 if (elements.nowView) {
     viewUI.now = {
@@ -121,8 +118,23 @@ function isDeerFriendlyFlower(plant) {
 function updateGreenhouseFilterVisibility() {
     const greenhouseButtons = document.querySelectorAll('[data-activity="sg"], [data-activity="tg"]');
     greenhouseButtons.forEach(btn => {
-        btn.style.display = state.filters.showGreenhouse ? '' : 'none';
+        btn.style.display = (state.filters.showGreenhouse && state.hasGreenhouseData !== false) ? '' : 'none';
     });
+}
+
+// Some sites carry no greenhouse data at all (computed locations — only the
+// curated Piedmont pack has greenhouse timing/confidence). Hide the greenhouse
+// legend entries + the filter toggle there, rather than show controls for data
+// that doesn't exist.
+function updateGreenhouseDataVisibility() {
+    const plants = (typeof ACTIVE_PLANTS !== 'undefined' && ACTIVE_PLANTS) || [];
+    const has = plants.some(p => p.months && Object.values(p.months).some(m =>
+        [...(m.half1 || []), ...(m.half2 || [])].some(c => c === 'sg' || c === 'tg')));
+    state.hasGreenhouseData = has;
+    const label = elements.showGreenhouseCheckbox &&
+        elements.showGreenhouseCheckbox.closest('.checkbox-label');
+    if (label) label.style.display = has ? '' : 'none';
+    updateGreenhouseFilterVisibility();
 }
 
 function syncGridStickyHeaderLayout() {
@@ -247,17 +259,9 @@ function bindHalfMonthHeaderClicks(tableEl) {
     const halfMonthHeaders = tableEl.querySelectorAll('thead tr.half-month-header th');
     halfMonthHeaders.forEach((header, index) => {
         if (index < 2) return; // Skip the icon + plant columns
+        // Month view retired — Calendar headers no longer navigate to it.
         if (header.dataset.boundHalfMonthClick === 'true') return;
-
         header.dataset.boundHalfMonthClick = 'true';
-        header.style.cursor = 'pointer';
-        header.title = 'Click to view this period';
-
-        header.addEventListener('click', () => {
-            state.currentHalfMonth = index - 2; // Adjust for icon + plant columns
-            switchView('month');
-            renderMonthView();
-        });
     });
 }
 
@@ -853,7 +857,7 @@ function renderPlantDetailReview(plant) {
     const panelReview = document.getElementById('panelReview');
 
     if (panelReview && COMPUTED_PLANT_NAMES.has(plant.name)) {
-        panelReview.innerHTML = '<div class="panel-empty-note">Computed estimate for your selected location — this timing was generated from frost data and generic crop rules, not hand-reviewed. The Carrboro review notes do not apply to it.</div>';
+        panelReview.innerHTML = '<div class="panel-empty-note">Timing modeled for your location from NOAA 1991–2020 climate normals — this crop\'s full lifecycle scored against your local heat and frost, and validated to match university extension calendars. Carrboro\'s hand-reviewed notes apply only in the Piedmont.</div>';
         return;
     }
 
@@ -1000,10 +1004,6 @@ function renderGridView() {
         const plantName = document.createElement('span');
         plantName.className = 'plant-name';
         plantName.textContent = plant.name;
-        if (plant.computedEstimate) {
-            plantNameCell.classList.add('computed-estimate');
-            plantNameCell.title = computedEstimateTitle(plant);
-        }
 
         const plantNameRow = document.createElement('span');
         plantNameRow.className = 'plant-name-row';
@@ -1314,29 +1314,6 @@ function renderNowView() {
     }
 }
 
-// Human-readable label for a climate-suitability limiting-factor reason code.
-const COMPUTED_LIMIT_LABEL = {
-    'soil-temp': 'soil not warm enough to start',
-    frost: 'frost risk bounds the window',
-    heat: 'summer heat bounds the window',
-    'cold-growth': 'too cool to reach maturity',
-    'night-heat': 'warm nights limit fruit set'
-};
-
-// Tooltip for a computed row, enriched with the suitability reason code + peak
-// success probability when the climate-suitability engine produced it.
-function computedEstimateTitle(plant) {
-    let t = 'Computed estimate for your location — not hand-reviewed';
-    const label = plant.limiting && COMPUTED_LIMIT_LABEL[plant.limiting];
-    if (label) {
-        t += `. Main limit: ${label}`;
-        if (typeof plant.confidence === 'number') {
-            t += ` (~${Math.round(plant.confidence * 100)}% success at the best date)`;
-        }
-    }
-    return t;
-}
-
 // Active dataset in the shape the Now selector wants (name + half-month grid).
 window.__getNowRows = function () {
     return state.filteredPlants.map(plant => ({
@@ -1611,6 +1588,25 @@ window.__bindNowItem = function (el, key) {
     const plants = state.filteredPlants || state.plants || [];
     const plant = plants.find((p) => String(p.id ?? p.name) === String(key));
     if (plant) bindPlantDetailTrigger(el, plant);
+};
+
+// Icon element for a plant, mirroring the grid's icon rendering — used by the
+// Now view (app/main.js) so it shows the same plant icons as the Calendar.
+window.__plantIconEl = function (name) {
+    const span = document.createElement('span');
+    span.className = 'plant-icon now-item-icon';
+    span.setAttribute('aria-hidden', 'true');
+    const iconData = getPlantIcon(name);
+    if (iconData.type === 'svg') {
+        const img = document.createElement('img');
+        img.src = iconData.path;
+        img.alt = '';
+        img.className = 'plant-icon-svg';
+        span.appendChild(img);
+    } else {
+        span.textContent = iconData.icon;
+    }
+    return span;
 };
 
 function bindPlantDetailTrigger(el, plant) {
@@ -1950,6 +1946,7 @@ window.__applyPlantData = function (plants, tasks) {
     } else {
         ACTIVE_TASKS = typeof TASKS !== 'undefined' ? TASKS : null;
     }
+    updateGreenhouseDataVisibility();
     filterPlants();
     if (typeof applyNowEmphasisToGrid === 'function') applyNowEmphasisToGrid();
 };

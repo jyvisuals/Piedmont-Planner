@@ -32,14 +32,11 @@
                     <h1><span class="title-main">Piedmont Planner</span><span class="title-zone">: Zone 8a Planting Calendar</span></h1>
                     <div class="view-switch-wrap">
                         <div class="view-switch" role="tablist" aria-label="Calendar views">
-                            <button id="gridViewBtn" class="view-switch-btn active" type="button" role="tab" aria-selected="true" aria-controls="gridView">
-                                Grid
-                            </button>
-                            <button id="monthViewBtn" class="view-switch-btn" type="button" role="tab" aria-selected="false" aria-controls="monthView" tabindex="-1">
-                                Month
-                            </button>
-                            <button id="nowViewBtn" class="view-switch-btn" type="button" role="tab" aria-selected="false" aria-controls="nowView" tabindex="-1">
+                            <button id="nowViewBtn" class="view-switch-btn active" type="button" role="tab" aria-selected="true" aria-controls="nowView">
                                 Now
+                            </button>
+                            <button id="gridViewBtn" class="view-switch-btn" type="button" role="tab" aria-selected="false" aria-controls="gridView" tabindex="-1">
+                                Calendar
                             </button>
                         </div>
                     </div>
@@ -145,7 +142,7 @@
             </div>
 
             <!-- Grid View -->
-            <div id="gridView" class="view active" role="tabpanel" aria-labelledby="gridViewBtn">
+            <div id="gridView" class="view" role="tabpanel" aria-labelledby="gridViewBtn" hidden>
                 <div id="gridStickyHeader" class="grid-sticky-header" aria-hidden="true"></div>
                 <div class="table-container">
                     <table id="gridTable" class="calendar-table">
@@ -222,7 +219,7 @@
                 </div>
             </div>
 
-            <div id="nowView" class="view" role="tabpanel" aria-labelledby="nowViewBtn" hidden>
+            <div id="nowView" class="view active" role="tabpanel" aria-labelledby="nowViewBtn">
                 <div class="now-header">
                     <h2 id="nowTitle">This week in the garden</h2>
                     <p id="nowSubtitle" class="now-subtitle"></p>
