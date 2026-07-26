@@ -3,7 +3,7 @@
 // etc.) as they are requested, so the calendar works without a connection.
 //
 // Bump CACHE_VERSION whenever the shell changes to retire stale caches.
-const CACHE_VERSION = 'piedmont-planner-v5';
+const CACHE_VERSION = 'piedmont-planner-v6';
 
 const CORE_ASSETS = [
   './',
