@@ -376,9 +376,14 @@ async function applySite(site, gen) {
         km !== null && km > 5
           ? `Hand-reviewed timing validated at ${ref.label ?? "the reference garden"}, ~${km} km from this site — local frost dates may differ by a week or more.`
           : `Hand-reviewed timing validated here (${ref?.label ?? "reference garden"}).`;
-    } else {
+    } else if (climateInfo) {
       els.note.textContent =
         "Your calendar is modeled for this location from NOAA 1991–2020 climate normals — each crop's full lifecycle scored against your local heat and frost, and validated to match university extension calendars. (Carrboro's hand-reviewed notes apply only in the Piedmont.)";
+    } else {
+      // No nearby temperature station — the resolver used the frost-offset
+      // engine, so describe only what it actually does (no heat modeling).
+      els.note.textContent =
+        "Your calendar is modeled for this location from NOAA 1991–2020 frost normals — planting timed to your last and first frost. (A nearby temperature station wasn't available to also model summer heat; Carrboro's hand-reviewed notes apply only in the Piedmont.)";
     }
     els.note.hidden = false;
   }

@@ -131,6 +131,14 @@ function updateGreenhouseDataVisibility() {
     const has = plants.some(p => p.months && Object.values(p.months).some(m =>
         [...(m.half1 || []), ...(m.half2 || [])].some(c => c === 'sg' || c === 'tg')));
     state.hasGreenhouseData = has;
+    // If a greenhouse-only activity filter was active, clear it when moving to a
+    // site with no greenhouse data — otherwise the calendar filters to nothing
+    // and the control to clear it is now hidden (mirrors the showGreenhouse-off
+    // handling at the filter toggle + loadPreferences).
+    if (!has && (state.filters.activity === 'sg' || state.filters.activity === 'tg')) {
+        state.filters.activity = 'all';
+        document.querySelectorAll('.legend-item.active').forEach(el => el.classList.remove('active'));
+    }
     const label = elements.showGreenhouseCheckbox &&
         elements.showGreenhouseCheckbox.closest('.checkbox-label');
     if (label) label.style.display = has ? '' : 'none';
@@ -857,7 +865,12 @@ function renderPlantDetailReview(plant) {
     const panelReview = document.getElementById('panelReview');
 
     if (panelReview && COMPUTED_PLANT_NAMES.has(plant.name)) {
-        panelReview.innerHTML = '<div class="panel-empty-note">Timing modeled for your location from NOAA 1991–2020 climate normals — this crop\'s full lifecycle scored against your local heat and frost, and validated to match university extension calendars. Carrboro\'s hand-reviewed notes apply only in the Piedmont.</div>';
+        // Suitability-modeled rows carry a limiting reason; frost-offset rows
+        // (no nearby temperature station) do not — describe each accurately.
+        const msg = plant.limiting
+            ? 'Timing modeled for your location from NOAA 1991–2020 climate normals — this crop\'s full lifecycle scored against your local heat and frost, and validated to match university extension calendars. Carrboro\'s hand-reviewed notes apply only in the Piedmont.'
+            : 'Timing modeled for your location from NOAA 1991–2020 frost normals — planting timed to your last and first frost. Carrboro\'s hand-reviewed notes apply only in the Piedmont.';
+        panelReview.innerHTML = `<div class="panel-empty-note">${msg}</div>`;
         return;
     }
 
