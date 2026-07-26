@@ -83,6 +83,7 @@ async function main() {
     ok(nowGroups > 0, `Now view populates groups (got ${nowGroups})`);
     ok((await page.locator("#nowSubtitle").textContent()).includes("Carrboro"), "Now subtitle names the default site");
     ok((await page.locator("#nowContent .now-group-chip").count()) > 0, "Now groups render as colored activity chips");
+    ok((await page.locator("#nowContent .now-tag").count()) === 0, "no per-item Last Chance/New chips (status is a sub-heading now)");
 
     // --- view switching: Now ↔ Calendar (two tabs); Calendar renders on demand ---
     await page.locator("#gridViewBtn").click();
@@ -91,6 +92,17 @@ async function main() {
     const rowCount = await page.locator("#gridTableBody tr").count();
     ok(rowCount === 77, `Calendar renders 77 crop rows (got ${rowCount})`);
     ok((await page.locator(".review-confidence-badge").count()) > 0, "Calendar shows curated confidence badges");
+
+    // --- detail panel: plain-language "when to plant" timing ---
+    await page.locator("#gridTableBody tr").first().locator(".plant-name").click();
+    await page.waitForTimeout(250);
+    ok(await page.locator("#plantDetailPanel").isVisible(), "clicking a crop opens the detail panel");
+    const timingSummary = (await page.locator("#panelTimingSummary").textContent()) || "";
+    ok(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/.test(timingSummary), `panel shows a plain-language schedule (got "${timingSummary.slice(0, 60)}")`);
+    const timingNow = (await page.locator("#panelTimingNow").textContent()) || "";
+    ok(/until [A-Z][a-z]{2} \d|next:/.test(timingNow), `panel shows a dated "right now" line (got "${timingNow.slice(0, 60)}")`);
+    await page.locator("#closePanelBtn").click();
+    await page.waitForTimeout(150);
     await page.locator("#nowViewBtn").click();
     await page.waitForTimeout(150);
     ok(await page.locator("#nowView").isVisible(), "Now view returns on click");

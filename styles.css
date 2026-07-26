@@ -1992,6 +1992,30 @@ body.panel-open {
     border-bottom: 2px solid var(--secondary-green);
 }
 
+/* When-to-plant timing block */
+.timing-now {
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #eef5e6;
+    border-left: 3px solid var(--primary-green, #2d5016);
+    font-weight: 600;
+    color: #2d5016;
+    font-size: 0.95rem;
+}
+.timing-now:not(.is-active) {
+    background: var(--gray-95, #f5f5f5);
+    border-left-color: var(--gray-50, #808080);
+    color: var(--gray-30, #4d4d4d);
+    font-weight: 500;
+}
+.timing-summary {
+    margin: 0;
+    color: var(--gray-20, #333);
+    line-height: 1.6;
+    font-size: 0.92rem;
+}
+
 /* Varieties Content */
 .varieties-content {
     font-size: 0.95rem;
@@ -2262,14 +2286,17 @@ body.panel-open {
 .now-item-icon { display: inline-flex; align-items: center; font-size: 1.05rem; line-height: 1; flex: 0 0 auto; }
 .now-item-icon .plant-icon-svg { width: 18px; height: 18px; display: block; }
 .now-item-name { font-weight: 500; }
-.now-tag {
-    font-size: 0.7rem;
+/* Status sub-headings within an activity group (Last chance / In season / New). */
+.now-subhead {
+    list-style: none;
+    margin: 10px 0 3px;
+    font-size: 0.66rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.02em;
-    border-radius: 4px;
-    padding: 1px 6px;
+    letter-spacing: 0.06em;
+    color: var(--gray-40, #666);
 }
-.now-tag-closing { background: #f6d9d0; color: #a03518; }
-.now-tag-new { background: #d9ead0; color: #3f6a26; }
-.now-item-closing .now-item-name { color: #a03518; }
+.now-subhead:first-child { margin-top: 0; }
+.now-subhead-last { color: #a03518; }
+.now-subhead-new { color: #3f6a26; }
+.now-subhead + .now-item { border-top: none; }
