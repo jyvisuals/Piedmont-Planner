@@ -76,27 +76,23 @@ async function main() {
     await page.evaluate(() => localStorage.clear());
     await page.reload({ waitUntil: "networkidle" });
 
-    // --- default (Carrboro) render ---
-    const rowCount = await page.locator("#gridTableBody tr").count();
-    ok(rowCount === 77, `default grid renders 77 crop rows (got ${rowCount})`);
-    ok((await page.locator(".computed-estimate").count()) === 0, "default has no computed-estimate markers");
-    ok((await page.locator(".review-confidence-badge").count()) > 0, "default shows curated confidence badges");
-
-    // --- view machinery: the exact wiring that broke this session ---
-    await page.locator("#monthViewBtn").click();
-    await page.waitForTimeout(150);
-    ok(await page.locator("#monthView").isVisible(), "Month view activates on click");
-
-    await page.locator("#nowViewBtn").click();
-    await page.waitForTimeout(200);
-    ok(await page.locator("#nowView").isVisible(), "Now view activates on click (tab registration + view-order)");
+    // --- default (Carrboro) render: Now is the default view ---
+    ok(await page.locator("#nowView").isVisible(), "Now is the default view on load");
+    ok((await page.locator("#monthViewBtn").count()) === 0, "Month view/tab is retired");
     const nowGroups = await page.locator("#nowContent .now-group").count();
     ok(nowGroups > 0, `Now view populates groups (got ${nowGroups})`);
     ok((await page.locator("#nowSubtitle").textContent()).includes("Carrboro"), "Now subtitle names the default site");
 
+    // --- view switching: Now ↔ Calendar (two tabs); Calendar renders on demand ---
     await page.locator("#gridViewBtn").click();
+    await page.waitForTimeout(200);
+    ok(await page.locator("#gridView").isVisible(), "Calendar view activates on click");
+    const rowCount = await page.locator("#gridTableBody tr").count();
+    ok(rowCount === 77, `Calendar renders 77 crop rows (got ${rowCount})`);
+    ok((await page.locator(".review-confidence-badge").count()) > 0, "Calendar shows curated confidence badges");
+    await page.locator("#nowViewBtn").click();
     await page.waitForTimeout(150);
-    ok(await page.locator("#gridView").isVisible(), "Grid view returns on click");
+    ok(await page.locator("#nowView").isVisible(), "Now view returns on click");
 
     // --- site panel: ZIP entry → curated + computed ---
     await page.locator("#sitePanel summary").click();
@@ -104,12 +100,12 @@ async function main() {
     await page.locator("#siteZipBtn").click();
     await page.waitForTimeout(1000);
     ok((await page.locator("#siteSummary").textContent()).includes("zone 8a"), "ZIP 27510 resolves to zone 8a");
-    ok((await page.locator(".computed-estimate").count()) === 0, "in-footprint ZIP stays curated (no est. markers)");
 
     await page.fill("#siteZip", "59715"); // Bozeman MT — computed
     await page.locator("#siteZipBtn").click();
     await page.waitForTimeout(1200);
-    ok((await page.locator(".computed-estimate").count()) > 0, "computed site (Bozeman) marks rows as estimates");
+    ok((await page.locator("#gridTableBody tr").count()) > 0, "computed site (Bozeman) renders a calendar");
+    ok((await page.locator("#siteNote").textContent()).toLowerCase().includes("modeled"), "computed site is framed as modeled (no scary est. warnings)");
 
     // --- shareable URL + dynamic title ---
     ok(page.url().includes("zip=59715"), `applying a ZIP deep-links the URL (got ${page.url()})`);
@@ -120,7 +116,6 @@ async function main() {
     await page.waitForTimeout(400);
     const resetRows = await page.locator("#gridTableBody tr").count();
     ok(resetRows === 77, `reset restores 77-crop default (got ${resetRows})`);
-    ok((await page.locator(".computed-estimate").count()) === 0, "reset clears estimate markers");
     ok(!page.url().includes("zip="), "reset clears the URL query");
 
     ok(pageErrors.length === 0, `no console/page errors (got ${pageErrors.length}: ${pageErrors.slice(0, 3).join(" | ")})`);

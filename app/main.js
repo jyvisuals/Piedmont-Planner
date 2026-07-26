@@ -247,25 +247,6 @@ function adaptCalendars(calendars, pack) {
   });
 }
 
-// Human-readable label for a suitability limiting-factor reason code.
-const LIMIT_LABEL = {
-  "soil-temp": "soil not warm enough to start",
-  frost: "frost risk bounds the window",
-  heat: "summer heat bounds the window",
-  "cold-growth": "too cool to reach maturity",
-  "night-heat": "warm nights limit fruit set",
-};
-
-/** Tooltip text for the "est." tag, enriched with the reason code when present. */
-function estTitle(item) {
-  let t = "Computed estimate for your location — not hand-reviewed";
-  if (item.limiting && LIMIT_LABEL[item.limiting]) {
-    t += `. Main limit: ${LIMIT_LABEL[item.limiting]}`;
-    if (typeof item.confidence === "number") t += ` (~${Math.round(item.confidence * 100)}% success at the best date)`;
-  }
-  return t;
-}
-
 function showError(msg) {
   if (els.error) {
     els.error.textContent = msg || "";
@@ -370,7 +351,7 @@ async function applySite(site, gen) {
               : ""
           }`
         : "frost-offset — timing from frost dates only (no nearby temperature station)"],
-      ["Calendar", computed === 0 ? `${curated} crops, hand-reviewed` : `${curated} hand-reviewed · ${computed} computed estimates`],
+      ["Calendar", computed === 0 ? `${curated} crops, hand-reviewed` : `${curated} hand-reviewed · ${computed} climate-modeled`],
     ];
     if (!zoneKnown) {
       items.splice(3, 0, [
@@ -395,9 +376,14 @@ async function applySite(site, gen) {
         km !== null && km > 5
           ? `Hand-reviewed timing validated at ${ref.label ?? "the reference garden"}, ~${km} km from this site — local frost dates may differ by a week or more.`
           : `Hand-reviewed timing validated here (${ref?.label ?? "reference garden"}).`;
-    } else {
+    } else if (climateInfo) {
       els.note.textContent =
-        "No hand-reviewed data covers this area yet — all timing shown is a computed estimate from frost normals and generic crop rules. Treat it as a starting point, not a reviewed calendar.";
+        "Your calendar is modeled for this location from NOAA 1991–2020 climate normals — each crop's full lifecycle scored against your local heat and frost, and validated to match university extension calendars. (Carrboro's hand-reviewed notes apply only in the Piedmont.)";
+    } else {
+      // No nearby temperature station — the resolver used the frost-offset
+      // engine, so describe only what it actually does (no heat modeling).
+      els.note.textContent =
+        "Your calendar is modeled for this location from NOAA 1991–2020 frost normals — planting timed to your last and first frost. (A nearby temperature station wasn't available to also model summer heat; Carrboro's hand-reviewed notes apply only in the Piedmont.)";
     }
     els.note.hidden = false;
   }
@@ -660,27 +646,26 @@ function renderNowView() {
       li.className = "now-item";
       if (item.endingSoon) li.classList.add("now-item-closing");
 
+      const icon = window.__plantIconEl?.(item.name);
+      if (icon) li.appendChild(icon);
+
       const name = document.createElement("span");
       name.className = "now-item-name";
       name.textContent = item.name;
+      // Clickable → opens the same plant detail panel the grid uses (script.js
+      // owns the plant records + a11y wiring; we hand it the item's key).
+      window.__bindNowItem?.(name, item.key);
       li.appendChild(name);
 
       if (item.endingSoon) {
         const tag = document.createElement("span");
         tag.className = "now-tag now-tag-closing";
-        tag.textContent = "closing soon";
+        tag.textContent = "ending";
         li.appendChild(tag);
       } else if (item.justOpened) {
         const tag = document.createElement("span");
         tag.className = "now-tag now-tag-new";
-        tag.textContent = "just opened";
-        li.appendChild(tag);
-      }
-      if (item.computedEstimate) {
-        const tag = document.createElement("span");
-        tag.className = "now-tag now-tag-est";
-        tag.textContent = "est.";
-        tag.title = estTitle(item);
+        tag.textContent = "new";
         li.appendChild(tag);
       }
       ul.appendChild(li);

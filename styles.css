@@ -2219,6 +2219,8 @@ body.panel-open {
     border-top: 1px solid rgba(45, 80, 22, 0.08);
 }
 .now-item:first-child { border-top: none; }
+.now-item-icon { display: inline-flex; align-items: center; font-size: 1.05rem; line-height: 1; flex: 0 0 auto; }
+.now-item-icon .plant-icon-svg { width: 18px; height: 18px; display: block; }
 .now-item-name { font-weight: 500; }
 .now-tag {
     font-size: 0.7rem;
