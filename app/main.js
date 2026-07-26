@@ -788,9 +788,12 @@ function renderNowView() {
     // in between. A lone "In season" run needs no header — only label it when a
     // flagged run shares the section.
     const buckets = [
+      // A single-slot window sets BOTH endingSoon and justOpened; Last chance
+      // takes precedence, so New must exclude endingSoon or the item renders
+      // twice (while the group count only counts it once).
       { key: "last", label: "Last chance", items: group.items.filter((i) => i.endingSoon) },
       { key: "regular", label: "In season", items: group.items.filter((i) => !i.endingSoon && !i.justOpened) },
-      { key: "new", label: "New", items: group.items.filter((i) => i.justOpened) },
+      { key: "new", label: "New", items: group.items.filter((i) => i.justOpened && !i.endingSoon) },
     ];
     const flagged = buckets.some((b) => b.key !== "regular" && b.items.length);
     for (const bucket of buckets) {
