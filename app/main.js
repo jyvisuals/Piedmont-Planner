@@ -463,6 +463,10 @@ function updateUrl(site) {
 
 function resetToDefault() {
   newGeneration(); // invalidate any in-flight site load
+  // A reset advances the generation, so any in-flight chooseSite's finally will
+  // skip clearBusy() — clear the loading state here, or the panel stays
+  // aria-busy="true" indefinitely for assistive tech.
+  clearBusy();
   setSite(null);
   updateUrl(null);
   document.title = DEFAULT_TITLE;
@@ -498,6 +502,9 @@ async function chooseSite(lat, lng, label, zip) {
     }
   } catch (err) {
     if (isCurrent(gen)) {
+      // The error alert carries the message now — retire the "building…" note
+      // so the live region doesn't stay stuck on a loading state.
+      if (els.note) els.note.hidden = true;
       showError(`Could not build a calendar for that location: ${err.message}`);
     }
   } finally {
