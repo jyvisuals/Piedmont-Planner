@@ -1604,6 +1604,15 @@ function isPlantDetailPanelOpen() {
     return !!(panel && !panel.hasAttribute('hidden'));
 }
 
+// Bridge for the Now view (rendered by app/main.js): given a rendered element and
+// a Now-row key, find the matching active plant and make the element open its
+// detail panel — same clickable/keyboard behavior as the grid's plant names.
+window.__bindNowItem = function (el, key) {
+    const plants = state.filteredPlants || state.plants || [];
+    const plant = plants.find((p) => String(p.id ?? p.name) === String(key));
+    if (plant) bindPlantDetailTrigger(el, plant);
+};
+
 function bindPlantDetailTrigger(el, plant) {
     if (!el) return;
 

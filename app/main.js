@@ -663,17 +663,20 @@ function renderNowView() {
       const name = document.createElement("span");
       name.className = "now-item-name";
       name.textContent = item.name;
+      // Clickable → opens the same plant detail panel the grid uses (script.js
+      // owns the plant records + a11y wiring; we hand it the item's key).
+      window.__bindNowItem?.(name, item.key);
       li.appendChild(name);
 
       if (item.endingSoon) {
         const tag = document.createElement("span");
         tag.className = "now-tag now-tag-closing";
-        tag.textContent = "closing soon";
+        tag.textContent = "ending";
         li.appendChild(tag);
       } else if (item.justOpened) {
         const tag = document.createElement("span");
         tag.className = "now-tag now-tag-new";
-        tag.textContent = "just opened";
+        tag.textContent = "new";
         li.appendChild(tag);
       }
       if (item.computedEstimate) {

@@ -95,8 +95,10 @@ export function computeNow(rows, todayDoy, slotsAhead = 1) {
         const items = byCode.get(code);
         if (!items || !items.length)
             continue;
-        // Closing windows first, then alphabetical — the miss-risk items lead.
-        items.sort((a, b) => Number(b.endingSoon) - Number(a.endingSoon) || a.name.localeCompare(b.name));
+        // Ending windows lead (miss-risk first), brand-new windows trail, everything
+        // else in the middle — then alphabetical within each tier.
+        const rank = (i) => (i.endingSoon ? 0 : i.justOpened ? 2 : 1);
+        items.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
         groups.push({ code, label, items });
         count += items.length;
     }
