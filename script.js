@@ -1157,7 +1157,12 @@ function renderMonthView() {
         const header = document.createElement('h3');
         header.className = 'month-activity-header';
         const displayCode = activityCode === 's' ? 'S/B' : getDisplayActivityCode(activityCode).toUpperCase();
-        header.innerHTML = `<span class="legend-badge ${getActivityColor(activityCode)}">${displayCode}</span> ${group.name}`;
+        const headerBadge = document.createElement('span');
+        headerBadge.className = `legend-badge ${getActivityColor(activityCode)}`;
+        headerBadge.textContent = displayCode;
+        // group.name can originate from an external pack — append as a text node
+        // so markup in it is rendered literally, never executed.
+        header.append(headerBadge, ` ${group.name}`);
         section.appendChild(header);
 
         const plantsGrid = document.createElement('div');
@@ -1258,7 +1263,11 @@ function renderMonthView() {
 
         const tasksHeader = document.createElement('h3');
         tasksHeader.className = 'month-activity-header';
-        tasksHeader.innerHTML = '<span class="legend-badge" style="background-color: var(--gray-30);">📋</span> Tasks';
+        const tasksBadge = document.createElement('span');
+        tasksBadge.className = 'legend-badge';
+        tasksBadge.style.backgroundColor = 'var(--gray-30)';
+        tasksBadge.textContent = '📋';
+        tasksHeader.append(tasksBadge, ' Tasks');
         tasksSection.appendChild(tasksHeader);
 
         const tasksGrid = document.createElement('div');
@@ -1288,13 +1297,20 @@ function renderMonthView() {
             return '📝';
         }
 
-        // Split by semicolon and create task cards
+        // Split by semicolon and create task cards. Task text comes from a pack
+        // (potentially an external contributor's), so build it as DOM text nodes
+        // rather than interpolating into innerHTML — no HTML injection surface.
         tasksText.split(';').forEach(task => {
+            const trimmed = task.trim();
+            if (!trimmed) return;
+
             const taskCard = document.createElement('div');
             taskCard.className = 'month-task-card';
 
-            const emoji = addTaskEmoji(task);
-            taskCard.innerHTML = `<span class="task-emoji">${emoji}</span> ${task.trim()}`;
+            const emojiSpan = document.createElement('span');
+            emojiSpan.className = 'task-emoji';
+            emojiSpan.textContent = addTaskEmoji(task);
+            taskCard.append(emojiSpan, ` ${trimmed}`);
 
             tasksGrid.appendChild(taskCard);
         });

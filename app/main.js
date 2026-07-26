@@ -254,6 +254,22 @@ function showError(msg) {
   }
 }
 
+// Loading state for the site panel. aria-busy marks the region as updating and
+// the note (an aria-live region) announces the pending location so a screen
+// reader user isn't left in silence while shards load.
+function setBusy(label) {
+  els.panel?.setAttribute("aria-busy", "true");
+  showError("");
+  if (els.note) {
+    els.note.textContent = `Building your calendar for ${label}…`;
+    els.note.hidden = false;
+  }
+}
+
+function clearBusy() {
+  els.panel?.removeAttribute("aria-busy");
+}
+
 // Nearest-neighbor lookups beyond these radii would silently serve an
 // unrelated place's data (the Fairbanks-gets-Seattle's-zone problem).
 // Refusing / marking unknown is the honest failure mode.
@@ -447,6 +463,10 @@ function updateUrl(site) {
 
 function resetToDefault() {
   newGeneration(); // invalidate any in-flight site load
+  // A reset advances the generation, so any in-flight chooseSite's finally will
+  // skip clearBusy() — clear the loading state here, or the panel stays
+  // aria-busy="true" indefinitely for assistive tech.
+  clearBusy();
   setSite(null);
   updateUrl(null);
   document.title = DEFAULT_TITLE;
@@ -469,6 +489,11 @@ async function chooseSite(lat, lng, label, zip) {
   }
   const site = { lat, lng, ...(label ? { label } : {}), ...(zip ? { zip } : {}) };
   const gen = newGeneration();
+  // Announce work-in-progress: per-site climate shards load asynchronously, and
+  // #siteNote is an aria-live region, so this reaches screen readers. On success
+  // applySite overwrites it with the result; on error showError (role="alert")
+  // takes over.
+  setBusy(label ?? `${lat.toFixed(2)}, ${lng.toFixed(2)}`);
   try {
     const committed = await applySite(site, gen);
     if (committed && isCurrent(gen)) {
@@ -477,8 +502,13 @@ async function chooseSite(lat, lng, label, zip) {
     }
   } catch (err) {
     if (isCurrent(gen)) {
+      // The error alert carries the message now — retire the "building…" note
+      // so the live region doesn't stay stuck on a loading state.
+      if (els.note) els.note.hidden = true;
       showError(`Could not build a calendar for that location: ${err.message}`);
     }
+  } finally {
+    if (isCurrent(gen)) clearBusy();
   }
 }
 
@@ -529,7 +559,12 @@ async function initPanel() {
   });
 
   const applyZip = async (zip) => {
+    // Claim a generation before the async shard fetch so a reset or a newer
+    // selection made while lookupZip is in flight supersedes this one — without
+    // it, a slow ZIP resolve would clobber the reset the user just clicked.
+    const gen = newGeneration();
     const hit = await lookupZip(zip);
+    if (!isCurrent(gen)) return;
     if (!hit) {
       showError(`ZIP ${zip} isn't in the dataset (PRISM 2023 / Census ZCTA). Try a nearby ZIP or coordinates.`);
       return;
