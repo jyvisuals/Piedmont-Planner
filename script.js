@@ -1344,12 +1344,34 @@ function renderNowView() {
 }
 
 // Active dataset in the shape the Now selector wants (name + half-month grid).
+// Search + flowers are already applied to state.filteredPlants; the greenhouse
+// and activity filters live at the grid's cell level, so apply the SAME helpers
+// to the grid handed to the Now view — otherwise the four filters wouldn't
+// behave identically across Calendar and Now.
 window.__getNowRows = function () {
+    const activity = state.filters.activity;
+    const filterSlot = (codes) => {
+        let out = filterGreenhouseActivities(codes || []);
+        if (activity !== 'all') {
+            out = out.filter(c => normalizeActivityCode(c) === activity);
+        }
+        return out;
+    };
+    const filterGrid = (grid) => {
+        const g = {};
+        for (const month of Object.keys(grid)) {
+            g[month] = {
+                half1: filterSlot(grid[month].half1),
+                half2: filterSlot(grid[month].half2)
+            };
+        }
+        return g;
+    };
     return state.filteredPlants.map(plant => ({
         key: String(plant.id ?? plant.name),
         name: plant.name,
         type: plant.type,
-        grid: plant.months,
+        grid: filterGrid(plant.months),
         computedEstimate: Boolean(plant.computedEstimate),
         limiting: plant.limiting,
         confidence: plant.confidence

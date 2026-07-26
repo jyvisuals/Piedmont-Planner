@@ -2170,17 +2170,30 @@ body.panel-open {
     color: #a03030;
     font-weight: 600;
 }
+.site-calc {
+    margin: 10px 0 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--gray-90, #e5e5e5);
+}
+.site-calc-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--gray-30, #4d4d4d);
+    cursor: pointer;
+}
+.site-calc-label input {
+    margin-top: 2px;
+    flex: 0 0 auto;
+}
+.site-calc-label strong { color: var(--black, #000); }
 
-/* Computed-estimate rows: visibly not hand-reviewed */
+/* Computed rows: a subtle, non-apologetic cue that timing is modeled (the
+   detail panel explains "modeled from NOAA normals"). No "est." label. */
 .plant-col.computed-estimate .plant-name {
     text-decoration: underline dotted rgba(160, 100, 30, 0.9);
     text-underline-offset: 3px;
-}
-.plant-col.computed-estimate::after {
-    content: " est.";
-    font-size: 0.72em;
-    color: #a06420;
-    font-weight: 600;
 }
 
 /* ===== "Now" view — what to do this week ===== */
@@ -2215,6 +2228,18 @@ body.panel-open {
     font-size: 1rem;
     color: var(--primary-green, #2d5016);
 }
+/* Activity chip section header — matches the grid legend badge color/shape. */
+.now-group-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    border-radius: 999px;
+}
 .now-group-count {
     margin-left: auto;
     font-size: 0.8rem;
@@ -2247,5 +2272,4 @@ body.panel-open {
 }
 .now-tag-closing { background: #f6d9d0; color: #a03518; }
 .now-tag-new { background: #d9ead0; color: #3f6a26; }
-.now-tag-est { background: #f2e6cf; color: #a06420; }
 .now-item-closing .now-item-name { color: #a03518; }

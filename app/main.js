@@ -40,6 +40,8 @@ const els = {
   applyBtn: document.getElementById("siteApplyBtn"),
   resetBtn: document.getElementById("siteResetBtn"),
   error: document.getElementById("siteError"),
+  calcToggle: document.getElementById("siteCalcToggle"),
+  calcToggleWrap: document.getElementById("siteCalcWrap"),
 };
 
 let bundles = null; // { frostTable, zonePoints, pack } — seed data (quick-picks + offline fallback)
@@ -283,8 +285,67 @@ let siteGeneration = 0;
 const newGeneration = () => ++siteGeneration;
 const isCurrent = (gen) => gen === siteGeneration;
 
-/** Applies the site if (and only if) still the latest request; true = committed. */
-async function applySite(site, gen) {
+// "Show the calculated calendar" comparison toggle. currentGeo is the geography
+// on screen (null → the default Carrboro calendar rendered from data.js);
+// showCalculated re-resolves it through the engine with the curated override
+// off, so you can see what the model produces on its own where curated data
+// exists. It's a transient VIEW toggle — it never changes the saved site or URL.
+const CARRBORO_DEFAULT = { lat: 35.91, lng: -79.075, label: "Carrboro, NC" };
+let currentGeo = null;
+let showCalculated = false;
+
+/** True where a hand-reviewed pack covers the point (so a calculated comparison
+ *  is meaningful). Reads the already-loaded pack footprint synchronously. */
+function curatedApplies(lat, lng) {
+  const b = bundles?.pack?.footprint;
+  if (!b || b.kind !== "bbox") return false;
+  return lat >= b.minLat && lat <= b.maxLat && lng >= b.minLng && lng <= b.maxLng;
+}
+
+/** Show the toggle only where curated data exists; force it off elsewhere. */
+function updateCalcToggle(lat, lng) {
+  const applies = curatedApplies(lat, lng);
+  if (els.calcToggleWrap) els.calcToggleWrap.hidden = !applies;
+  if (!applies) {
+    showCalculated = false;
+    if (els.calcToggle) els.calcToggle.checked = false;
+  }
+}
+
+/** Render a geography through the engine as a transient view (no persistence,
+ *  no URL change) — used by the toggle for both calculated and curated modes. */
+async function runEngineView(geo, calculated) {
+  const gen = newGeneration();
+  setBusy(geo.label ?? `${geo.lat.toFixed(2)}, ${geo.lng.toFixed(2)}`);
+  try {
+    await applySite(geo, gen, { calculated });
+  } catch (err) {
+    if (isCurrent(gen)) {
+      if (els.note) els.note.hidden = true;
+      showError(`Could not build a calendar for that location: ${err.message}`);
+    }
+  } finally {
+    if (isCurrent(gen)) clearBusy();
+  }
+}
+
+/** Toggle handler: flip between the curated and calculated calendars in place. */
+function onCalcToggle() {
+  showCalculated = !!els.calcToggle?.checked;
+  if (!showCalculated && !currentGeo) {
+    // Back to the untouched default Carrboro calendar (data.js).
+    resetToDefault();
+    return;
+  }
+  runEngineView(currentGeo ?? CARRBORO_DEFAULT, showCalculated);
+}
+
+/** Applies the site if (and only if) still the latest request; true = committed.
+ *  opts.calculated drops the curated Piedmont override so the engine's own
+ *  computed calendar shows even where hand-reviewed data exists — the "show me
+ *  the calculated version" comparison toggle. */
+async function applySite(site, gen, opts = {}) {
+  const { calculated = false } = opts;
   const { pack } = await loadBundles();
   const [frost, zones] = await Promise.all([
     loadFrostTable(site.lat, site.lng),
@@ -320,7 +381,7 @@ async function applySite(site, gen) {
   const tempTable = await loadTempTable(site.lat, site.lng);
   if (!isCurrent(gen)) return false; // shard fetch is async — a newer choice may have won
   const climateInfo = buildClimate(site.lat, site.lng, tempTable.stations);
-  const calendars = resolveAll(ctx, { catalog: CROP_CATALOG, packs: [pack] }, climateInfo?.climate);
+  const calendars = resolveAll(ctx, { catalog: CROP_CATALOG, packs: calculated ? [] : [pack] }, climateInfo?.climate);
 
   // Honest refusal: an effectively frost-free climate with NO real temperature
   // data and no curated pack — the frost-anchored model doesn't apply and we have
@@ -385,7 +446,12 @@ async function applySite(site, gen) {
     els.stats.hidden = false;
   }
   if (els.note) {
-    if (inPackFootprint) {
+    if (calculated) {
+      // Comparison mode: the curated override is deliberately off so you can see
+      // what the engine produces on its own for a place that HAS hand-reviewed data.
+      els.note.textContent =
+        "Calculated calendar — the hand-reviewed timing is turned off so you can see what the model produces on its own from NOAA normals. Toggle it back to return to the curated calendar.";
+    } else if (inPackFootprint) {
       const ref = pack.referencePoint;
       const km = ref ? Math.round(haversineKm(site.lat, site.lng, ref.lat, ref.lng)) : null;
       els.note.textContent =
@@ -467,6 +533,11 @@ function resetToDefault() {
   // skip clearBusy() — clear the loading state here, or the panel stays
   // aria-busy="true" indefinitely for assistive tech.
   clearBusy();
+  // Default Carrboro: no chosen geography, curated view, toggle visible + off.
+  currentGeo = null;
+  showCalculated = false;
+  if (els.calcToggle) els.calcToggle.checked = false;
+  updateCalcToggle(CARRBORO_DEFAULT.lat, CARRBORO_DEFAULT.lng);
   setSite(null);
   updateUrl(null);
   document.title = DEFAULT_TITLE;
@@ -497,6 +568,13 @@ async function chooseSite(lat, lng, label, zip) {
   try {
     const committed = await applySite(site, gen);
     if (committed && isCurrent(gen)) {
+      // Commit the geography + toggle state ONLY on success — if the load fails
+      // the previously rendered calendar stays on screen, so currentGeo and the
+      // comparison toggle must keep matching it, not the failed location.
+      currentGeo = site;
+      showCalculated = false;
+      if (els.calcToggle) els.calcToggle.checked = false;
+      updateCalcToggle(site.lat, site.lng);
       setSite(site);
       updateUrl(site);
     }
@@ -595,6 +673,7 @@ async function initPanel() {
   });
 
   els.resetBtn?.addEventListener("click", resetToDefault);
+  els.calcToggle?.addEventListener("change", onCalcToggle);
 
   // A shared ?zip=/?lat&lng link wins over the saved site, so opening someone
   // else's link shows THEIR calendar (and updates your address bar to match).
@@ -609,7 +688,13 @@ async function initPanel() {
       const gen = newGeneration();
       applySite(saved, gen)
         .then((committed) => {
-          if (committed && isCurrent(gen)) updateUrl(saved);
+          if (committed && isCurrent(gen)) {
+            // Only adopt the saved geography once it actually loaded (the catch
+            // falls back to the Carrboro default, which sets its own state).
+            currentGeo = saved;
+            updateCalcToggle(saved.lat, saved.lng);
+            updateUrl(saved);
+          }
         })
         .catch((err) => {
           if (!isCurrent(gen)) return;
@@ -667,7 +752,13 @@ function renderNowView() {
 
     const h = document.createElement("h3");
     h.className = "now-group-title";
-    h.textContent = `${NOW_CODE_ICON[group.code] ?? ""} ${group.label}`;
+    // The section label IS the activity chip — same color/style as the grid
+    // legend badges (green sow, lavender transplant, gold harvest, …) so the
+    // activity is the primary visual anchor for the group.
+    const chip = document.createElement("span");
+    chip.className = `now-group-chip legend-badge activity-${group.code}`;
+    chip.textContent = `${NOW_CODE_ICON[group.code] ?? ""} ${group.label}`.trim();
+    h.appendChild(chip);
     const n = document.createElement("span");
     n.className = "now-group-count";
     n.textContent = String(group.items.length);
@@ -695,12 +786,12 @@ function renderNowView() {
       if (item.endingSoon) {
         const tag = document.createElement("span");
         tag.className = "now-tag now-tag-closing";
-        tag.textContent = "ending";
+        tag.textContent = "Last Chance";
         li.appendChild(tag);
       } else if (item.justOpened) {
         const tag = document.createElement("span");
         tag.className = "now-tag now-tag-new";
-        tag.textContent = "new";
+        tag.textContent = "New";
         li.appendChild(tag);
       }
       ul.appendChild(li);
